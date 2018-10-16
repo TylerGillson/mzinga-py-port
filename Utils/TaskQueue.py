@@ -1,42 +1,22 @@
-from queue import Queue
-from threading import Thread
-
-poison = object()
+import asyncio
 
 
 class TaskQueue(object):
 
-    def __init__(self, limit):
-        def process_items():
-            while True:
-                callback, args, kwargs = self._queue.get()
-
-                if callback is poison:
-                    break
-                try:
-                    result = callback(*args, **kwargs)
-                    self.results.put(result)
-                except Exception as ex:
-                    print(ex)
-                    pass
-                finally:
-                    self._queue.task_done()
-        self._workers = [Thread(target=process_items) for _ in range(limit)]
-        self._queue = Queue()
-        self.results = Queue()
-
-    def processing(self):
-        return self._queue.empty()
+    def __init__(self):
+        self.tasks = []
+        self.loop = asyncio.get_event_loop()
 
     def enqueue(self, callback, *args, **kwargs):
-        self._queue.put((callback, args, kwargs))
+        self.tasks.append(
+            asyncio.ensure_future(callback(*args, **kwargs))
+        )
 
-    def start(self):
-        for w in self._workers:
-            w.start()
+    def run(self):
+        done, _ = self.loop.run_until_complete(asyncio.wait(self.tasks))
+        results = [fut.result() for fut in done]
+        return results
 
-    def stop(self):
-        for i in range(len(self._workers)):
-            self._queue.put((poison, poison, poison))
-        while self._workers:
-            self._workers.pop().join()
+    async def stop(self, max_time):
+        asyncio.sleep(max_time)
+        self.loop.stop()

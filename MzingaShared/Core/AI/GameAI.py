@@ -88,10 +88,10 @@ class GameAI:
         self._cached_board_scores.clear()
 
     # region Move Evaluation
-    def get_best_move(self, game_board, max_depth, max_helper_threads):
-        return self.get_best_move_async(game_board, max_helper_threads, max_depth=max_depth)
+    def get_best_move(self, game_board, max_depth):
+        return self.get_best_move_async(game_board, max_depth=max_depth)
 
-    def get_best_move_async(self, game_board, max_helper_threads, **kwargs):
+    async def get_best_move_async(self, game_board, **kwargs):
         max_depth = sys.maxsize if 'max_depth' not in kwargs else int(kwargs.pop('max_depth'))
 
         if game_board is None:
@@ -100,14 +100,11 @@ class GameAI:
         if max_depth < 0:
             raise ValueError("Invalid max_depth.")
 
-        if max_helper_threads < 0:
-            raise ValueError("Invalid max_helper_threads.")
-
         if game_board.game_is_over:
             raise Exception("Game is over.")
 
-        best_move_params = BestMoveParams(max_depth, max_helper_threads, None)
-        evaluated_moves = self.evaluate_moves_async(game_board, best_move_params)
+        best_move_params = BestMoveParams(max_depth, None, None)
+        evaluated_moves = await self.evaluate_moves_async(game_board, best_move_params)
 
         if evaluated_moves.count == 0:
             raise Exception("No moves after evaluation!")
@@ -116,7 +113,7 @@ class GameAI:
         self.BestMoveFound.on_change.fire(self, best_move_params, evaluated_moves.best_move)  # fire event
         return best_move_params.BestMove.move
 
-    def evaluate_moves_async(self, game_board, best_move_params):
+    async def evaluate_moves_async(self, game_board, best_move_params):
         moves_to_evaluate = EvaluatedMoveCollection()
         best_move = None
 
@@ -149,15 +146,15 @@ class GameAI:
         while depth <= best_move_params.MaxSearchDepth:
 
             # Start LazySMP helper threads
-            helper_queue = TaskQueue(best_move_params.MaxHelperThreads)
-            self.start_helper_threads(game_board, depth, best_move_params.MaxHelperThreads, helper_queue)
-            helper_queue.start()
+            # helper_queue = TaskQueue(best_move_params.MaxHelperThreads)
+            # self.start_helper_threads(game_board, depth, best_move_params.MaxHelperThreads, helper_queue)
+            # helper_queue.start()
 
             # "Re-sort" moves to evaluate based on the next iteration
-            moves_to_evaluate = self.evaluate_moves_to_depth_async(game_board, depth, moves_to_evaluate)
+            moves_to_evaluate = await self.evaluate_moves_to_depth_async(game_board, depth, moves_to_evaluate)
 
             # End LazySMP helper threads
-            helper_queue.stop()
+            # helper_queue.stop()
 
             # Fire best_move_found for current depth
             self.BestMoveFound.on_change.fire(self, best_move_params, moves_to_evaluate.best_move)
@@ -175,7 +172,7 @@ class GameAI:
 
         return moves_to_evaluate
 
-    def evaluate_moves_to_depth_async(self, game_board, depth, moves_to_evaluate):
+    async def evaluate_moves_to_depth_async(self, game_board, depth, moves_to_evaluate):
         alpha = float("-inf")
         beta = float("inf")
         colour = 1 if game_board.current_turn_colour == "White" else -1
@@ -190,17 +187,17 @@ class GameAI:
 
             if first_move:
                 # Full window search
-                value = -1 * self.principal_variation_search_async(
+                value = -1 * await self.principal_variation_search_async(
                     game_board, depth - 1, -beta, -alpha, -colour, "Default")
                 update_alpha = True
                 first_move = False
             else:
                 # Null window search
-                value = -1 * self.principal_variation_search_async(
+                value = -1 * await self.principal_variation_search_async(
                     game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, "Default")
                 if value and alpha < value < beta:
                     # Re-search with full window
-                    value = -1 * self.principal_variation_search_async(
+                    value = -1 * await self.principal_variation_search_async(
                         game_board, depth - 1, -beta, -alpha, -colour, "Default")
                     update_alpha = True
 
@@ -256,7 +253,7 @@ class GameAI:
     # endregion
 
     # region Principal Variation Search
-    def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type):
+    async def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type):
         alpha_original = alpha
         key = game_board.zobrist_key
 
@@ -273,7 +270,7 @@ class GameAI:
                 return t_entry.Value
 
         if depth == 0 or game_board.game_is_over:
-            return self.quiescence_search_async(game_board, self.QuiescentSearchMaxDepth, alpha, beta, colour)
+            return await self.quiescence_search_async(game_board, self.QuiescentSearchMaxDepth, alpha, beta, colour)
 
         best_value = None
         best_move = t_entry.BestMove if t_entry else None
@@ -287,17 +284,17 @@ class GameAI:
 
             if first_move:
                 # Full window search
-                value = -1 * self.principal_variation_search_async(
+                value = -1 * await self.principal_variation_search_async(
                     game_board, depth - 1, -beta, -alpha, -colour, order_type)
                 update_alpha = True
                 first_move = False
             else:
                 # Null window search
-                value = -1 * self.principal_variation_search_async(
+                value = -1 * await self.principal_variation_search_async(
                     game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, order_type)
                 if value and alpha < value < beta:
                     # Re-search with full window
-                    value = -1 * self.principal_variation_search_async(
+                    value = -1 * await self.principal_variation_search_async(
                         game_board, depth - 1, -beta, -alpha, -colour, order_type)
                     update_alpha = True
 
@@ -380,7 +377,7 @@ class GameAI:
     # endregion
 
     # region Quiescence Search
-    def quiescence_search_async(self, game_board, depth, alpha, beta, colour):
+    async def quiescence_search_async(self, game_board, depth, alpha, beta, colour):
         best_value = colour * self.calculate_board_score(game_board)
         alpha = max(alpha, best_value)
 
@@ -390,7 +387,7 @@ class GameAI:
         for move in game_board.get_valid_moves():
             if game_board.is_noisy_move(move):
                 game_board.trusted_play(move)
-                value = -1 * self.quiescence_search_async(game_board, depth - 1, -beta, -alpha, -colour)
+                value = -1 * await self.quiescence_search_async(game_board, depth - 1, -beta, -alpha, -colour)
                 game_board.undo_last_move()
 
                 if value is None:

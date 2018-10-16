@@ -55,7 +55,6 @@ class GameEngine:
         self.init_ai()
         self.exit_requested = False
 
-        self._async_queue = TaskQueue(self.config.MaxHelperThreads)
         self.StartAsyncCommand.on_change += self.on_start_async_command
         self.EndAsyncCommand.on_change += self.on_end_async_command
 
@@ -183,35 +182,32 @@ class GameEngine:
         valid_moves = self._game_board.get_valid_moves()
         print(valid_moves)
 
-    def cancel_after(self, time_delta):
-        time.sleep(time_delta)
-        self.EndAsyncCommand.on_change.fire(self)
-
     def best_move(self, **kwargs):
         self.check_board()
 
         if 'max_time' not in kwargs and 'max_depth' not in kwargs:
             raise ValueError("You must specify either a max_depth or a max_time!")
 
+        max_time = None
         if 'max_time' in kwargs:
-            max_time = int(kwargs.get('max_time'))
-            if max_time < datetime.timedelta.max:
-                self.cancel_after(datetime.timedelta(seconds=max_time))
+            max_time = datetime.timedelta(seconds=int(kwargs.get('max_time')))
 
-        args = [self._game_board, self.config.MaxHelperThreads]
-        self._async_queue.enqueue(self._game_ai.get_best_move_async, *args, **kwargs)
-        self.StartAsyncCommand.on_change.fire()
+        self._async_queue = TaskQueue()
+        self._async_queue.enqueue(self._game_ai.get_best_move_async, self._game_board, **kwargs)
 
-        while self._async_queue.processing():
-            continue
+        if max_time:
+            self._async_queue.enqueue(self._async_queue.stop, max_time)
 
-        bm = self._async_queue.results.get()
+        results = self.StartAsyncCommand.on_change.fire()
+        try:
+            best_move = results[0][0]
+        except KeyError:
+            best_move = None
 
-        if bm is None:
+        if best_move is None:
             raise ValueError("Null move returned!")
 
-        print(bm)
-        self.EndAsyncCommand.on_change.fire()
+        print(best_move)
 
     def undo(self, moves=1):
         self.check_board(check_game_over=False)
@@ -245,7 +241,7 @@ class GameEngine:
         except KeyError:
             print("The option \"%s\" is not valid." % opt_key)
             return
-        
+
         if values is None or values.isspace():
             print("%s;%s;%s" % (opt_key, opt_type, value))
         else:
@@ -286,29 +282,28 @@ class GameEngine:
             if self.config.ReportIntermediateBestMoves:
                 self._game_ai.BestMoveFound -= self.on_best_move_found
 
-            self._ponder_queue = TaskQueue(
-                self.config.MaxHelperThreads if self.config.PonderDuringIdleType == "MultiThreaded" else 1)
+            self._ponder_queue = TaskQueue()
 
             args = [self._game_board.clone(),
                     self.config.MaxHelperThreads if self.config.PonderDuringIdle == "MultiThreaded" else 0
                     ]
             self._ponder_queue.enqueue(self._game_ai.get_best_move_async, *args)
-            self._ponder_queue.start()
+            self._ponder_queue.run()
             self._is_pondering = True
 
     def stop_ponder(self):
         if self._is_pondering:
-            self._ponder_queue.stop()
+            self._ponder_queue.stop(0)
             self._is_pondering = False
 
             if self.config.ReportIntermediateBestMoves:
                 self._game_ai.BestMoveFound += self.on_best_move_found
 
     def on_start_async_command(self):
-        self._async_queue.start()
+        return self._async_queue.run()
 
     def on_end_async_command(self):
-        self._async_queue.stop()
+        self._async_queue.stop(0)
 
     def exit(self):
         self._game_board = None
