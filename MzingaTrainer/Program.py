@@ -17,7 +17,7 @@ class Program:
                 self.show_help()
             else:
                 t = Trainer()
-                cmd = self.parse_arguments(args, t.TrainerSettings)
+                cmd = self.parse_arguments(args, t.trainer_settings)
 
                 cmd_dict = {
                     "b": t.battle,

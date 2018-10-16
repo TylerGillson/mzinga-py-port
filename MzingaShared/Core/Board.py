@@ -705,7 +705,7 @@ class Board:
                 neighbor = target_piece.position.neighbor_at(i)
 
                 has_piece = self.has_piece_at(neighbor)
-                if last_has_piece:
+                if last_has_piece is not None:
                     if last_has_piece != has_piece:
                         edges += 1
 

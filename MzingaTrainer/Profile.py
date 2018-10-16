@@ -79,6 +79,7 @@ class Profile:
 
         self.Id = i_id
         self.Name = name
+
         self.StartMetricWeights = start_metric_weights
         self.EndMetricWeights = end_metric_weights
         self.CreationTimestamp = kwargs.pop("creation_timestamp") \
@@ -86,12 +87,14 @@ class Profile:
         self.LastUpdatedTimestamp = kwargs.pop("last_updated_timestamp") \
             if "last_updated_timestamp" in kwargs else datetime.datetime.now()
 
-        self.Generation = kwargs.pop("generation") if "generation" in kwargs else 0
-
         if "parent_a" in kwargs:
             self.ParentA = kwargs.pop("parent_a")
         if "parent_b" in kwargs:
             self.ParentB = kwargs.pop("parent_b")
+
+        null_parents = (self.ParentA is None) or (self.ParentB is None)
+        self.Generation = 0 if null_parents else kwargs.pop("generation")
+
         if "elo_rating" in kwargs:
             self.EloRating = kwargs.pop("elo_rating")
         if "wins" in kwargs:

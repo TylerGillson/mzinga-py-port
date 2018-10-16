@@ -138,7 +138,7 @@ class TrainerSettings:
 
     @property
     def bulk_battle_time_limit(self):
-        if not self._bulkBattleTimeLimit:
+        if self._bulkBattleTimeLimit is None:
             self._bulkBattleTimeLimit = datetime.timedelta.max
         return self._bulkBattleTimeLimit
 

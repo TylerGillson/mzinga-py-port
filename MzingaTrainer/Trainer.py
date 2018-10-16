@@ -455,8 +455,8 @@ class Trainer:
 
                 for p in profile_list:
                     profile_str = "%s,%s,%d,%d,%s,%s,%d,%d,%d" % (p.Id, p.Name, p.EloRating, p.Generation,
-                                                                  p.ParentA if p.ParentA else "",
-                                                                  p.ParentB if p.ParentB else "",
+                                                                  p.ParentA if p.ParentA is not None else "",
+                                                                  p.ParentB if p.ParentB is not None else "",
                                                                   p.Wins, p.Losses, p.Draws)
 
                     start_normalized = p.StartMetricWeights.get_normalized()

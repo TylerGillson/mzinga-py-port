@@ -90,7 +90,7 @@ class GameEngineConfig:
         r_type = "int"
 
         default = TranspositionTable.DefaultSizeInBytes / (1024 * 1024)
-        value = str(self.TranspositionTableSizeMB if self.TranspositionTableSizeMB else default)
+        value = str(self.TranspositionTableSizeMB if self.TranspositionTableSizeMB is not None else default)
 
         size = self.MaxTranspositionTableSizeMB64Bit if is_64 else self.MaxTranspositionTableSizeMB32Bit
         values = "%d;%d" % (self.MinTranspositionTableSizeMB, size)
@@ -143,7 +143,7 @@ class GameEngineConfig:
 
     def get_max_branching_factor_value(self):
         r_type = "int"
-        value = str(self.MaxBranchingFactor if self.MaxBranchingFactor else GameAI.MaxMaxBranchingFactor)
+        value = str(self.MaxBranchingFactor if self.MaxBranchingFactor is not None else GameAI.MaxMaxBranchingFactor)
         values = "%d;%d" % (self.MinMaxBranchingFactor, GameAI.MaxMaxBranchingFactor)
         return r_type, value, values
 

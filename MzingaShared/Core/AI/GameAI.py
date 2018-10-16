@@ -6,7 +6,6 @@ sys.path.append(dirname(dirname(dirname(os.getcwd()))))  # Add root directory to
 import numpy as np
 import functools
 import datetime
-import threading
 
 from MzingaShared.Core import EnumUtils
 from MzingaShared.Core.EnumUtils import EnumUtils as EnumUtilsCls
@@ -14,12 +13,12 @@ from Utils.Events import Broadcaster
 from MzingaShared.Core.FixedCache import FixedCache
 from MzingaShared.Core.Move import Move
 from MzingaShared.Core.MoveSet import MoveSet
-from Utils.TaskQueue import TaskQueue
 from MzingaShared.Core.AI.EvaluatedMove import EvaluatedMove
 from MzingaShared.Core.AI.EvaluatedMoveCollection import EvaluatedMoveCollection
-from MzingaShared.Core.AI.ListExtensions import ListExtensions, OrderTypeByInt
+from MzingaShared.Core.AI.ListExtensions import ListExtensions
 from MzingaShared.Core.AI.MetricWeights import MetricWeights, BugTypeWeights
-from MzingaShared.Core.AI.TranspositionTable import TranspositionTable, TranspositionTableEntry, TranspositionTableEntryType
+from MzingaShared.Core.AI.TranspositionTable import TranspositionTable, TranspositionTableEntry, \
+                                                    TranspositionTableEntryType
 
 
 class BestMoveFoundEventArgs:
@@ -70,14 +69,14 @@ class GameAI:
                 if config.StartMetricWeights else MetricWeights()
             self.EndMetricWeights = config.EndMetricWeights.clone() if config.EndMetricWeights else MetricWeights()
 
-            if config.TranspositionTableSizeMB:
+            if config.TranspositionTableSizeMB is not None:
                 if config.TranspositionTableSizeMB <= 0:
                     raise ValueError("Invalid config.TranspositionTableSizeMB.")
                 self._transposition_table = TranspositionTable(config.TranspositionTableSizeMB * 1024 * 1024)
             else:
                 self._transposition_table = TranspositionTable()
 
-            if config.MaxBranchingFactor:
+            if config.MaxBranchingFactor is not None:
                 if config.MaxBranchingFactor <= 0:
                     raise ValueError("Invalid config.MaxBranchingFactor.")
                 self._max_branching_factor = config.MaxBranchingFactor
@@ -206,7 +205,7 @@ class GameAI:
                     game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, "Default",
                     start_time=start_time, timeout=timeout)
 
-                if value and alpha < value < beta:
+                if value is not None and alpha < value < beta:
                     # Re-search with full window
                     value = -1 * await self.principal_variation_search_async(
                         game_board, depth - 1, -beta, -alpha, -colour, "Default",
@@ -300,7 +299,7 @@ class GameAI:
                     game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, order_type,
                     start_time=start_time, timeout=timeout)
 
-                if value and alpha < value < beta:
+                if value is not None and alpha < value < beta:
                     # Re-search with full window
                     value = -1 * await self.principal_variation_search_async(
                         game_board, depth - 1, -beta, -alpha, -colour, order_type,
@@ -323,7 +322,7 @@ class GameAI:
             if best_value >= beta:
                 break
 
-        if best_value:
+        if best_value is not None:
             t_entry = TranspositionTableEntry()
 
             if best_value <= alpha_original:
