@@ -4,7 +4,6 @@ from os.path import dirname
 sys.path.append(dirname(dirname(os.getcwd())))  # Add root directory to PYTHONPATH
 
 import datetime
-import time
 
 from MzingaShared.Core.Board import InvalidMoveException
 from MzingaShared.Core.BoardHistory import BoardHistory
@@ -188,20 +187,16 @@ class GameEngine:
         if 'max_time' not in kwargs and 'max_depth' not in kwargs:
             raise ValueError("You must specify either a max_depth or a max_time!")
 
-        max_time = None
         if 'max_time' in kwargs:
-            max_time = datetime.timedelta(seconds=int(kwargs.get('max_time')))
+            kwargs['max_time'] = datetime.timedelta(seconds=int(kwargs.get('max_time')))
 
         self._async_queue = TaskQueue()
         self._async_queue.enqueue(self._game_ai.get_best_move_async, self._game_board, **kwargs)
 
-        if max_time:
-            self._async_queue.enqueue(self._async_queue.stop, max_time)
-
         results = self.StartAsyncCommand.on_change.fire()
-        try:
+        if isinstance(results, list) and len(results[0]) > 0:
             best_move = results[0][0]
-        except KeyError:
+        else:
             best_move = None
 
         if best_move is None:
@@ -293,7 +288,7 @@ class GameEngine:
 
     def stop_ponder(self):
         if self._is_pondering:
-            self._ponder_queue.stop(0)
+            self._ponder_queue.stop()
             self._is_pondering = False
 
             if self.config.ReportIntermediateBestMoves:
@@ -303,7 +298,7 @@ class GameEngine:
         return self._async_queue.run()
 
     def on_end_async_command(self):
-        self._async_queue.stop(0)
+        self._async_queue.stop()
 
     def exit(self):
         self._game_board = None

@@ -5,6 +5,8 @@ sys.path.append(dirname(dirname(dirname(os.getcwd()))))  # Add root directory to
 
 import numpy as np
 import functools
+import datetime
+import threading
 
 from MzingaShared.Core import EnumUtils
 from MzingaShared.Core.EnumUtils import EnumUtils as EnumUtilsCls
@@ -56,6 +58,7 @@ class GameAI:
     MaxMaxBranchingFactor = 500
     DefaultBoardScoresCacheSize = 516240
     QuiescentSearchMaxDepth = 12  # To prevent runaway stack overflows
+    MaxDepth = 10
 
     _max_branching_factor = MaxMaxBranchingFactor  # To prevent search explosion
     _transposition_table = None
@@ -92,7 +95,8 @@ class GameAI:
         return self.get_best_move_async(game_board, max_depth=max_depth)
 
     async def get_best_move_async(self, game_board, **kwargs):
-        max_depth = sys.maxsize if 'max_depth' not in kwargs else int(kwargs.pop('max_depth'))
+        max_depth = self.MaxDepth if 'max_depth' not in kwargs else int(kwargs.pop('max_depth'))
+        kwargs['start_time'] = datetime.datetime.now()
 
         if game_board is None:
             raise ValueError("Invalid game_board.")
@@ -104,7 +108,7 @@ class GameAI:
             raise Exception("Game is over.")
 
         best_move_params = BestMoveParams(max_depth, None, None)
-        evaluated_moves = await self.evaluate_moves_async(game_board, best_move_params)
+        evaluated_moves = await self.evaluate_moves_async(game_board, best_move_params, **kwargs)
 
         if evaluated_moves.count == 0:
             raise Exception("No moves after evaluation!")
@@ -113,7 +117,10 @@ class GameAI:
         self.BestMoveFound.on_change.fire(self, best_move_params, evaluated_moves.best_move)  # fire event
         return best_move_params.BestMove.move
 
-    async def evaluate_moves_async(self, game_board, best_move_params):
+    async def evaluate_moves_async(self, game_board, best_move_params, **kwargs):
+        timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
+        start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
+
         moves_to_evaluate = EvaluatedMoveCollection()
         best_move = None
 
@@ -144,17 +151,13 @@ class GameAI:
         # Iterative search
         depth = 1 + max(0, moves_to_evaluate.best_move.depth)
         while depth <= best_move_params.MaxSearchDepth:
-
-            # Start LazySMP helper threads
-            # helper_queue = TaskQueue(best_move_params.MaxHelperThreads)
-            # self.start_helper_threads(game_board, depth, best_move_params.MaxHelperThreads, helper_queue)
-            # helper_queue.start()
+            if timeout:
+                if datetime.datetime.now() > start_time + timeout:
+                    break
 
             # "Re-sort" moves to evaluate based on the next iteration
-            moves_to_evaluate = await self.evaluate_moves_to_depth_async(game_board, depth, moves_to_evaluate)
-
-            # End LazySMP helper threads
-            # helper_queue.stop()
+            moves_to_evaluate = await self.evaluate_moves_to_depth_async(
+                game_board, depth, moves_to_evaluate, start_time=start_time, timeout=timeout)
 
             # Fire best_move_found for current depth
             self.BestMoveFound.on_change.fire(self, best_move_params, moves_to_evaluate.best_move)
@@ -172,7 +175,7 @@ class GameAI:
 
         return moves_to_evaluate
 
-    async def evaluate_moves_to_depth_async(self, game_board, depth, moves_to_evaluate):
+    async def evaluate_moves_to_depth_async(self, game_board, depth, moves_to_evaluate, **kwargs):
         alpha = float("-inf")
         beta = float("inf")
         colour = 1 if game_board.current_turn_colour == "White" else -1
@@ -180,25 +183,35 @@ class GameAI:
         best_value = None
         evaluated_moves = EvaluatedMoveCollection()
         first_move = True
+        timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
+        start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
 
         for move_to_evaluate in moves_to_evaluate.get_enumerator():
+            if timeout:
+                if datetime.datetime.now() > start_time + timeout:
+                    break
+
             update_alpha = False
             game_board.trusted_play(move_to_evaluate.move)
 
             if first_move:
                 # Full window search
                 value = -1 * await self.principal_variation_search_async(
-                    game_board, depth - 1, -beta, -alpha, -colour, "Default")
+                    game_board, depth - 1, -beta, -alpha, -colour, "Default", start_time=start_time, timeout=timeout)
                 update_alpha = True
                 first_move = False
             else:
                 # Null window search
                 value = -1 * await self.principal_variation_search_async(
-                    game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, "Default")
+                    game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, "Default",
+                    start_time=start_time, timeout=timeout)
+
                 if value and alpha < value < beta:
                     # Re-search with full window
                     value = -1 * await self.principal_variation_search_async(
-                        game_board, depth - 1, -beta, -alpha, -colour, "Default")
+                        game_board, depth - 1, -beta, -alpha, -colour, "Default",
+                        start_time=start_time, timeout=timeout)
+
                     update_alpha = True
 
             game_board.undo_last_move()
@@ -239,23 +252,12 @@ class GameAI:
         return evaluated_moves
     # end region
 
-    # region Threading support
-    def start_helper_threads(self, game_board, depth, threads, task_queue):
-        if depth > 1 and threads > 0:
-            colour = 1 if game_board.current_turn_colour == "White" else -1
-
-            for i in range(threads):
-                clone = game_board.clone()
-                args = [clone, depth + i % 2, float("-inf"), float("inf"), colour, OrderTypeByInt[2 - (i % 2)]]
-                task_queue.enqueue(self.principal_variation_search_async, *args)
-
-        return task_queue
-    # endregion
-
     # region Principal Variation Search
-    async def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type):
+    async def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type, **kwargs):
         alpha_original = alpha
         key = game_board.zobrist_key
+        timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
+        start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
 
         flag, t_entry = self._transposition_table.try_lookup(key)
         if flag and t_entry.Depth >= depth:
@@ -279,23 +281,31 @@ class GameAI:
         first_move = True
 
         for move in ListExtensions.get_enumerable_by_order_type(moves, order_type):
+            if timeout:
+                if datetime.datetime.now() > start_time + timeout:
+                    break
+
             update_alpha = False
             game_board.trusted_play(move)
 
             if first_move:
                 # Full window search
                 value = -1 * await self.principal_variation_search_async(
-                    game_board, depth - 1, -beta, -alpha, -colour, order_type)
+                    game_board, depth - 1, -beta, -alpha, -colour, order_type, start_time=start_time, timeout=timeout)
                 update_alpha = True
                 first_move = False
             else:
                 # Null window search
                 value = -1 * await self.principal_variation_search_async(
-                    game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, order_type)
+                    game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, order_type,
+                    start_time=start_time, timeout=timeout)
+
                 if value and alpha < value < beta:
                     # Re-search with full window
                     value = -1 * await self.principal_variation_search_async(
-                        game_board, depth - 1, -beta, -alpha, -colour, order_type)
+                        game_board, depth - 1, -beta, -alpha, -colour, order_type,
+                        start_time=start_time, timeout=timeout)
+
                     update_alpha = True
 
             game_board.undo_last_move()
