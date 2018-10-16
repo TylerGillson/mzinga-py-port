@@ -1,7 +1,7 @@
 ﻿class ListExtensions:
     @staticmethod
     def get_enumerable_by_order_type(items, order_type):
-        length = len(items)
+        length = items.count
         i = 1 if order_type == "SkipOffset" and length > 1 else 0
 
         count = 0
@@ -18,7 +18,7 @@
 
 
 OrderType = {
-    "Default": 0,
+    "Default": 2,
     "Skip": 0,  # Starts at 0
     "SkipOffset": 1,  # Starts at 1
 }

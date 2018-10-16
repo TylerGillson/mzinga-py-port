@@ -54,7 +54,7 @@ class EvaluatedMoveCollection:
             self._evaluated_moves = self._evaluated_moves[0:first_losing_move_idx:]
 
     def get_enumerator(self):
-        return enumerate(self._evaluated_moves)
+        return self._evaluated_moves
 
     def search_for(self, evaluated_move):
         return binary_search_ext(self._evaluated_moves, 0, len(self._evaluated_moves)-1, evaluated_move)

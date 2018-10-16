@@ -16,6 +16,12 @@ class EvaluatedMove:
             return False
         return self.depth == other.depth and self.score_after_move == other.score_after_move and self.move == other.move
 
+    def __lt__(self, other):
+        return self.score_after_move < other.score_after_move
+
+    def __gt__(self, other):
+        return self.score_after_move > other.score_after_move
+
     def __ne__(self, other):
         return not self == other
 
@@ -24,9 +30,6 @@ class EvaluatedMove:
 
     def __repr__(self):
         return "%s%c%d%c%d" % (self.move, ';', self.depth, ';', self.score_after_move)
-
-    def compare_to(self, evaluated_move):
-        return evaluated_move.score_after_move.compare_to(self.score_after_move)
 
     @staticmethod
     def equals(a, b):

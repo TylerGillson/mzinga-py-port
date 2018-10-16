@@ -32,8 +32,16 @@ class EventHook(object):
         return self
 
     def fire(self, *args, **kwargs):
-        for handler in self.__handlers:
+        if 'handler_key' in kwargs:
+            handler_idx = kwargs.pop('handler_key')
+            if handler_idx < 0 or handler_idx > len(self.__handlers) - 1:
+                return
+
+            handler = self.__handlers[handler_idx]
             handler(*args, **kwargs)
+        else:
+            for handler in self.__handlers:
+                handler(*args, **kwargs)
 
     def clear_object_handlers(self, in_object):
         for handler in self.__handlers:

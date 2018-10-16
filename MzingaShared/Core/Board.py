@@ -145,13 +145,19 @@ class Board:
     # END CACHES
 
     def __init__(self, board_string):
+        # New game constructor
         if board_string == "START":
             self.init_pieces()
+            return
+
+        # Empty constructor
+        if board_string == "NONE":
             return
 
         if board_string is None or board_string.isspace():
             raise ValueError("Invalid board_string.")
 
+        # Board history string constructor:
         split = board_string.split(';')
         board_state_string = split[1]
 
@@ -347,20 +353,29 @@ class Board:
         for piece_name in self.current_turn_pieces:
             target_piece = self.get_piece(piece_name)
 
+            p = self._board_metrics[piece_name]
+
             if target_piece is not None:
                 if target_piece.in_play:
                     self._board_metrics.PiecesInPlay += 1
-                    self._board_metrics[piece_name].in_play = 1
+                    p.in_play = 1
                 else:
                     self._board_metrics.PiecesInHand += 1
-                    self._board_metrics[piece_name].in_play = 0
+                    p.in_play = 0
 
-                # Move metrics
-                is_pinned = self.is_pinned(piece_name)  # set noisy/quiet move counts
+                # Set noisy/quiet move counts
+                is_pinned, n_count, q_count = self.is_pinned(piece_name)
+                p.NoisyMoveCount = n_count
+                p.QuietMoveCount = q_count
+
                 is_below = target_piece.in_play and target_piece.piece_above is not None
-                self._board_metrics[piece_name].is_pinned = 1 if is_pinned else 0
-                self._board_metrics[piece_name].is_covered = 1 if is_below else 0
-                self.count_neighbors(target_piece)  # set neighbor counts
+                p.is_pinned = 1 if is_pinned else 0
+                p.is_covered = 1 if is_below else 0
+
+                # Set neighbor counts
+                total, f_count, e_count = self.count_neighbors(piece=target_piece)
+                p.FriendlyNeighborCount = f_count
+                p.EnemyNeighborCount = e_count
 
     def count_neighbors(self, piece_name=None, piece=None):
         if piece_name and not piece:
@@ -415,7 +430,7 @@ class Board:
     # END METRICS
 
     # VALID MOVES
-    def get_valid_moves(self, piece_name=None):
+    def get_valid_moves(self, piece_name=None) -> MoveSet:
         if piece_name:
             if self._cached_valid_moves_by_piece is None:
                 self._cached_valid_moves_by_piece = MoveSet(size=EnumUtils.NumPieceNames)

@@ -89,20 +89,20 @@ class GameEngine:
 
             if cmd == "bestmove":
                 if param_count == 0:
-                    self.best_move()
+                    return self.best_move()
                 elif param_count >= 2 and split[1].lower() == "depth":
-                    self.best_move(max_depth=split[2])
+                    return self.best_move(max_depth=split[2])
                 elif param_count >= 2 and split[1].lower() == "time":
-                    self.best_move(max_time=split[2])
+                    return self.best_move(max_time=split[2])
                 else:
                     self.raise_command_exception()
             elif cmd == "options":
                 if param_count == 0:
-                    self.options_list()
+                    return self.options_list()
                 elif param_count >= 2 and split[1].lower() == "get":
-                    self.options_get(split[2])
+                    return self.options_get(split[2])
                 elif param_count >= 3 and split[1].lower() == "set":
-                    self.options_set(split[2], split[3])
+                    return self.options_set(split[2], split[3])
                 else:
                     self.raise_command_exception()
             else:
@@ -190,13 +190,16 @@ class GameEngine:
     def best_move(self, **kwargs):
         self.check_board()
 
-        if 'max_time' in kwargs:
-            max_time = kwargs.get('max_time')
-            if max_time < datetime.timedelta.max:
-                self.cancel_after(max_time)
+        if 'max_time' not in kwargs and 'max_depth' not in kwargs:
+            raise ValueError("You must specify either a max_depth or a max_time!")
 
-        self._async_queue.enqueue(
-            self._game_ai.get_best_move_async(self._game_board, self.config.MaxHelperThreads, **kwargs))
+        if 'max_time' in kwargs:
+            max_time = int(kwargs.get('max_time'))
+            if max_time < datetime.timedelta.max:
+                self.cancel_after(datetime.timedelta(seconds=max_time))
+
+        args = [self._game_board, self.config.MaxHelperThreads]
+        self._async_queue.enqueue(self._game_ai.get_best_move_async, *args, **kwargs)
         self.StartAsyncCommand.on_change.fire()
 
         while self._async_queue.processing():
@@ -278,7 +281,7 @@ class GameEngine:
 
     def start_ponder(self):
         if self.config.PonderDuringIdle != "Disabled" and not self._is_pondering and \
-                self._game_board is not None and self._game_board.GameInProgress:
+                self._game_board is not None and self._game_board.game_in_progress:
 
             if self.config.ReportIntermediateBestMoves:
                 self._game_ai.BestMoveFound -= self.on_best_move_found
@@ -286,11 +289,10 @@ class GameEngine:
             self._ponder_queue = TaskQueue(
                 self.config.MaxHelperThreads if self.config.PonderDuringIdleType == "MultiThreaded" else 1)
 
-            self._ponder_queue.enqueue(self._game_ai.GetBestMoveAsync(
-                self._game_board.clone(),
-                self.config.MaxHelperThreads if self.config.PonderDuringIdle == "MultiThreaded" else 0)
-            )
-
+            args = [self._game_board.clone(),
+                    self.config.MaxHelperThreads if self.config.PonderDuringIdle == "MultiThreaded" else 0
+                    ]
+            self._ponder_queue.enqueue(self._game_ai.get_best_move_async, *args)
             self._ponder_queue.start()
             self._is_pondering = True
 

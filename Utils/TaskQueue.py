@@ -1,6 +1,5 @@
 from queue import Queue
 from threading import Thread
-from typing import Callable, Awaitable
 
 poison = object()
 
@@ -10,13 +9,15 @@ class TaskQueue(object):
     def __init__(self, limit):
         def process_items():
             while True:
-                callback = self._queue.get()
+                callback, args, kwargs = self._queue.get()
+
                 if callback is poison:
                     break
                 try:
-                    result = callback
+                    result = callback(*args, **kwargs)
                     self.results.put(result)
-                except:
+                except Exception as ex:
+                    print(ex)
                     pass
                 finally:
                     self._queue.task_done()
@@ -27,15 +28,15 @@ class TaskQueue(object):
     def processing(self):
         return self._queue.empty()
 
-    def enqueue(self, callback):
-        self._queue.put(callback)
+    def enqueue(self, callback, *args, **kwargs):
+        self._queue.put((callback, args, kwargs))
 
     def start(self):
-        for worker in self._workers:
-            worker.start()
+        for w in self._workers:
+            w.start()
 
     def stop(self):
         for i in range(len(self._workers)):
-            self._queue.put(poison)
+            self._queue.put((poison, poison, poison))
         while self._workers:
             self._workers.pop().join()

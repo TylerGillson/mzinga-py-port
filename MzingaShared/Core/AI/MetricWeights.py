@@ -128,4 +128,4 @@ class MetricWeights:
                 bug_type_weight_int += 1
 
     def get_key(self, bug_type, bug_type_weight):
-        return BugTypeWeights[bug_type] * self.NumBugTypeWeights + bug_type_weight
+        return EnumUtils.BugTypes[bug_type] * self.NumBugTypeWeights + bug_type_weight

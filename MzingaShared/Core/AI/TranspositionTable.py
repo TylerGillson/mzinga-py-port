@@ -20,14 +20,14 @@ class TranspositionTableEntry:
     SizeInBytes = 256
 
 
+def transposition_table_replace_entry_predicate(existing_entry, new_entry):
+    return new_entry.Depth > existing_entry.Depth
+
+
 class TranspositionTable(FixedCache):
     DefaultSizeInBytes = 32 * 1024 * 1024
     FillFactor = 0.92  # To leave room for unaccounted for overhead and unused dictionary capacity
     EntrySizeInBytes = (12 * sys.getsizeof(float)) + TranspositionTableEntry.SizeInBytes
-
-    @staticmethod
-    def transposition_table_replace_entry_predicate(existing_entry, new_entry):
-        return new_entry.Depth > existing_entry.Depth
 
     def __init__(self, size_in_bytes=DefaultSizeInBytes, rep=transposition_table_replace_entry_predicate):
         super().__init__(size_in_bytes, rep)

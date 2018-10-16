@@ -12,8 +12,8 @@ DefaultCapacity = 1024
 
 class FixedCacheEntry(object):
     def __init__(self, list_node, new_entry):
-        self._list_node = list_node
-        self._entry = new_entry
+        self.list_node = list_node
+        self.entry = new_entry
 
 
 class FixedCache:
@@ -48,9 +48,8 @@ class FixedCache:
         return "U: %d/%d (%2f) %s" % (self.count, self.capacity, self.usage, self.metrics)
 
     def store(self, key, new_entry):
-        global _store_lock
-        _store_lock.acquire()
-        existing_entry = None
+        self._store_lock.acquire()
+
         if key not in self._dict.keys():
             # New entry
             if self.count == self.capacity:
@@ -63,11 +62,16 @@ class FixedCache:
             self.metrics.store()
         else:
             # Existing entry
+            existing_entry = self._dict[key]
+
             if self.replace_entry_predicate is None or self.replace_entry_predicate(existing_entry.entry, new_entry):
                 # Replace
-                self._list.remove(existing_entry.list_node)
+                if existing_entry.list_node in self._list:
+                    self._list.remove(existing_entry.list_node)
                 self.store_internal(key, new_entry)
                 self.metrics.update()
+
+        self._store_lock.release()
 
     def store_internal(self, key, new_entry):
         list_node = self._list.append(key)

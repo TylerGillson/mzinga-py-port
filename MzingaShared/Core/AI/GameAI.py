@@ -4,16 +4,18 @@ from os.path import dirname
 sys.path.append(dirname(dirname(dirname(os.getcwd()))))  # Add root directory to PYTHONPATH
 
 import numpy as np
+import functools
 
 from MzingaShared.Core import EnumUtils
 from MzingaShared.Core.EnumUtils import EnumUtils as EnumUtilsCls
 from Utils.Events import Broadcaster
 from MzingaShared.Core.FixedCache import FixedCache
 from MzingaShared.Core.Move import Move
+from MzingaShared.Core.MoveSet import MoveSet
 from Utils.TaskQueue import TaskQueue
 from MzingaShared.Core.AI.EvaluatedMove import EvaluatedMove
 from MzingaShared.Core.AI.EvaluatedMoveCollection import EvaluatedMoveCollection
-from MzingaShared.Core.AI.ListExtensions import OrderTypeByInt
+from MzingaShared.Core.AI.ListExtensions import ListExtensions, OrderTypeByInt
 from MzingaShared.Core.AI.MetricWeights import MetricWeights, BugTypeWeights
 from MzingaShared.Core.AI.TranspositionTable import TranspositionTable, TranspositionTableEntry, TranspositionTableEntryType
 
@@ -39,11 +41,13 @@ class GameAI:
         if evaluated_move is None:
             raise ValueError("Invalid evaluated_move.")
 
-        if evaluated_move != best_move_params.best_move:
+        if evaluated_move != best_move_params.BestMove:
             # Fire GameEngine.on_best_move_found func:
             self.BestMoveFound.on_change.fire(
-                BestMoveFoundEventArgs(evaluated_move.move, evaluated_move.depth, evaluated_move.score_after_move))
-            best_move_params.best_move = evaluated_move
+                BestMoveFoundEventArgs(evaluated_move.move, evaluated_move.depth, evaluated_move.score_after_move),
+                handler_key=1
+            )
+            best_move_params.BestMove = evaluated_move
 
     BestMoveFound.on_change += on_best_move_found  # add a listener to the event
 
@@ -85,9 +89,11 @@ class GameAI:
 
     # region Move Evaluation
     def get_best_move(self, game_board, max_depth, max_helper_threads):
-        return self.get_best_move_async(game_board, max_helper_threads, max_depth)
+        return self.get_best_move_async(game_board, max_helper_threads, max_depth=max_depth)
 
-    def get_best_move_async(self, game_board, max_helper_threads, max_depth=sys.maxsize):
+    def get_best_move_async(self, game_board, max_helper_threads, **kwargs):
+        max_depth = sys.maxsize if 'max_depth' not in kwargs else int(kwargs.pop('max_depth'))
+
         if game_board is None:
             raise ValueError("Invalid game_board.")
 
@@ -107,8 +113,8 @@ class GameAI:
             raise Exception("No moves after evaluation!")
 
         # Make sure at least one move is reported
-        self.BestMoveFound.on_change.fire(best_move_params, evaluated_moves.best_move)  # fire event
-        return best_move_params.BestMove.Move
+        self.BestMoveFound.on_change.fire(self, best_move_params, evaluated_moves.best_move)  # fire event
+        return best_move_params.BestMove.move
 
     def evaluate_moves_async(self, game_board, best_move_params):
         moves_to_evaluate = EvaluatedMoveCollection()
@@ -119,22 +125,27 @@ class GameAI:
         flag, t_entry = self._transposition_table.try_lookup(key)
         if flag and t_entry.best_move is not None:
             best_move = EvaluatedMove(t_entry.best_move, t_entry.Value, t_entry.Depth)
-            self.BestMoveFound.on_change.fire(best_move_params, best_move)
+            self.BestMoveFound.on_change.fire(self, best_move_params, best_move)
 
         if best_move is not None and best_move.score_after_move == float("inf"):
             # Winning move, don't search
-            moves_to_evaluate.add(best_move)
+            moves_to_evaluate.add(evaluated_move=best_move)
             return moves_to_evaluate
 
         valid_moves = self.get_presorted_valid_moves(game_board, best_move)
-        moves_to_evaluate.add(valid_moves, False)
+
+        # If necessary, convert each entry to an EvaluatedMove:
+        if isinstance(valid_moves[0], Move):
+            valid_moves = list(map(lambda x: EvaluatedMove(x), valid_moves))
+
+        moves_to_evaluate.add(evaluated_moves=valid_moves, re_sort=False)
 
         if moves_to_evaluate.count <= 1 or best_move_params.MaxSearchDepth == 0:
             # No need to search
             return moves_to_evaluate
 
         # Iterative search
-        depth = 1 + max(0, moves_to_evaluate.best_move.Depth)
+        depth = 1 + max(0, moves_to_evaluate.best_move.depth)
         while depth <= best_move_params.MaxSearchDepth:
 
             # Start LazySMP helper threads
@@ -148,10 +159,10 @@ class GameAI:
             # End LazySMP helper threads
             helper_queue.stop()
 
-            # Fire best_moveFound for current depth
-            self.BestMoveFound.on_change.fire(best_move_params, best_move)
+            # Fire best_move_found for current depth
+            self.BestMoveFound.on_change.fire(self, best_move_params, moves_to_evaluate.best_move)
 
-            if moves_to_evaluate.best_move.ScoreAfterMove == float("inf"):
+            if moves_to_evaluate.best_move.score_after_move == float("inf"):
                 break  # The best move ends the game, stop searching
 
             # Prune game-losing moves if possible
@@ -160,7 +171,7 @@ class GameAI:
             if moves_to_evaluate.count <= 1:
                 break  # Only one move, no reason to keep looking
 
-            depth = 1 + max(depth, moves_to_evaluate.best_move.Depth)
+            depth = 1 + max(depth, moves_to_evaluate.best_move.depth)
 
         return moves_to_evaluate
 
@@ -175,7 +186,7 @@ class GameAI:
 
         for move_to_evaluate in moves_to_evaluate.get_enumerator():
             update_alpha = False
-            game_board.trusted_play(move_to_evaluate.Move)
+            game_board.trusted_play(move_to_evaluate.move)
 
             if first_move:
                 # Full window search
@@ -199,8 +210,8 @@ class GameAI:
                 # Cancel occurred during evaluation
                 return EvaluatedMoveCollection(moves_to_evaluate, False)
 
-            evaluated_move = EvaluatedMove(move_to_evaluate.Move, value, depth)
-            evaluated_moves.add(evaluated_move)
+            evaluated_move = EvaluatedMove(move_to_evaluate.move, value, depth)
+            evaluated_moves.add(evaluated_move=evaluated_move)
 
             if update_alpha:
                 alpha = max(alpha, value)
@@ -222,9 +233,9 @@ class GameAI:
             # (always infinity in this function), otherwise it's exact
             t_entry.Type = TranspositionTableEntryType.LowerBound \
                 if best_value >= beta else TranspositionTableEntryType.Exact
-            t_entry.best_move = evaluated_moves.best_move.Move
+            t_entry.best_move = evaluated_moves.best_move.move
 
-        t_entry.Value = best_value.value
+        t_entry.Value = best_value
         t_entry.Depth = depth
 
         self._transposition_table.store(key, t_entry)
@@ -238,8 +249,8 @@ class GameAI:
 
             for i in range(threads):
                 clone = game_board.clone()
-                task_queue.enqueue(self.principal_variation_search_async(
-                    clone, depth + i % 2, float("-inf"), float("inf"), colour, OrderTypeByInt[2 - (i % 2)]))
+                args = [clone, depth + i % 2, float("-inf"), float("inf"), colour, OrderTypeByInt[2 - (i % 2)]]
+                task_queue.enqueue(self.principal_variation_search_async, *args)
 
         return task_queue
     # endregion
@@ -270,7 +281,7 @@ class GameAI:
         moves = self.get_presorted_valid_moves(game_board, best_move)
         first_move = True
 
-        for move in moves.GetEnumerableByOrderType(order_type):
+        for move in ListExtensions.get_enumerable_by_order_type(moves, order_type):
             update_alpha = False
             game_board.trusted_play(move)
 
@@ -334,9 +345,13 @@ class GameAI:
                 evaluated_moves.append(best_move if move == bm else EvaluatedMove(move))
 
             return evaluated_moves
-        elif isinstance(best_move, Move):
+        elif isinstance(best_move, Move) or best_move is None:
             valid_moves = game_board.get_valid_moves()
-            valid_moves.sort(lambda x, y: self.pre_sort_moves(x, y, game_board, best_move), reverse=False)
+            valid_moves = sorted(
+                valid_moves,
+                key=functools.cmp_to_key(lambda x, y: self.pre_sort_moves(x, y, game_board, best_move))
+            )
+            valid_moves = MoveSet(moves_list=valid_moves)
 
             if valid_moves.count > self._max_branching_factor:
                 # Too many moves, reduce branching factor
@@ -428,31 +443,35 @@ class GameAI:
                 return (start_ratio * start_score) + (end_ratio * end_score)
         else:
             score = 0
+            mw = start_weights if start_weights is not None else end_weights
 
             for piece_name in EnumUtils.PieceNames:
+                if piece_name == 'INVALID':
+                    continue
+
                 bug_type = EnumUtilsCls.get_bug_type(piece_name)
                 colour_value = 1.0 if EnumUtilsCls.get_colour(piece_name) == "White" else -1.0
 
-                score += colour_value * MetricWeights().get(
+                score += colour_value * mw.get(
                     bug_type, BugTypeWeights["InPlayWeight"]) * board_metrics[piece_name].InPlay
 
-                score += colour_value * MetricWeights().get(
+                score += colour_value * mw.get(
                     bug_type, BugTypeWeights["IsPinnedWeight"]) * board_metrics[piece_name].IsPinned
 
-                score += colour_value * MetricWeights().get(
+                score += colour_value * mw.get(
                     bug_type, BugTypeWeights["IsCoveredWeight"]) * board_metrics[piece_name].IsCovered
 
-                score += colour_value * MetricWeights().get(
+                score += colour_value * mw.get(
                     bug_type, BugTypeWeights["NoisyMoveWeight"]) * board_metrics[piece_name].NoisyMoveCount
 
-                score += colour_value * MetricWeights().get(
+                score += colour_value * mw.get(
                     bug_type, BugTypeWeights["QuietMoveWeight"]) * board_metrics[piece_name].QuietMoveCount
 
-                score += colour_value * MetricWeights().get(
+                score += colour_value * mw.get(
                     bug_type,
                     BugTypeWeights["FriendlyNeighborWeight"]) * board_metrics[piece_name].FriendlyNeighborCount
 
-                score += colour_value * MetricWeights().get(
+                score += colour_value * mw.get(
                     bug_type, BugTypeWeights["EnemyNeighborWeight"]) * board_metrics[piece_name].EnemyNeighborCount
 
             return score

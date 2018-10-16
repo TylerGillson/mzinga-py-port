@@ -15,7 +15,13 @@ class MoveSet:
     def count(self):
         return len(self._moves)
 
-    def __init__(self, size=None, move_set_string=None):
+    def __init__(self, size=None, move_set_string=None, moves_list=None):
+        if moves_list:
+            self._moves = []
+            for m in moves_list:
+                self._moves.append(m)
+            return
+
         if not move_set_string:
             self._moves = [Move()] * size if size else []
             self.IsLocked = False
@@ -30,8 +36,6 @@ class MoveSet:
             self._moves.append(parse_move)
 
     def __getitem__(self, index):
-        #if index < 0 or index >= len(self._moves) or not self._moves:
-        #    return None
         return self._moves[index]
 
     def __setitem__(self, key, value):

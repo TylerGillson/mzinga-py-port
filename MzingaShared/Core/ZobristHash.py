@@ -8,7 +8,7 @@ from MzingaShared.Core import Position, EnumUtils
 from MzingaShared.Core.EnumUtils import PieceNames
 
 EmptyBoard = 0
-NumUniquePositions = Position.MaxStack * EnumUtils.NumPieceNames * EnumUtils.NumPieceNames
+NumUniquePositions = Position.MaxStack * EnumUtils.NumPieceNames  # * EnumUtils.NumPieceNames
 
 
 class ZobristHash:

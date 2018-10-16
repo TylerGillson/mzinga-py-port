@@ -15,8 +15,8 @@ class GameBoard(Board):
     BoardChanged = Broadcaster()
 
     def on_board_changed(self):
-        white_queen_surrounded = self.count_neighbors("WhiteQueenBee")[0] == 6
-        black_queen_surrounded = self.count_neighbors("BlackQueenBee")[0] == 6
+        white_queen_surrounded = self.count_neighbors(piece_name="WhiteQueenBee")[0] == 6
+        black_queen_surrounded = self.count_neighbors(piece_name="BlackQueenBee")[0] == 6
 
         if white_queen_surrounded and black_queen_surrounded:
             self.BoardState = "Draw"
@@ -44,9 +44,9 @@ class GameBoard(Board):
         return super().__repr__()
 
     def clone(self):
-        clone = GameBoard()
-        for item in self.board_history.get_enumerator():
-            clone.play(item.move)
+        clone = GameBoard("NONE")
+        for item in self.board_history.get_enumerator:
+            clone.play(item.Move)
         return clone
 
     def play(self, move):
