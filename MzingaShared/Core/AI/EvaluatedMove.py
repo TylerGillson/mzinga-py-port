@@ -30,7 +30,7 @@ class EvaluatedMove:
         return self.get_hash_code()
 
     def __repr__(self):
-        return "%s%c%d%c%2f" % (str(self.move), ';', self.depth, ';', self.score_after_move)
+        return "%s%c%d%c%.5f" % (str(self.move), ';', self.depth, ';', self.score_after_move)
 
     @staticmethod
     def equals(a, b):

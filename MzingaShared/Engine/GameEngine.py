@@ -202,8 +202,6 @@ class GameEngine:
         if best_move is None:
             raise ValueError("Null move returned!")
 
-        print(best_move)
-
     def undo(self, moves=1):
         self.check_board(check_game_over=False)
 

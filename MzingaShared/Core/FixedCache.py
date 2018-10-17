@@ -74,7 +74,8 @@ class FixedCache:
                 self.metrics.update()
 
     def store_internal(self, key, new_entry):
-        list_node = self._list.append(key)
+        self._list.append(key)
+        list_node = self._list[-1]
         wrapped_entry = FixedCacheEntry(list_node, new_entry)
         self._dict[key] = wrapped_entry
 

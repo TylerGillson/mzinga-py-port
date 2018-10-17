@@ -27,6 +27,9 @@ class EventHook(object):
         self.__handlers.append(handler)
         return self
 
+    def __sub__(self, handler):
+        self.__handlers.remove(handler)
+
     def __isub__(self, handler):
         self.__handlers.remove(handler)
         return self

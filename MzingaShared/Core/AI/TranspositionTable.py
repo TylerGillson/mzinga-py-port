@@ -8,8 +8,8 @@ from MzingaShared.Core.FixedCache import FixedCache
 
 class TranspositionTableEntryType:
     Exact = 0
-    LowerBound = None
-    UpperBound = None
+    LowerBound = 1
+    UpperBound = 2
 
 
 class TranspositionTableEntry:

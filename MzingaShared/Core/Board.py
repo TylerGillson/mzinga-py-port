@@ -733,6 +733,7 @@ class Board:
 
         return True
 
+    # noinspection PyMethodMayBeStatic
     def placing_piece_in_order(self, target_piece):
         if target_piece.in_hand:
             try:

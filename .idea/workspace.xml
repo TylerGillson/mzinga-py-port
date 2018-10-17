@@ -6,17 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="aa05651a-1eca-4dbd-9b9c-26b22eb664c0" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMove.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMove.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMoveCollection.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMoveCollection.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MzingaShared/Core/AI/MetricWeights.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/AI/MetricWeights.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MzingaShared/Core/Board.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/Board.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MzingaShared/Core/BoardHistory.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/BoardHistory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MzingaShared/Core/AI/TranspositionTable.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/AI/TranspositionTable.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/MzingaShared/Core/FixedCache.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/FixedCache.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MzingaShared/Core/Move.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/Move.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MzingaShared/Core/Position.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/Position.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/MzingaShared/Engine/GameEngine.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Engine/GameEngine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MzingaShared/Engine/GameEngineConfig.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Engine/GameEngineConfig.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MzingaTrainer/Profile.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaTrainer/Profile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Utils/Events.py" beforeDir="false" afterPath="$PROJECT_DIR$/Utils/Events.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -27,80 +21,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="GameEngine.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/MzingaShared/Engine/GameEngine.py">
+      <file leaf-file-name="EvaluatedMoveCollection.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMoveCollection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-597">
-              <caret line="6" selection-start-line="6" selection-end-line="6" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="GameAI.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="140">
-              <caret line="412" selection-start-line="412" selection-end-line="412" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="MetricWeights.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/MetricWeights.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="218">
-              <caret line="60" column="54" lean-forward="true" selection-start-line="60" selection-start-column="54" selection-end-line="60" selection-end-column="54" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Profile.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/MzingaTrainer/Profile.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5015">
-              <caret line="295" lean-forward="true" selection-start-line="295" selection-end-line="295" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="GameEngineConfig.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/MzingaShared/Engine/GameEngineConfig.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="162">
-              <caret line="69" selection-start-line="69" selection-end-line="69" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Board.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/Board.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2412">
-              <caret line="474" column="24" lean-forward="true" selection-start-line="474" selection-start-column="24" selection-end-line="474" selection-end-column="24" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="GameBoard.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/GameBoard.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1054">
-              <caret line="62" selection-start-line="62" selection-end-line="62" />
+            <state relative-caret-position="724">
+              <caret line="46" selection-start-line="46" selection-end-line="46" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -111,8 +36,74 @@
       <file leaf-file-name="EvaluatedMove.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMove.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="113">
-              <caret line="32" column="26" selection-start-line="32" selection-start-column="26" selection-end-line="32" selection-end-column="26" />
+            <state relative-caret-position="274">
+              <caret line="32" column="27" selection-start-line="32" selection-start-column="27" selection-end-line="32" selection-end-column="27" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GameAI.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-1013">
+              <caret line="116" selection-start-line="116" selection-end-line="116" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GameBoard.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/GameBoard.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="368">
+              <caret line="141" selection-start-line="141" selection-end-line="141" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TranspositionTable.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/TranspositionTable.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="106">
+              <caret line="11" column="18" selection-start-line="11" selection-start-column="18" selection-end-line="11" selection-end-column="18" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FixedCache.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/FixedCache.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="181">
+              <caret line="63" selection-start-line="63" selection-end-line="63" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="CacheMetrics.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/CacheMetrics.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="170">
+              <caret line="39" selection-start-line="39" selection-end-line="39" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Board.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/MzingaShared/Core/Board.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="147">
+              <caret line="74" selection-start-line="74" selection-end-line="74" />
             </state>
           </provider>
         </entry>
@@ -128,10 +119,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>start_ponder</find>
-      <find>EndAs</find>
-      <find>shop</find>
-      <find>hasMore</find>
       <find>getResultContainer</find>
       <find>setResult</find>
       <find>resultIsException</find>
@@ -158,6 +145,10 @@
       <find>store</find>
       <find>get_key_name</find>
       <find>\.split</find>
+      <find>fire\(</find>
+      <find>fire</find>
+      <find>prune_</find>
+      <find>Quies</find>
     </findStrings>
     <replaceStrings>
       <replace>list(PieceNames\.keys\(\))\[0\]</replace>
@@ -211,25 +202,25 @@
         <option value="$PROJECT_DIR$/MzingaShared/Core/EnumUtils.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/GameBoard.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/AI/ListExtensions.py" />
-        <option value="$PROJECT_DIR$/MzingaShared/Core/AI/TranspositionTable.py" />
-        <option value="$PROJECT_DIR$/Utils/Events.py" />
         <option value="$PROJECT_DIR$/MzingaTrainer/Program.py" />
         <option value="$PROJECT_DIR$/MzingaTrainer/TrainerSettings.py" />
         <option value="$PROJECT_DIR$/MzingaTrainer/Trainer.py" />
         <option value="$PROJECT_DIR$/Utils/TaskQueue.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/BoardMetrics.py" />
-        <option value="$PROJECT_DIR$/MzingaShared/Core/FixedCache.py" />
-        <option value="$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMoveCollection.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/Board.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/BoardHistory.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/Move.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/MoveSet.py" />
-        <option value="$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMove.py" />
-        <option value="$PROJECT_DIR$/MzingaShared/Engine/GameEngine.py" />
         <option value="$PROJECT_DIR$/MzingaTrainer/Profile.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Engine/GameEngineConfig.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/AI/MetricWeights.py" />
+        <option value="$PROJECT_DIR$/Utils/Events.py" />
+        <option value="$PROJECT_DIR$/MzingaShared/Engine/GameEngine.py" />
+        <option value="$PROJECT_DIR$/MzingaShared/Core/FixedCache.py" />
+        <option value="$PROJECT_DIR$/MzingaShared/Core/AI/TranspositionTable.py" />
+        <option value="$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMove.py" />
+        <option value="$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py" />
       </list>
     </option>
   </component>
@@ -267,25 +258,17 @@
               <item name="MzingaPorted" type="b2602c69:ProjectViewProjectNode" />
               <item name="MzingaPorted" type="462c0819:PsiDirectoryNode" />
               <item name="MzingaShared" type="462c0819:PsiDirectoryNode" />
-              <item name="Core" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MzingaPorted" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MzingaPorted" type="462c0819:PsiDirectoryNode" />
-              <item name="MzingaShared" type="462c0819:PsiDirectoryNode" />
-              <item name="Core" type="462c0819:PsiDirectoryNode" />
-              <item name="AI" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MzingaPorted" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MzingaPorted" type="462c0819:PsiDirectoryNode" />
-              <item name="MzingaShared" type="462c0819:PsiDirectoryNode" />
               <item name="Engine" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="MzingaPorted" type="b2602c69:ProjectViewProjectNode" />
               <item name="MzingaPorted" type="462c0819:PsiDirectoryNode" />
               <item name="MzingaTrainer" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="MzingaPorted" type="b2602c69:ProjectViewProjectNode" />
+              <item name="MzingaPorted" type="462c0819:PsiDirectoryNode" />
+              <item name="Utils" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -393,7 +376,7 @@
     <frame x="0" y="23" width="1440" height="877" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49786323" weight="0.26723224" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49786323" weight="0.2670895" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32948717" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.50156415" side_tool="true" weight="0.4" />
       <window_info anchor="bottom" id="Inspection Results" weight="0.32948717" />
@@ -404,7 +387,7 @@
       <window_info id="Structure" order="1" sideWeight="0.50213677" side_tool="true" weight="0.20930232" />
       <window_info anchor="bottom" id="Terminal" order="9" sideWeight="0.49964765" weight="0.32948717" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.49843588" visible="true" weight="0.31666666" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.49843588" visible="true" weight="0.37307692" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49786323" visible="true" weight="0.13679746" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -448,24 +431,14 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py</url>
-          <line>151</line>
-          <option name="timeStamp" value="178" />
+          <url>file://$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMoveCollection.py</url>
+          <line>54</line>
+          <option name="timeStamp" value="198" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py</url>
           <line>184</line>
-          <option name="timeStamp" value="180" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py</url>
-          <line>412</line>
-          <option name="timeStamp" value="181" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/MzingaShared/Engine/GameEngineConfig.py</url>
-          <line>69</line>
-          <option name="timeStamp" value="186" />
+          <option name="timeStamp" value="200" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
@@ -478,7 +451,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="187" />
+      <option name="time" value="201" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -554,13 +527,6 @@ valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/ZobristHash.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="14" column="16" lean-forward="true" selection-start-line="14" selection-start-column="16" selection-end-line="14" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Utils/BinarySearch.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="168">
@@ -691,34 +657,6 @@ valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Utils/Events.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="47" selection-start-line="47" selection-end-line="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/local/Cellar/python/3.6.5/Frameworks/Python.framework/Versions/3.6/lib/python3.6/asyncio/base_events.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="361">
-          <caret line="467" selection-start-line="467" selection-end-line="467" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/EnumUtils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="373">
-          <caret line="53" column="27" lean-forward="true" selection-start-line="53" selection-start-column="27" selection-end-line="53" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/local/Cellar/python/3.6.5/Frameworks/Python.framework/Versions/3.6/lib/python3.6/asyncio/events.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="140">
-          <caret line="144" selection-start-line="144" selection-end-line="144" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="289">
@@ -733,43 +671,6 @@ valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Utils/TaskQueue.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/FixedCache.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="319">
-          <caret line="94" lean-forward="true" selection-start-line="94" selection-end-line="94" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMoveCollection.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="680">
-          <caret line="40" column="27" lean-forward="true" selection-start-line="40" selection-start-column="27" selection-end-line="40" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/TranspositionTable.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="47">
-          <caret line="23" selection-start-line="23" selection-end-line="23" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/MzingaShared/Core/BoardHistory.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="606">
@@ -777,26 +678,9 @@ valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/CacheMetrics.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="612">
-          <caret line="36" selection-start-line="36" selection-end-line="36" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/MzingaShared/Core/CacheMetricsSet.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-148">
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/Move.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1054">
-          <caret line="62" column="22" lean-forward="true" selection-start-line="62" selection-start-column="22" selection-end-line="62" selection-end-column="22" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
@@ -850,67 +734,6 @@ valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMove.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="113">
-          <caret line="32" column="26" selection-start-line="32" selection-start-column="26" selection-end-line="32" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.virtualenvs/MzingaPorted/lib/python3.6/site-packages/numpy/core/getlimits.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="384" selection-start-line="384" selection-end-line="384" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/GameBoard.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1054">
-          <caret line="62" selection-start-line="62" selection-end-line="62" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/Board.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2412">
-          <caret line="474" column="24" lean-forward="true" selection-start-line="474" selection-start-column="24" selection-end-line="474" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/BoardMetrics.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="20" selection-start-line="20" selection-end-line="20" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="140">
-          <caret line="412" selection-start-line="412" selection-end-line="412" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaShared/Engine/GameEngine.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-597">
-          <caret line="6" selection-start-line="6" selection-end-line="6" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/local/Cellar/python/3.6.5/Frameworks/Python.framework/Versions/3.6/lib/python3.6/xml/etree/ElementTree.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="198">
@@ -928,20 +751,10 @@ valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaEngine/Program.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="367">
-          <caret line="48" selection-start-line="48" selection-end-line="48" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/local/Cellar/python/3.6.5/Frameworks/Python.framework/Versions/3.6/lib/python3.6/codecs.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
-          <caret line="266" selection-start-line="266" selection-end-line="266" />
+          <caret line="308" selection-start-line="308" selection-end-line="308" />
         </state>
       </provider>
     </entry>
@@ -955,10 +768,170 @@ valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaEngine/Program.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="20" selection-start-line="20" selection-end-line="20" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/EnumUtils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="367">
+          <caret line="155" selection-start-line="155" selection-end-line="155" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/BoardMetrics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="303">
+          <caret line="20" selection-start-line="20" selection-end-line="20" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/MetricWeights.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="218">
-          <caret line="60" column="54" lean-forward="true" selection-start-line="60" selection-start-column="54" selection-end-line="60" selection-end-column="54" />
+        <state relative-caret-position="179">
+          <caret line="82" selection-start-line="82" selection-end-line="82" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/Move.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="213">
+          <caret line="46" selection-start-line="46" selection-end-line="46" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/python/3.6.5/Frameworks/Python.framework/Versions/3.6/lib/python3.6/asyncio/base_events.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="383">
+          <caret line="467" selection-start-line="467" selection-end-line="467" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Utils/TaskQueue.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="18" selection-start-line="18" selection-end-line="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Utils/Events.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="231">
+          <caret line="48" selection-start-line="48" selection-end-line="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Engine/GameEngine.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2">
+          <caret line="64" lean-forward="true" selection-start-line="64" selection-end-line="64" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/TranspositionTable.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="106">
+          <caret line="11" column="18" selection-start-line="11" selection-start-column="18" selection-end-line="11" selection-end-column="18" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/CacheMetrics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="39" selection-start-line="39" selection-end-line="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/FixedCache.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="181">
+          <caret line="63" selection-start-line="63" selection-end-line="63" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/python/3.6.5/Frameworks/Python.framework/Versions/3.6/lib/python3.6/asyncio/events.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="366">
+          <caret line="144" selection-start-line="144" selection-end-line="144" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.virtualenvs/MzingaPorted/lib/python3.6/site-packages/numpy/core/getlimits.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="310">
+          <caret line="384" selection-start-line="384" selection-end-line="384" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/Board.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="147">
+          <caret line="74" selection-start-line="74" selection-end-line="74" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/GameBoard.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="368">
+          <caret line="141" selection-start-line="141" selection-end-line="141" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/python/3.6.5/Frameworks/Python.framework/Versions/3.6/lib/python3.6/copy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="164">
+          <caret line="185" selection-start-line="185" selection-end-line="185" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMove.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="274">
+          <caret line="32" column="27" selection-start-line="32" selection-start-column="27" selection-end-line="32" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMoveCollection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="724">
+          <caret line="46" selection-start-line="46" selection-end-line="46" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1013">
+          <caret line="116" selection-start-line="116" selection-end-line="116" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>

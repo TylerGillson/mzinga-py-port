@@ -16,7 +16,7 @@ from MzingaShared.Core.MoveSet import MoveSet
 from MzingaShared.Core.AI.EvaluatedMove import EvaluatedMove
 from MzingaShared.Core.AI.EvaluatedMoveCollection import EvaluatedMoveCollection
 from MzingaShared.Core.AI.ListExtensions import ListExtensions
-from MzingaShared.Core.AI.MetricWeights import MetricWeights, BugTypeWeights
+from MzingaShared.Core.AI.MetricWeights import MetricWeights
 from MzingaShared.Core.AI.TranspositionTable import TranspositionTable, TranspositionTableEntry, \
                                                     TranspositionTableEntryType
 
@@ -56,7 +56,7 @@ class GameAI:
     EndMetricWeights = None
     MaxMaxBranchingFactor = 500
     DefaultBoardScoresCacheSize = 516240
-    QuiescentSearchMaxDepth = 12  # To prevent runaway stack overflows
+    QuiescentSearchMaxDepth = 3  # To prevent runaway stack overflows
     MaxDepth = 10
 
     _max_branching_factor = MaxMaxBranchingFactor  # To prevent search explosion
@@ -113,7 +113,7 @@ class GameAI:
             raise Exception("No moves after evaluation!")
 
         # Make sure at least one move is reported
-        self.BestMoveFound.on_change.fire(self, best_move_params, evaluated_moves.best_move)  # fire event
+        self.BestMoveFound.on_change.fire(self, best_move_params, evaluated_moves.best_move, handler_key=0)
         return best_move_params.BestMove.move
 
     async def evaluate_moves_async(self, game_board, best_move_params, **kwargs):
@@ -128,7 +128,7 @@ class GameAI:
         flag, t_entry = self._transposition_table.try_lookup(key)
         if flag and t_entry.BestMove is not None:
             best_move = EvaluatedMove(t_entry.BestMove, t_entry.Value, t_entry.Depth)
-            self.BestMoveFound.on_change.fire(self, best_move_params, best_move)
+            self.BestMoveFound.on_change.fire(self, best_move_params, best_move, handler_key=0)
 
         if best_move is not None and best_move.score_after_move == float("inf"):
             # Winning move, don't search
@@ -155,10 +155,10 @@ class GameAI:
                     break
 
             # "Re-sort" moves to evaluate based on the next iteration
-            moves_to_evaluate = await self.evaluate_moves_to_depth_async(game_board, depth, moves_to_evaluate)
+            moves_to_evaluate = await self.evaluate_moves_to_depth_async(game_board, depth, moves_to_evaluate, **kwargs)
 
             # Fire best_move_found for current depth
-            self.BestMoveFound.on_change.fire(self, best_move_params, moves_to_evaluate.best_move)
+            self.BestMoveFound.on_change.fire(self, best_move_params, moves_to_evaluate.best_move, handler_key=0)
 
             if moves_to_evaluate.best_move.score_after_move == float("inf"):
                 break  # The best move ends the game, stop searching
@@ -173,7 +173,7 @@ class GameAI:
 
         return moves_to_evaluate
 
-    async def evaluate_moves_to_depth_async(self, game_board, depth, moves_to_evaluate):
+    async def evaluate_moves_to_depth_async(self, game_board, depth, moves_to_evaluate, **kwargs):
         alpha = float("-inf")
         beta = float("inf")
         colour = 1 if game_board.current_turn_colour == "White" else -1
@@ -182,6 +182,9 @@ class GameAI:
         evaluated_moves = EvaluatedMoveCollection()
         first_move = True
 
+        timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
+        start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
+
         for move_to_evaluate in moves_to_evaluate.get_enumerator():
             update_alpha = False
             game_board.trusted_play(move_to_evaluate.move)
@@ -189,18 +192,18 @@ class GameAI:
             if first_move:
                 # Full window search
                 value = -1 * await self.principal_variation_search_async(
-                    game_board, depth - 1, -beta, -alpha, -colour, "Default")
+                    game_board, depth - 1, -beta, -alpha, -colour, "Default", **kwargs)
                 update_alpha = True
                 first_move = False
             else:
                 # Null window search
                 value = -1 * await self.principal_variation_search_async(
-                    game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, "Default")
+                    game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, "Default", **kwargs)
 
                 if value is not None and alpha < value < beta:
                     # Re-search with full window
                     value = -1 * await self.principal_variation_search_async(
-                        game_board, depth - 1, -beta, -alpha, -colour, "Default")
+                        game_board, depth - 1, -beta, -alpha, -colour, "Default", **kwargs)
 
                     update_alpha = True
 
@@ -217,6 +220,10 @@ class GameAI:
 
             if best_value >= beta:
                 break  # A winning move has been found, since beta is always infinity in this function
+
+            if timeout:
+                if datetime.datetime.now() > start_time + timeout:
+                    break
 
         key = game_board.zobrist_key
         t_entry = TranspositionTableEntry()
@@ -239,9 +246,12 @@ class GameAI:
     # end region
 
     # region Principal Variation Search
-    async def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type):
+    async def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type, **kwargs):
         alpha_original = alpha
         key = game_board.zobrist_key
+
+        timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
+        start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
 
         flag, t_entry = self._transposition_table.try_lookup(key)
         if flag and t_entry.Depth >= depth:
@@ -299,6 +309,10 @@ class GameAI:
 
             if best_value >= beta:
                 break
+
+            if timeout:
+                if datetime.datetime.now() > start_time + timeout:
+                    break
 
         if best_value is not None:
             t_entry = TranspositionTableEntry()
@@ -435,26 +449,13 @@ class GameAI:
                 bug_type = EnumUtilsCls.get_bug_type(piece_name)
                 colour_value = 1.0 if EnumUtilsCls.get_colour(piece_name) == "White" else -1.0
 
-                score += colour_value * mw.get(
-                    bug_type, BugTypeWeights["InPlayWeight"]) * board_metrics[piece_name].InPlay
-
-                score += colour_value * mw.get(
-                    bug_type, BugTypeWeights["IsPinnedWeight"]) * board_metrics[piece_name].IsPinned
-
-                score += colour_value * mw.get(
-                    bug_type, BugTypeWeights["IsCoveredWeight"]) * board_metrics[piece_name].IsCovered
-
-                score += colour_value * mw.get(
-                    bug_type, BugTypeWeights["NoisyMoveWeight"]) * board_metrics[piece_name].NoisyMoveCount
-
-                score += colour_value * mw.get(
-                    bug_type, BugTypeWeights["QuietMoveWeight"]) * board_metrics[piece_name].QuietMoveCount
-
-                score += colour_value * mw.get(
-                    bug_type,
-                    BugTypeWeights["FriendlyNeighborWeight"]) * board_metrics[piece_name].FriendlyNeighborCount
-
-                score += colour_value * mw.get(
-                    bug_type, BugTypeWeights["EnemyNeighborWeight"]) * board_metrics[piece_name].EnemyNeighborCount
-
+                score += colour_value * mw.get(bug_type, "InPlayWeight") * board_metrics[piece_name].InPlay
+                score += colour_value * mw.get(bug_type, "IsPinnedWeight") * board_metrics[piece_name].IsPinned
+                score += colour_value * mw.get(bug_type, "IsCoveredWeight") * board_metrics[piece_name].IsCovered
+                score += colour_value * mw.get(bug_type, "NoisyMoveWeight") * board_metrics[piece_name].NoisyMoveCount
+                score += colour_value * mw.get(bug_type, "QuietMoveWeight") * board_metrics[piece_name].QuietMoveCount
+                score += colour_value * mw.get(bug_type, "FriendlyNeighborWeight") \
+                                      * board_metrics[piece_name].FriendlyNeighborCount
+                score += colour_value * mw.get(bug_type, "EnemyNeighborWeight") \
+                                      * board_metrics[piece_name].EnemyNeighborCount
             return score
