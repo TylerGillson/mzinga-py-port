@@ -358,10 +358,10 @@ class Board:
             if target_piece is not None:
                 if target_piece.in_play:
                     self._board_metrics.PiecesInPlay += 1
-                    p.in_play = 1
+                    p.InPlay = 1
                 else:
                     self._board_metrics.PiecesInHand += 1
-                    p.in_play = 0
+                    p.InPlay = 0
 
                 # Set noisy/quiet move counts
                 is_pinned, n_count, q_count = self.is_pinned(piece_name)
@@ -369,8 +369,8 @@ class Board:
                 p.QuietMoveCount = q_count
 
                 is_below = target_piece.in_play and target_piece.piece_above is not None
-                p.is_pinned = 1 if is_pinned else 0
-                p.is_covered = 1 if is_below else 0
+                p.IsPinned = 1 if is_pinned else 0
+                p.IsCovered = 1 if is_below else 0
 
                 # Set neighbor counts
                 total, f_count, e_count = self.count_neighbors(piece=target_piece)

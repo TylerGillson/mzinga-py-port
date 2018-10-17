@@ -182,14 +182,11 @@ class GameAI:
         best_value = None
         evaluated_moves = EvaluatedMoveCollection()
         first_move = True
+
         timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
         start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
 
         for move_to_evaluate in moves_to_evaluate.get_enumerator():
-            if timeout:
-                if datetime.datetime.now() > start_time + timeout:
-                    break
-
             update_alpha = False
             game_board.trusted_play(move_to_evaluate.move)
 
@@ -231,6 +228,10 @@ class GameAI:
             if best_value >= beta:
                 break  # A winning move has been found, since beta is always infinity in this function
 
+            if timeout:
+                if datetime.datetime.now() > start_time + timeout:
+                    break
+
         key = game_board.zobrist_key
         t_entry = TranspositionTableEntry()
 
@@ -255,8 +256,13 @@ class GameAI:
     async def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type, **kwargs):
         alpha_original = alpha
         key = game_board.zobrist_key
+
         timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
         start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
+
+        if timeout:
+            if datetime.datetime.now() > start_time + timeout:
+                return None
 
         flag, t_entry = self._transposition_table.try_lookup(key)
         if flag and t_entry.Depth >= depth:
@@ -280,10 +286,6 @@ class GameAI:
         first_move = True
 
         for move in ListExtensions.get_enumerable_by_order_type(moves, order_type):
-            if timeout:
-                if datetime.datetime.now() > start_time + timeout:
-                    break
-
             update_alpha = False
             game_board.trusted_play(move)
 
@@ -321,6 +323,10 @@ class GameAI:
 
             if best_value >= beta:
                 break
+
+            if timeout:
+                if datetime.datetime.now() > start_time + timeout:
+                    break
 
         if best_value is not None:
             t_entry = TranspositionTableEntry()
