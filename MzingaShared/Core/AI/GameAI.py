@@ -126,8 +126,8 @@ class GameAI:
         # Try to get cached best move if available
         key = game_board.zobrist_key
         flag, t_entry = self._transposition_table.try_lookup(key)
-        if flag and t_entry.best_move is not None:
-            best_move = EvaluatedMove(t_entry.best_move, t_entry.Value, t_entry.Depth)
+        if flag and t_entry.BestMove is not None:
+            best_move = EvaluatedMove(t_entry.BestMove, t_entry.Value, t_entry.Depth)
             self.BestMoveFound.on_change.fire(self, best_move_params, best_move)
 
         if best_move is not None and best_move.score_after_move == float("inf"):
@@ -242,7 +242,7 @@ class GameAI:
             # (always infinity in this function), otherwise it's exact
             t_entry.Type = TranspositionTableEntryType.LowerBound \
                 if best_value >= beta else TranspositionTableEntryType.Exact
-            t_entry.best_move = evaluated_moves.best_move.move
+            t_entry.BestMove = evaluated_moves.best_move.move
 
         t_entry.Value = best_value
         t_entry.Depth = depth

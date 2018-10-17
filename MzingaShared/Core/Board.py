@@ -277,7 +277,7 @@ class Board:
 
         # Find a piece on the board to start checking
         starting_piece = None
-        for piece_name in EnumUtils.PieceNames.keys():
+        for piece_name in list(EnumUtils.PieceNames.keys())[1:]:
             piece = self.get_piece(piece_name)
             if piece is None or piece.in_hand:
                 part_of_hive[PieceNames[piece_name]] = True
