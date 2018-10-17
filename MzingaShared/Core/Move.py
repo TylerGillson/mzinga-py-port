@@ -3,6 +3,8 @@ import os
 from os.path import dirname
 sys.path.append(dirname(dirname(os.getcwd())))  # Add root directory to PYTHONPATH
 
+from copy import deepcopy
+
 from MzingaShared.Core.EnumUtils import EnumUtils
 from MzingaShared.Core.EnumUtils import PieceNames
 from MzingaShared.Core.PiecePositionBase import PiecePositionBase
@@ -49,8 +51,8 @@ class Move(PiecePositionBase):
             raise ValueError("Invalid piece_name.")
         if position is None:
             raise ValueError("Invalid position.")
-        self.piece_name = piece_name
-        self.position = position
+        self.piece_name = deepcopy(piece_name)
+        self.position = deepcopy(position)
 
     def equals(self, move):
         if move is None:

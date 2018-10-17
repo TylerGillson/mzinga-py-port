@@ -133,7 +133,6 @@ def get_unique_positions(count, max_stack=MaxStack):
     while not positions.empty():
         pos = positions.get()
         for i in range(EnumUtils.NumDirections + 2):
-            # print(pos, i)
             if len(result) < count:
                 neighbor = pos.cache_lookup(i)
 

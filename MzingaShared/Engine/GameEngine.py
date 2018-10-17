@@ -4,7 +4,6 @@ from os.path import dirname
 sys.path.append(dirname(dirname(os.getcwd())))  # Add root directory to PYTHONPATH
 
 import datetime
-from copy import deepcopy
 
 from MzingaShared.Core.Board import InvalidMoveException
 from MzingaShared.Core.BoardHistory import BoardHistory

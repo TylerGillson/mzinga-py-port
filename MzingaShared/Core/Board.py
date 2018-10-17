@@ -4,9 +4,9 @@ from os.path import dirname
 sys.path.append(dirname(dirname(os.getcwd())))  # Add root directory to PYTHONPATH
 
 import queue
+from copy import deepcopy
 
 from MzingaShared.Core import Move as MoveCls, EnumUtils
-
 from MzingaShared.Core.BoardMetrics import BoardMetrics
 from MzingaShared.Core.CacheMetricsSet import CacheMetricsSet
 from MzingaShared.Core.EnumUtils import Colours, ColoursByInt, PieceNamesByInt, PieceNames, EnumUtils as EnumUtilsCls
@@ -325,13 +325,16 @@ class Board:
         self._set_current_player_metrics()
 
         # Save off current valid moves/placements since we'll be returning to it
-        valid_moves_by_piece = self._cached_valid_moves_by_piece
+        valid_moves_by_piece = deepcopy(self._cached_valid_moves_by_piece)
         self._cached_valid_moves_by_piece = None
-        valid_placement_positions = self._cached_valid_placement_positions
+
+        valid_placement_positions = deepcopy(self._cached_valid_placement_positions)
         self._cached_valid_placement_positions = None
-        enemy_queen_neighbors = self._cached_enemy_queen_neighbors
+
+        enemy_queen_neighbors = deepcopy(self._cached_enemy_queen_neighbors)
         self._cached_enemy_queen_neighbors = None
-        last_piece_moved = self._last_piece_moved
+
+        last_piece_moved = deepcopy(self._last_piece_moved)
         self._last_piece_moved = list(PieceNames.keys())[0]  # "INVALID"
 
         # Spoof going to the next turn to get the opponent's metrics
@@ -342,10 +345,10 @@ class Board:
         self._zobrist_hash.toggle_turn()
 
         # Returned, so reload saved valid moves/placements into cache
-        self._last_piece_moved = last_piece_moved
-        self._cached_enemy_queen_neighbors = enemy_queen_neighbors
-        self._cached_valid_placement_positions = valid_placement_positions
-        self._cached_valid_moves_by_piece = valid_moves_by_piece
+        self._last_piece_moved = deepcopy(last_piece_moved)
+        self._cached_enemy_queen_neighbors = deepcopy(enemy_queen_neighbors)
+        self._cached_valid_placement_positions = deepcopy(valid_placement_positions)
+        self._cached_valid_moves_by_piece = deepcopy(valid_moves_by_piece)
 
         return self._board_metrics
 
@@ -455,7 +458,7 @@ class Board:
                 moves.lock()
 
                 # Populate cache
-                self._cached_valid_moves_by_piece[piece_name_index] = moves
+                self._cached_valid_moves_by_piece[piece_name_index] = deepcopy(moves)
 
             return self._cached_valid_moves_by_piece[piece_name_index]
         else:

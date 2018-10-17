@@ -3,6 +3,8 @@ import os
 from os.path import dirname
 sys.path.append(dirname(dirname(os.getcwd())))  # Add root directory to PYTHONPATH
 
+from copy import deepcopy
+
 from MzingaShared.Core import Move
 from MzingaShared.Core.Move import Move as MoveCls
 from MzingaShared.Core.Piece import Piece
@@ -23,7 +25,7 @@ class BoardHistory:
 
     def __init__(self, board_history=None, board_history_string=None):
         if board_history:
-            self._items = board_history.get_enumerator
+            self._items = deepcopy(board_history.get_enumerator)
         elif board_history_string:
             if board_history_string.isspace():
                 raise ValueError("Invalid board_history_string.")
@@ -75,14 +77,14 @@ class BoardHistoryItem:
                 split = list(filter(None, board_history_item_string.replace(' ', '>').split('>')))
                 starting_piece = Piece(split[0])
                 move = MoveCls(split[1])
-                self.Move = move
-                self.OriginalPosition = starting_piece.position
+                self.Move = deepcopy(move)
+                self.OriginalPosition = deepcopy(starting_piece.position)
         else:
             if move is None:
                 raise ValueError("Invalid move.")
 
-            self.Move = move
-            self.OriginalPosition = original_position
+            self.Move = deepcopy(move)
+            self.OriginalPosition = deepcopy(original_position)
 
     def __repr__(self):
         if self.Move.is_pass:

@@ -3,6 +3,7 @@ import os
 from os.path import dirname
 sys.path.append(dirname(dirname(dirname(os.getcwd()))))  # Add root directory to PYTHONPATH
 
+from copy import deepcopy
 from Utils.BinarySearch import binary_search_ext
 
 
@@ -32,15 +33,15 @@ class EvaluatedMoveCollection:
         if evaluated_move:
             index = self.search_for(evaluated_move)
             if index == len(self._evaluated_moves):
-                self._evaluated_moves.append(evaluated_move)
+                self._evaluated_moves.append(deepcopy(evaluated_move))
             else:
-                self._evaluated_moves.insert(index, evaluated_move)
+                self._evaluated_moves.insert(index, deepcopy(evaluated_move))
         else:
             for move in evaluated_moves:
                 if re_sort:
-                    self.add(evaluated_move=move)
+                    self.add(evaluated_move=deepcopy(move))
                 else:
-                    self._evaluated_moves.append(move)
+                    self._evaluated_moves.append(deepcopy(move))
 
     def prune_game_losing_moves(self):
         first_losing_move_idx = -1

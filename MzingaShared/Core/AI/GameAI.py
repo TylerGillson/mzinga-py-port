@@ -155,8 +155,7 @@ class GameAI:
                     break
 
             # "Re-sort" moves to evaluate based on the next iteration
-            moves_to_evaluate = await self.evaluate_moves_to_depth_async(
-                game_board, depth, moves_to_evaluate, start_time=start_time, timeout=timeout)
+            moves_to_evaluate = await self.evaluate_moves_to_depth_async(game_board, depth, moves_to_evaluate)
 
             # Fire best_move_found for current depth
             self.BestMoveFound.on_change.fire(self, best_move_params, moves_to_evaluate.best_move)
@@ -174,7 +173,7 @@ class GameAI:
 
         return moves_to_evaluate
 
-    async def evaluate_moves_to_depth_async(self, game_board, depth, moves_to_evaluate, **kwargs):
+    async def evaluate_moves_to_depth_async(self, game_board, depth, moves_to_evaluate):
         alpha = float("-inf")
         beta = float("inf")
         colour = 1 if game_board.current_turn_colour == "White" else -1
@@ -183,9 +182,6 @@ class GameAI:
         evaluated_moves = EvaluatedMoveCollection()
         first_move = True
 
-        timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
-        start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
-
         for move_to_evaluate in moves_to_evaluate.get_enumerator():
             update_alpha = False
             game_board.trusted_play(move_to_evaluate.move)
@@ -193,28 +189,22 @@ class GameAI:
             if first_move:
                 # Full window search
                 value = -1 * await self.principal_variation_search_async(
-                    game_board, depth - 1, -beta, -alpha, -colour, "Default", start_time=start_time, timeout=timeout)
+                    game_board, depth - 1, -beta, -alpha, -colour, "Default")
                 update_alpha = True
                 first_move = False
             else:
                 # Null window search
                 value = -1 * await self.principal_variation_search_async(
-                    game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, "Default",
-                    start_time=start_time, timeout=timeout)
+                    game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, "Default")
 
                 if value is not None and alpha < value < beta:
                     # Re-search with full window
                     value = -1 * await self.principal_variation_search_async(
-                        game_board, depth - 1, -beta, -alpha, -colour, "Default",
-                        start_time=start_time, timeout=timeout)
+                        game_board, depth - 1, -beta, -alpha, -colour, "Default")
 
                     update_alpha = True
 
             game_board.undo_last_move()
-
-            if value is None:
-                # Cancel occurred during evaluation
-                return EvaluatedMoveCollection(moves_to_evaluate, False)
 
             evaluated_move = EvaluatedMove(move_to_evaluate.move, value, depth)
             evaluated_moves.add(evaluated_move=evaluated_move)
@@ -227,10 +217,6 @@ class GameAI:
 
             if best_value >= beta:
                 break  # A winning move has been found, since beta is always infinity in this function
-
-            if timeout:
-                if datetime.datetime.now() > start_time + timeout:
-                    break
 
         key = game_board.zobrist_key
         t_entry = TranspositionTableEntry()
@@ -253,16 +239,9 @@ class GameAI:
     # end region
 
     # region Principal Variation Search
-    async def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type, **kwargs):
+    async def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type):
         alpha_original = alpha
         key = game_board.zobrist_key
-
-        timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
-        start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
-
-        if timeout:
-            if datetime.datetime.now() > start_time + timeout:
-                return None
 
         flag, t_entry = self._transposition_table.try_lookup(key)
         if flag and t_entry.Depth >= depth:
@@ -292,21 +271,18 @@ class GameAI:
             if first_move:
                 # Full window search
                 value = -1 * await self.principal_variation_search_async(
-                    game_board, depth - 1, -beta, -alpha, -colour, order_type, start_time=start_time, timeout=timeout)
+                    game_board, depth - 1, -beta, -alpha, -colour, order_type)
                 update_alpha = True
                 first_move = False
             else:
                 # Null window search
                 value = -1 * await self.principal_variation_search_async(
-                    game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, order_type,
-                    start_time=start_time, timeout=timeout)
+                    game_board, depth - 1, -alpha - np.finfo(float).eps, -alpha, -colour, order_type)
 
                 if value is not None and alpha < value < beta:
                     # Re-search with full window
                     value = -1 * await self.principal_variation_search_async(
-                        game_board, depth - 1, -beta, -alpha, -colour, order_type,
-                        start_time=start_time, timeout=timeout)
-
+                        game_board, depth - 1, -beta, -alpha, -colour, order_type)
                     update_alpha = True
 
             game_board.undo_last_move()
@@ -324,10 +300,6 @@ class GameAI:
             if best_value >= beta:
                 break
 
-            if timeout:
-                if datetime.datetime.now() > start_time + timeout:
-                    break
-
         if best_value is not None:
             t_entry = TranspositionTableEntry()
 
@@ -340,7 +312,6 @@ class GameAI:
 
             t_entry.Value = best_value
             t_entry.Depth = depth
-
             self._transposition_table.store(key, t_entry)
 
         return best_value

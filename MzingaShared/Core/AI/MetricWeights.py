@@ -9,19 +9,66 @@ from MzingaShared.Core import EnumUtils
 
 BugTypeWeights = {
     "InPlayWeight": 0,
-    "IsPinnedWeight": 0,
-    "IsCoveredWeight": 0,
-    "NoisyMoveWeight": 0,
-    "QuietMoveWeight": 0,
-    "FriendlyNeighborWeight": 0,
-    "EnemyNeighborWeight": 0,
+    "IsPinnedWeight": 1,
+    "IsCoveredWeight": 2,
+    "NoisyMoveWeight": 3,
+    "QuietMoveWeight": 4,
+    "FriendlyNeighborWeight": 5,
+    "EnemyNeighborWeight": 6,
 }
 BugTypeWeightsByInt = {v: k for k, v in BugTypeWeights.items()}
+NumBugTypeWeights = 7
+
+
+def iterate_over_weights(action):
+    if action is None:
+        raise ValueError("Invalid action.")
+
+    for bug_type in EnumUtils.BugTypes.values():
+        bug_type_weight_int = 0
+        while bug_type_weight_int < NumBugTypeWeights:
+            bug_type_weight = BugTypeWeightsByInt[bug_type_weight_int]
+            action(bug_type, bug_type_weight)
+            bug_type_weight_int += 1
+
+
+def get_key(bug_type, bug_type_weight):
+    return EnumUtils.BugTypes[bug_type] * NumBugTypeWeights + BugTypeWeights[bug_type_weight]
+
+
+def get_key_name(bug_type, bug_type_weight):
+    return "".join(['.', bug_type, bug_type_weight])
+
+
+def read_metric_weights_xml(xml_elem):
+    mw = MetricWeights()
+
+    for elem in xml_elem:
+        key = elem.tag
+        value = float(elem.text)
+
+        flag, bug_type, bug_type_weight = try_parse_key_name(key)
+        if flag:
+            mw.set(bug_type, bug_type_weight, value + mw.get(bug_type, bug_type_weight))
+    return mw
+
+
+def try_parse_key_name(key):
+    if not key.isspace():
+        try:
+            split = key.split('.')
+            bug_type = split[0]
+            bug_type_weight = split[1]
+            return True, bug_type, bug_type_weight
+        except KeyError:
+            pass
+
+    bug_type = EnumUtils.BugTypes.values()[0]
+    bug_type_weight = list(BugTypeWeights.values())[0]
+    return False, bug_type, bug_type_weight
 
 
 class MetricWeights:
-    NumBugTypeWeights = 7
-    KeySeparator = "."
     _bug_type_weights = []
 
     @property
@@ -29,21 +76,21 @@ class MetricWeights:
         return self._bug_type_weights
 
     def __init__(self):
-        self._bug_type_weights = [0] * EnumUtils.NumBugTypes * self.NumBugTypeWeights
+        self._bug_type_weights = [0] * EnumUtils.NumBugTypes * NumBugTypeWeights
 
     def get(self, bug_type, bug_type_weight):
-        btw_key = self.get_key(bug_type, bug_type_weight)
+        btw_key = get_key(bug_type, bug_type_weight)
         return self._bug_type_weights[btw_key]
 
     def set(self, bug_type, bug_type_weight, val):
-        btw_key = self.get_key(bug_type, bug_type_weight)
+        btw_key = get_key(bug_type, bug_type_weight)
         self._bug_type_weights[btw_key] = val
 
     def copy_from(self, source):
         if source is None:
             raise ValueError("Invalid source.")
 
-        self._bug_type_weights = source.bug_type_weights
+        self._bug_type_weights = deepcopy(source.bug_type_weights)
 
     def clone(self):
         return deepcopy(self)
@@ -82,50 +129,3 @@ class MetricWeights:
     def scale(self, factor):
         for i in range(len(self._bug_type_weights)):
             self._bug_type_weights[i] *= factor
-
-    def read_metric_weights_xml(self, xml_tree):
-        mw = MetricWeights()
-        root = xml_tree.getroot()
-
-        for elem in root:
-            if elem == root and not elem.text == "MetricWeights":
-                key = elem.attrib
-                value = elem.text
-
-                flag, bug_type, bug_type_weight = self.try_parse_key_name(key)
-                if flag:
-                    mw.set(bug_type, bug_type_weight, value + mw.get(bug_type, bug_type_weight))
-        return mw
-
-    def try_parse_key_name(self, key):
-        if not key.isspace():
-            try:
-                split = key.Split(self.KeySeparator)
-
-                bug_type_weight = split[-1]
-                bug_type = split[-2]
-                return True, bug_type, bug_type_weight
-            except KeyError:
-                pass
-
-        global BugTypeWeights
-        bug_type = EnumUtils.BugTypes.values()[0]
-        bug_type_weight = BugTypeWeights.values()[0]
-        return False, bug_type, bug_type_weight
-
-    def get_key_name(self, bug_type, bug_type_weight):
-        return "".join([self.KeySeparator, bug_type, bug_type_weight])
-
-    def iterate_over_weights(self, action):
-        if action is None:
-            raise ValueError("Invalid action.")
-
-        for bug_type in EnumUtils.BugTypes.values():
-            bug_type_weight_int = 0
-            while bug_type_weight_int < self.NumBugTypeWeights:
-                bug_type_weight = BugTypeWeightsByInt[bug_type_weight_int]
-                action(bug_type, bug_type_weight)
-                bug_type_weight_int += 1
-
-    def get_key(self, bug_type, bug_type_weight):
-        return EnumUtils.BugTypes[bug_type] * self.NumBugTypeWeights + bug_type_weight

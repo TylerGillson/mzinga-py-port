@@ -7,9 +7,9 @@ import multiprocessing
 import platform
 import xml.etree.ElementTree as ElementTree
 
+from MzingaShared.Core.AI import MetricWeights
 from MzingaShared.Core.AI.GameAI import GameAI
 from MzingaShared.Core.AI.GameAIConfig import GameAIConfig
-from MzingaShared.Core.AI.MetricWeights import MetricWeights
 from MzingaShared.Core.AI.TranspositionTable import TranspositionTable
 
 is_64 = platform.architecture() == "64bit"
@@ -54,7 +54,7 @@ class GameEngineConfig:
             reader = ElementTree.parse(input_stream, parser=parser)
             root = reader.getroot()
 
-        if root.text == "GameAI":
+        if root.tag == "Mzinga.Engine":
             self.load_game_ai_config([elem for elem in root])
 
     def load_game_ai_config(self, xml_tree):
@@ -63,21 +63,21 @@ class GameEngineConfig:
 
         for node in xml_tree:
             sub_elems = [sub_elem for sub_elem in node]
-
-            if node.attrib == "TranspositionTableSizeMB":
-                self.parse_transposition_table_size_mb_value(node.text)
-            if node.attrib in ["MetricWeights", "StartMetricWeights"]:
-                self.StartMetricWeights = MetricWeights().read_metric_weights_xml(sub_elems)
-            if node.attrib == "EndMetricWeights":
-                self.EndMetricWeights = MetricWeights().read_metric_weights_xml(sub_elems)
-            if node.attrib == "MaxHelperThreads":
-                self.parse_max_helper_threads_value(node.text)
-            if node.attrib == "PonderDuringIdle":
-                self.parse_ponder_during_idle_value(node.text)
-            if node.attrib == "MaxBranchingFactor":
-                self.parse_max_branching_factor_value(node.text)
-            if node.attrib == "ReportIntermediateBestMoves":
-                self.parse_report_intermediate_best_moves_value(sub_elems)
+            for elem in sub_elems:
+                if elem.tag == "TranspositionTableSizeMB":
+                    self.parse_transposition_table_size_mb_value(elem.text)
+                if elem.tag in ["MetricWeights", "StartMetricWeights"]:
+                    self.StartMetricWeights = MetricWeights.read_metric_weights_xml(elem)
+                if elem.tag == "EndMetricWeights":
+                    self.EndMetricWeights = MetricWeights.read_metric_weights_xml(elem)
+                if elem.tag == "MaxHelperThreads":
+                    self.parse_max_helper_threads_value(elem.text)
+                if elem.tag == "PonderDuringIdle":
+                    self.parse_ponder_during_idle_value(elem.text)
+                if elem.tag == "MaxBranchingFactor":
+                    self.parse_max_branching_factor_value(elem.text)
+                if elem.tag == "ReportIntermediateBestMoves":
+                    self.parse_report_intermediate_best_moves_value(elem.text)
 
     def parse_transposition_table_size_mb_value(self, raw_value):
         int_value = int(raw_value)

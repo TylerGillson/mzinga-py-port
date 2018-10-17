@@ -48,18 +48,20 @@ class FixedCache:
         return "U: %d/%d (%2f) %s" % (self.count, self.capacity, self.usage, self.metrics)
 
     def store(self, key, new_entry):
-        self._store_lock.acquire()
-
         if key not in self._dict.keys():
             # New entry
+            self._store_lock.acquire()
+
             if self.count == self.capacity:
                 # Make space
                 first = self._list[0]
                 self._dict.pop(first)
                 self._list.pop(0)
+
             # Add
             self.store_internal(key, new_entry)
             self.metrics.store()
+            self._store_lock.release()
         else:
             # Existing entry
             existing_entry = self._dict[key]
@@ -70,8 +72,6 @@ class FixedCache:
                     self._list.remove(existing_entry.list_node)
                 self.store_internal(key, new_entry)
                 self.metrics.update()
-
-        self._store_lock.release()
 
     def store_internal(self, key, new_entry):
         list_node = self._list.append(key)

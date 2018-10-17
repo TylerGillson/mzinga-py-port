@@ -8,7 +8,8 @@ import random
 import uuid
 import xml.etree.ElementTree as ElementTree
 
-from MzingaShared.Core.AI.MetricWeights import MetricWeights
+from MzingaShared.Core.AI import MetricWeights
+from MzingaShared.Core.AI.MetricWeights import MetricWeights as MetricWeightsCls
 from MzingaTrainer.EloUtils import EloUtils
 
 
@@ -159,13 +160,13 @@ class Profile:
         parent_node = start_metric_weights
 
         def write_weights(bug_type, bug_type_weight):
-            key = MetricWeights().get_key_name(bug_type, bug_type_weight)
+            key = MetricWeights.get_key_name(bug_type, bug_type_weight)
             w_value = self.StartMetricWeights.get(bug_type, bug_type_weight)
             _ = ElementTree.SubElement(parent_node, key).text = w_value
 
-        MetricWeights().iterate_over_weights(write_weights)
+        MetricWeights.iterate_over_weights(write_weights)
         parent_node = end_metric_weights
-        MetricWeights().iterate_over_weights(write_weights)
+        MetricWeights.iterate_over_weights(write_weights)
 
         tree = ElementTree.ElementTree(root)
         tree.write(output_stream)
@@ -216,9 +217,9 @@ class Profile:
             if node.attrib == "LastUpdated":
                 last_updated_timestamp = datetime.datetime.strptime(node.text, "YYYY-MM-DD %H:%M%:%S")
             if node.attrib in ["MetricWeights", "StartMetricWeights"]:
-                start_metric_weights = MetricWeights().read_metric_weights_xml([subelem for subelem in node])
+                start_metric_weights = MetricWeights.read_metric_weights_xml([subelem for subelem in node])
             if node.attrib == "EndMetricWeights":
-                end_metric_weights = MetricWeights().read_metric_weights_xml([subelem for subelem in node])
+                end_metric_weights = MetricWeights.read_metric_weights_xml([subelem for subelem in node])
 
         if r_name is None:
             r_name = generate_name(r_id)
@@ -270,7 +271,7 @@ class Profile:
 
 
 def generate_metric_weights(min_weight, max_weight):
-    mw = MetricWeights()
+    mw = MetricWeightsCls()
 
     def generate_weights(bug_type, bug_type_weight):
         value = min_weight + (random.random() * (max_weight - min_weight))
@@ -281,7 +282,7 @@ def generate_metric_weights(min_weight, max_weight):
 
 
 def mix_metric_weights(mw_a, mw_b, min_mix, max_mix):
-    mw = MetricWeights()
+    mw = MetricWeightsCls()
 
     def mix_weights(bug_type, bug_type_weight):
         value = 0.5 * (mw_a.get(bug_type, bug_type_weight) + mw_b.get(bug_type, bug_type_weight))

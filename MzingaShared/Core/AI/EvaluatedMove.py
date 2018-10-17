@@ -1,4 +1,5 @@
-﻿UnevaluatedMoveScore = float("-inf")
+﻿from copy import deepcopy
+UnevaluatedMoveScore = float("-inf")
 
 
 class EvaluatedMove:
@@ -7,9 +8,9 @@ class EvaluatedMove:
     depth = None
 
     def __init__(self, move, score_after_move=UnevaluatedMoveScore, depth=0):
-        self.move = move
-        self.score_after_move = score_after_move
-        self.depth = depth
+        self.move = deepcopy(move)
+        self.score_after_move = deepcopy(score_after_move)
+        self.depth = deepcopy(depth)
 
     def __eq__(self, other):
         if other is None:
@@ -29,7 +30,7 @@ class EvaluatedMove:
         return self.get_hash_code()
 
     def __repr__(self):
-        return "%s%c%d%c%d" % (self.move, ';', self.depth, ';', self.score_after_move)
+        return "%s%c%d%c%2f" % (str(self.move), ';', self.depth, ';', self.score_after_move)
 
     @staticmethod
     def equals(a, b):
