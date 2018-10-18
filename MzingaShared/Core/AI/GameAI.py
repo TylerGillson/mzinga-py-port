@@ -209,6 +209,10 @@ class GameAI:
 
             game_board.undo_last_move()
 
+            if value is None:
+                # Cancel occurred during evaluation
+                return EvaluatedMoveCollection(move_to_evaluate, False)
+
             evaluated_move = EvaluatedMove(move_to_evaluate.move, value, depth)
             evaluated_moves.add(evaluated_move=evaluated_move)
 
