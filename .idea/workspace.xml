@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aa05651a-1eca-4dbd-9b9c-26b22eb664c0" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/tylergillson.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/tylergillson.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MzingaTrainer/Program.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaTrainer/Program.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MzingaTrainer/Trainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaTrainer/Trainer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MzingaTrainer/TrainerSettings.py" beforeDir="false" afterPath="$PROJECT_DIR$/MzingaTrainer/TrainerSettings.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -20,7 +23,7 @@
         <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="113">
-              <caret line="113" lean-forward="true" selection-start-line="113" selection-end-line="113" />
+              <caret line="113" selection-start-line="113" selection-end-line="113" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -40,11 +43,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Program.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Program.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/MzingaTrainer/Program.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-750">
-              <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+            <state relative-caret-position="147">
+              <caret line="102" selection-start-line="102" selection-end-line="102" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -55,8 +58,8 @@
       <file leaf-file-name="Profile.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/MzingaTrainer/Profile.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="408">
-              <caret line="295" lean-forward="true" selection-start-line="295" selection-end-line="295" />
+            <state relative-caret-position="3807">
+              <caret line="280" column="13" selection-start-line="280" selection-start-column="13" selection-end-line="280" selection-end-column="13" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -72,8 +75,8 @@
       <file leaf-file-name="Trainer.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/MzingaTrainer/Trainer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="10" column="23" lean-forward="true" selection-start-line="10" selection-start-column="23" selection-end-line="10" selection-end-column="23" />
+            <state relative-caret-position="79">
+              <caret line="470" selection-start-line="470" selection-end-line="470" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -81,11 +84,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="TrainerSettings.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="TrainerSettings.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/MzingaTrainer/TrainerSettings.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="115">
-              <caret line="152" column="18" lean-forward="true" selection-start-line="152" selection-start-column="18" selection-end-line="152" selection-end-column="18" />
+            <state relative-caret-position="253">
+              <caret line="22" column="71" lean-forward="true" selection-start-line="22" selection-start-column="71" selection-end-line="22" selection-end-column="71" />
             </state>
           </provider>
         </entry>
@@ -101,8 +104,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>setResult</find>
-      <find>resultIsException</find>
       <find>getResult</find>
       <find>getNextFunc</find>
       <find>set_resultFunc</find>
@@ -131,6 +132,8 @@
       <find>prune_</find>
       <find>Quies</find>
       <find>Quiesc</find>
+      <find>BattleShuffleProfiles</find>
+      <find>battleTimeLimit</find>
     </findStrings>
     <replaceStrings>
       <replace>list(PieceNames\.keys\(\))\[0\]</replace>
@@ -184,9 +187,6 @@
         <option value="$PROJECT_DIR$/MzingaShared/Core/EnumUtils.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/GameBoard.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/AI/ListExtensions.py" />
-        <option value="$PROJECT_DIR$/MzingaTrainer/Program.py" />
-        <option value="$PROJECT_DIR$/MzingaTrainer/TrainerSettings.py" />
-        <option value="$PROJECT_DIR$/MzingaTrainer/Trainer.py" />
         <option value="$PROJECT_DIR$/Utils/TaskQueue.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/BoardMetrics.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMoveCollection.py" />
@@ -203,6 +203,9 @@
         <option value="$PROJECT_DIR$/MzingaShared/Core/AI/EvaluatedMove.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/Board.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py" />
+        <option value="$PROJECT_DIR$/MzingaTrainer/Program.py" />
+        <option value="$PROJECT_DIR$/MzingaTrainer/Trainer.py" />
+        <option value="$PROJECT_DIR$/MzingaTrainer/TrainerSettings.py" />
       </list>
     </option>
   </component>
@@ -309,7 +312,7 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
-    <configuration name="MzingaTrainerTest" type="PythonConfigurationType" factoryName="Python">
+    <configuration name="MzingaTrainerTest" type="PythonConfigurationType" factoryName="Python" editBeforeRun="true">
       <module name="MzingaPorted" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -322,8 +325,8 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/MzingaTrainer/Program.py" />
-      <option name="PARAMETERS" value="battle -GenerateCount 2" />
-      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="PARAMETERS" value="generate -GenerateCount 2" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
@@ -356,6 +359,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="877" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49786323" weight="0.26638478" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32948717" />
@@ -382,22 +386,22 @@
     <layout-to-restore>
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Run" order="3" weight="0.32948717" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49786323" visible="true" weight="0.23774765" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49786323" visible="true" weight="0.13679746" />
       <window_info id="Structure" order="1" sideWeight="0.50213677" side_tool="true" weight="0.20930232" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="bottom" id="TODO" order="7" />
-      <window_info anchor="bottom" id="Version Control" order="8" />
+      <window_info anchor="bottom" id="TODO" order="7" weight="0.32948717" />
       <window_info anchor="bottom" id="Inspection Results" order="0" weight="0.32948717" />
-      <window_info anchor="bottom" id="Message" order="1" />
-      <window_info anchor="bottom" id="Debug" order="4" sideWeight="0.49843588" visible="true" weight="0.4" />
+      <window_info anchor="bottom" id="Python Console" order="9" weight="0.32948717" />
+      <window_info anchor="bottom" id="Find" order="2" />
+      <window_info active="true" anchor="bottom" id="Debug" order="4" sideWeight="0.49843588" visible="true" weight="0.37307692" />
       <window_info anchor="bottom" id="Terminal" order="10" sideWeight="0.49964765" weight="0.32948717" />
       <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.50156415" side_tool="true" weight="0.4" />
       <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
+      <window_info anchor="bottom" id="Version Control" order="8" />
+      <window_info anchor="bottom" id="Message" order="1" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Find" order="2" />
-      <window_info anchor="bottom" id="Python Console" order="9" weight="0.32948717" />
     </layout-to-restore>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -410,6 +414,23 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/MzingaTrainer/Program.py</url>
+          <line>102</line>
+          <option name="timeStamp" value="204" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/MzingaTrainer/Trainer.py</url>
+          <line>60</line>
+          <option name="timeStamp" value="206" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/MzingaTrainer/Trainer.py</url>
+          <line>470</line>
+          <option name="timeStamp" value="211" />
+        </line-breakpoint>
+      </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
@@ -420,57 +441,53 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="204" />
+      <option name="time" value="213" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateCodeFragment">
       <expression>
-        <expression-string>import functools
-valid_moves.sort(key=lambda x, y: self.pre_sort_moves(x, y, game_board, best_move))</expression-string>
+        <expression-string>black_profile_path</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>import functools
-valid_moves.sort(lambda x, y: self.pre_sort_moves(x, y, game_board, best_move))</expression-string>
+        <expression-string>black_profile_path()</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>import functools
-valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre_sort_moves(x, y, game_board, best_move)))</expression-string>
+        <expression-string>black_profile_path.value</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>valid_moves = sorted(valid_moves, key=lambda x,y: self.pre_sort_moves(x, y, game_board, best_move))</expression-string>
+        <expression-string>black_profile_path = self.trainer_settings.black_profiles_path</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>valid_moves = sorted(valid_moves, key=lambda x, y: self.pre_sort_moves(x, y, game_board, best_move))</expression-string>
+        <expression-string>black_profile_path = &quot;FUCK&quot;</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>_shared_cache</expression-string>
+        <expression-string>print(black_profile_path)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>_local_cache</expression-string>
+        <expression-string>print(self.trainer_settings)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>print(_local_cache)</expression-string>
+        <expression-string>print(self._settings)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>if neighbor and neighbor.stack &lt; max_stack and result.add(neighbor):
-    a = 3</expression-string>
+        <expression-string>print(self)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
@@ -848,7 +865,7 @@ valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre
     <entry file="file://$PROJECT_DIR$/MzingaShared/Core/AI/GameAI.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="113">
-          <caret line="113" lean-forward="true" selection-start-line="113" selection-end-line="113" />
+          <caret line="113" selection-start-line="113" selection-end-line="113" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
@@ -865,30 +882,13 @@ valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaTrainer/Profile.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="408">
-          <caret line="295" lean-forward="true" selection-start-line="295" selection-end-line="295" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/MzingaTrainer/EloUtils.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaTrainer/TrainerSettings.py">
+    <entry file="file://$PROJECT_DIR$/MzingaTrainer/Profile.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="115">
-          <caret line="152" column="18" lean-forward="true" selection-start-line="152" selection-start-column="18" selection-end-line="152" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MzingaTrainer/Trainer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="23" lean-forward="true" selection-start-line="10" selection-start-column="23" selection-end-line="10" selection-end-column="23" />
+        <state relative-caret-position="3807">
+          <caret line="280" column="13" selection-start-line="280" selection-start-column="13" selection-end-line="280" selection-end-column="13" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
@@ -897,11 +897,28 @@ valid_moves = sorted(valid_moves, key=functools.cmp_to_key(lambda x, y: self.pre
     </entry>
     <entry file="file://$PROJECT_DIR$/MzingaTrainer/Program.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-750">
-          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+        <state relative-caret-position="147">
+          <caret line="102" selection-start-line="102" selection-end-line="102" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaTrainer/Trainer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="79">
+          <caret line="470" selection-start-line="470" selection-end-line="470" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MzingaTrainer/TrainerSettings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="253">
+          <caret line="22" column="71" lean-forward="true" selection-start-line="22" selection-start-column="71" selection-end-line="22" selection-end-column="71" />
         </state>
       </provider>
     </entry>

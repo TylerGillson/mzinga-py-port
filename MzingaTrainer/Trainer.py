@@ -7,14 +7,12 @@ import datetime
 import random
 import math
 import queue
-
 from typing import List
 
 from MzingaShared.Core.GameBoard import GameBoard
-from MzingaShared.Core.AI.MetricWeights import MetricWeights
+from MzingaShared.Core.AI import MetricWeights
 from MzingaShared.Core.AI.GameAI import GameAI
 from MzingaShared.Core.AI.GameAIConfig import GameAIConfig
-
 from MzingaTrainer.Profile import Profile
 from MzingaTrainer.EloUtils import EloUtils
 from MzingaTrainer.TrainerSettings import TrainerSettings
@@ -59,7 +57,7 @@ class Trainer:
 
     def battle(self, white_profile_path=None, black_profile_path=None):
         if white_profile_path is None and black_profile_path is None:
-            self.battle(self.trainer_settings.WhiteProfilePath, self.trainer_settings.BlackProfilePath)
+            self.battle(self.trainer_settings.white_profiles_path, self.trainer_settings.black_profiles_path)
 
         if white_profile_path.isspace():
             raise ValueError("Invalid white_profile_path.")
@@ -350,7 +348,7 @@ class Trainer:
 
     def enumerate(self, path=None):
         if path is None:
-            self.enumerate(self.trainer_settings.ProfilesPath)
+            self.enumerate(self.trainer_settings.profiles_path)
         else:
             if path.isspace():
                 raise ValueError("Invalid path.")
@@ -364,7 +362,7 @@ class Trainer:
             for p in profile_list:
                 self.log("%s" % self.to_string(p))
 
-                profile_path = "".join([path, p.Id, ".xml"])
+                profile_path = "".join([path, str(p.Id), ".xml"])
                 with open(profile_path, "wb+") as f:
                     p.write_xml(f)
 
@@ -378,9 +376,9 @@ class Trainer:
         profile_list = []
         files = [f for f in os.listdir(path) if f.endswith(".xml")]
         for file_path in files:
-            with open(file_path, "wb+") as f:
+            with open(path + file_path, "r") as f:
                 profile = Profile.read_xml(f)
-                profile_list.append(profile)
+            profile_list.append(profile)
         return profile_list
 
     @staticmethod
@@ -445,7 +443,7 @@ class Trainer:
                     header += ",Start%s.%d" % (bug_type, bug_type_weight)
                     header += ",End%s.%d" % (bug_type, bug_type_weight)
 
-                MetricWeights().iterate_over_weights(add_csv_weights)
+                MetricWeights.iterate_over_weights(add_csv_weights)
                 print(header + "\n", file=f)
 
                 def add_csv_norm_weights(bug_type, bug_type_weight):
@@ -461,7 +459,7 @@ class Trainer:
 
                     start_normalized = p.StartMetricWeights.get_normalized()
                     end_normalized = p.EndMetricWeights.get_normalized()
-                    MetricWeights().iterate_over_weights(add_csv_norm_weights)
+                    MetricWeights.iterate_over_weights(add_csv_norm_weights)
 
                     print(profile_str, file=f)
 
@@ -469,8 +467,8 @@ class Trainer:
 
     def generate(self, path=None, count=None, min_weight=None, max_weight=None):
         if path is None:
-            self.generate(self.trainer_settings.ProfilesPath,
-                          self.trainer_settings.GenerateCount,
+            self.generate(self.trainer_settings.profiles_path,
+                          self.trainer_settings.generate_count,
                           self.trainer_settings.GenerateMinWeight,
                           self.trainer_settings.GenerateMaxWeight)
         else:
@@ -482,12 +480,13 @@ class Trainer:
             self.start_time = datetime.datetime.now()
             self.log("Generate start.")
 
-            os.mkdir(path)
+            if not os.path.exists(path):
+                os.mkdir(path)
 
             for i in range(count):
                 profile = Profile.generate(min_weight, max_weight)
 
-                filename = "".join([path, profile.Id, ".xml"])
+                filename = "".join([path, str(profile.Id), ".xml"])
                 with open(filename, "wb+") as f:
                     profile.write_xml(f)
 
@@ -647,7 +646,7 @@ class Trainer:
                         self.log("Tournament auto-advances %s." % self.to_string(current_tier[profile_index]))
                         winners[i] = current_tier[profile_index]
                     else:
-                        white_index = random.randrange(0, 2) # Help mitigate top players always playing white
+                        white_index = random.randrange(0, 2)  # Help mitigate top players always playing white
                         white_profile = current_tier[profile_index + white_index]
                         black_profile = current_tier[profile_index + 1 - white_index]
 
@@ -760,12 +759,12 @@ class Trainer:
 
     def to_string(self, val):
         if isinstance(val, datetime.timedelta):
-            return datetime.datetime.strptime(val, "%d.%H:M:S")
+            return "%d.%d:%d:%d" % (val.days, val.seconds // 3600, val.seconds // 60, val.seconds)
         elif isinstance(val, Profile):
             if val is None:
                 raise ValueError("Invalid profile.")
 
-            prov = "?" if self.is_provisional(val) else " "
+            prov = "?" if self.is_provisional(val) else ""
             return "%s(%d%s %d/%d/%d)" % (val.Name, val.EloRating, prov, val.Wins, val.Losses, val.Draws)
 
     def is_provisional(self, profile):

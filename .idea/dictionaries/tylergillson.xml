@@ -3,6 +3,7 @@
     <words>
       <w>elems</w>
       <w>strs</w>
+      <w>unshuffled</w>
       <w>zobrist</w>
     </words>
   </dictionary>

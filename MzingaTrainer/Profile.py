@@ -128,7 +128,6 @@ class Profile:
 
         self.StartMetricWeights = start_metric_weights
         self.EndMetricWeights = end_metric_weights
-
         self.update()
 
     def update(self):
@@ -139,21 +138,21 @@ class Profile:
             raise ValueError("Invalid output_stream.")
 
         root = ElementTree.Element("Profile")
-        _ = ElementTree.SubElement(root, "Id").text = str(self.Id)
+        ElementTree.SubElement(root, "Id").text = str(self.Id)
 
         if not (self._name is None or self._name.isspace()):
-            _ = ElementTree.SubElement(root, "Name").text = self._name.strip()
+            ElementTree.SubElement(root, "Name").text = self._name.strip()
         if self.ParentA is not None:
-            _ = ElementTree.SubElement(root, "ParentA").text = self.ParentA
+            ElementTree.SubElement(root, "ParentA").text = str(self.ParentA)
         if self.ParentB is not None:
-            _ = ElementTree.SubElement(root, "ParentB").text = self.ParentB
+            ElementTree.SubElement(root, "ParentB").text = str(self.ParentB)
 
-        _ = ElementTree.SubElement(root, "EloRating").text = self.EloRating
-        _ = ElementTree.SubElement(root, "Wins").text = self.Wins
-        _ = ElementTree.SubElement(root, "Losses").text = self.Losses
-        _ = ElementTree.SubElement(root, "Draws").text = self.Draws
-        _ = ElementTree.SubElement(root, "Creation").text = self.CreationTimestamp
-        _ = ElementTree.SubElement(root, "LastUpdated").text = self.LastUpdatedTimestamp
+        ElementTree.SubElement(root, "EloRating").text = str(self.EloRating)
+        ElementTree.SubElement(root, "Wins").text = str(self.Wins)
+        ElementTree.SubElement(root, "Losses").text = str(self.Losses)
+        ElementTree.SubElement(root, "Draws").text = str(self.Draws)
+        ElementTree.SubElement(root, "Creation").text = str(self.CreationTimestamp)
+        ElementTree.SubElement(root, "LastUpdated").text = str(self.LastUpdatedTimestamp)
 
         start_metric_weights = ElementTree.SubElement(root, "StartMetricWeights")
         end_metric_weights = ElementTree.SubElement(root, "EndMetricWeights")
@@ -162,7 +161,7 @@ class Profile:
         def write_weights(bug_type, bug_type_weight):
             key = MetricWeights.get_key_name(bug_type, bug_type_weight)
             w_value = self.StartMetricWeights.get(bug_type, bug_type_weight)
-            _ = ElementTree.SubElement(parent_node, key).text = w_value
+            ElementTree.SubElement(parent_node, key).text = str(w_value)
 
         MetricWeights.iterate_over_weights(write_weights)
         parent_node = end_metric_weights
@@ -190,35 +189,36 @@ class Profile:
         creation_timestamp = datetime.datetime.now()
         last_updated_timestamp = creation_timestamp
 
-        reader = ElementTree.parse(input_stream)
-        root = reader.getroot()
+        parser = ElementTree.XMLParser(encoding="utf-8")
+        tree = ElementTree.parse(input_stream, parser=parser)
+        root = tree.getroot()
 
         for node in root:
-            if node.attrib == "Id":
+            if node.tag == "Id":
                 r_id = uuid.UUID(uuid.UUID(node.text).hex)
-            if node.attrib == "Name":
+            elif node.tag == "Name":
                 r_name = node.text
-            if node.attrib == "Generation":
+            elif node.tag == "Generation":
                 generation = int(node.text)
-            if node.attrib == "ParentA":
+            elif node.tag == "ParentA":
                 parent_a = uuid.UUID(uuid.UUID(node.text).hex)
-            if node.attrib == "ParentB":
+            elif node.tag == "ParentB":
                 parent_a = uuid.UUID(uuid.UUID(node.text).hex)
-            if node.attrib == "EloRating":
+            elif node.tag == "EloRating":
                 elo_rating = int(node.text)
-            if node.attrib == "Wins":
+            elif node.tag == "Wins":
                 wins = int(node.text)
-            if node.attrib == "Losses":
+            elif node.tag == "Losses":
                 losses = int(node.text)
-            if node.attrib == "Draws":
+            elif node.tag == "Draws":
                 draws = int(node.text)
-            if node.attrib == "Creation":
-                creation_timestamp = datetime.datetime.strptime(node.text, "YYYY-MM-DD %H:%M%:%S")
-            if node.attrib == "LastUpdated":
-                last_updated_timestamp = datetime.datetime.strptime(node.text, "YYYY-MM-DD %H:%M%:%S")
-            if node.attrib in ["MetricWeights", "StartMetricWeights"]:
+            elif node.tag == "Creation":
+                creation_timestamp = datetime.datetime.strptime(node.text, '%Y-%m-%d %H:%M:%S.%f')
+            elif node.tag == "LastUpdated":
+                last_updated_timestamp = datetime.datetime.strptime(node.text, '%Y-%m-%d %H:%M:%S.%f')
+            elif node.tag in ["MetricWeights", "StartMetricWeights"]:
                 start_metric_weights = MetricWeights.read_metric_weights_xml([subelem for subelem in node])
-            if node.attrib == "EndMetricWeights":
+            elif node.tag == "EndMetricWeights":
                 end_metric_weights = MetricWeights.read_metric_weights_xml([subelem for subelem in node])
 
         if r_name is None:
@@ -226,9 +226,21 @@ class Profile:
         if end_metric_weights is None:
             end_metric_weights = start_metric_weights
 
-        kwargs = dict([parent_a, parent_b, elo_rating, wins, losses, draws,
-                       start_metric_weights, end_metric_weights, creation_timestamp, last_updated_timestamp])
-        return Profile(r_id, r_name, generation, **kwargs)
+        kwargs = {
+            "elo_rating": elo_rating,
+            "wins": wins,
+            "losses": losses,
+            "draws": draws,
+            "start_metric_weights": start_metric_weights,
+            "end_metric_weights": end_metric_weights,
+            "creation_timestamp": creation_timestamp,
+            "last_updated_timestamp": last_updated_timestamp,
+            "generation": generation,
+        }
+        if parent_a is not None:
+            kwargs.update({"parent_a": parent_a, "parent_b": parent_b})
+
+        return Profile(r_id, r_name, **kwargs)
 
     @staticmethod
     def generate(min_weight, max_weight):
@@ -277,7 +289,7 @@ def generate_metric_weights(min_weight, max_weight):
         value = min_weight + (random.random() * (max_weight - min_weight))
         mw.set(bug_type, bug_type_weight, value)
 
-    mw.iterate_over_weights(generate_weights)
+    MetricWeights.iterate_over_weights(generate_weights)
     return mw
 
 
@@ -291,7 +303,7 @@ def mix_metric_weights(mw_a, mw_b, min_mix, max_mix):
         value = value * (min_mix + (random.random() * abs(max_mix - min_mix)))
         mw.set(bug_type, bug_type_weight, value)
 
-    mw.iterate_over_weights(mix_weights)
+    MetricWeights.iterate_over_weights(mix_weights)
     return mw
 
 
@@ -300,7 +312,7 @@ def generate_name(n_id):
     name = ""
 
     for i in range(len(short_id)):
-        j = int(short_id[i]) % len(_syllables[i])
+        j = (ord(short_id[i]) % 9) % len(_syllables[i])
         name += _syllables[i][j]
     return name
 

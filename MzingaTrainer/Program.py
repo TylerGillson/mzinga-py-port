@@ -17,7 +17,6 @@ class Program:
                 self.show_help()
             else:
                 t = Trainer()
-                cmd = self.parse_arguments(args, t.trainer_settings)
 
                 cmd_dict = {
                     "b": t.battle,
@@ -40,12 +39,16 @@ class Program:
                     "tournament": t.tournament,
                 }
                 self.cmd_dict = cmd_dict
+
+                cmd = self.parse_arguments(args, t.trainer_settings)
                 cmd_dict[cmd]()
 
         except KeyError:
             self.show_help()
         except Exception as ex:
             print("Error: %s" % ex)
+        finally:
+            return
 
     @staticmethod
     def show_help():
@@ -117,6 +120,7 @@ class Program:
             global arg_dict
             try:
                 exec(arg_dict[arg])
+                i += 2
             except KeyError:
                 raise Exception("Unknown parameter: %s" % args[i])
 
@@ -124,20 +128,20 @@ class Program:
 
 
 arg_dict = {
-    "pp": "trainer_settings.ProfilesPath = args[i + 1])",
-    "profilespath": "trainer_settings.ProfilesPath = args[i + 1]",
+    "pp": "trainer_settings.profiles_path = args[i + 1])",
+    "profilespath": "trainer_settings.profiles_path = args[i + 1]",
 
-    "wpp": "trainer_settings.WhiteProfilePath = args[i + 1]",
-    "whiteprofilepath": "trainer_settings.WhiteProfilePath = args[i + 1]",
+    "wpp": "trainer_settings.white_profiles_path = args[i + 1]",
+    "whiteprofilepath": "trainer_settings.white_profiles_path = args[i + 1]",
 
-    "bpp": "trainer_settings.BlackProfilePath = args[i + 1]",
-    "blackprofilepath": "trainer_settings.BlackProfilePath = args[i + 1]",
+    "bpp": "trainer_settings.black_profiles_path = args[i + 1]",
+    "blackprofilepath": "trainer_settings.black_profiles_path = args[i + 1]",
 
-    "ckc": "trainer_settings.CullKeepCount = int(args[i + 1])",
-    "cullkeepcount": "trainer_settings.CullKeepCount = int(args[i + 1])",
+    "ckc": "trainer_settings.cull_keep_count = int(args[i + 1])",
+    "cullkeepcount": "trainer_settings.cull_keep_count = int(args[i + 1])",
 
-    "gc": "trainer_settings.GenerateCount = int(args[i + 1])",
-    "generatecount": "trainer_settings.GenerateCount = int(args[i + 1])",
+    "gc": "trainer_settings.generate_count = int(args[i + 1])",
+    "generatecount": "trainer_settings.generate_count = int(args[i + 1])",
 
     "gminw": "trainer_settings.GenerateMinWeight = float(args[i + 1])",
     "generateminweight": "trainer_settings.GenerateMinWeight = float(args[i + 1])",
@@ -145,26 +149,26 @@ arg_dict = {
     "gmaxw": "trainer_settings.GenerateMaxWeight = float(args[i + 1])",
     "generatemaxweight": "trainer_settings.GenerateMaxWeight = float(args[i + 1])",
 
-    "lg": "trainer_settings.LifecycleGenerations = int(args[i + 1])",
-    "lifecyclegenerations": "trainer_settings.LifecycleGenerations = int(args[i + 1])",
+    "lg": "trainer_settings.lifecycle_generations = int(args[i + 1])",
+    "lifecyclegenerations": "trainer_settings.lifecycle_generations = int(args[i + 1])",
 
     "lb": "trainer_settings.LifecycleBattles = int(args[i + 1])",
     "lifecyclebattles": "trainer_settings.LifecycleBattles = int(args[i + 1])",
 
-    "mb": "trainer_settings.MaxBattles = int(args[i + 1])",
-    "maxbattles": "trainer_settings.MaxBattles = int(args[i + 1])",
+    "mb": "trainer_settings.max_battles = int(args[i + 1])",
+    "maxbattles": "trainer_settings.max_battles = int(args[i + 1])",
 
-    "mcb": "trainer_settings.MaxConcurrentBattles = int(args[i + 1])",
-    "maxconcurrentbattles": "trainer_settings.MaxConcurrentBattles = int(args[i + 1])",
+    "mcb": "trainer_settings.max_concurrent_battles = int(args[i + 1])",
+    "maxconcurrentbattles": "trainer_settings.max_concurrent_battles = int(args[i + 1])",
 
     "bsp": "trainer_settings.BattleShuffleProfiles = bool(args[i + 1])",
     "battleshuffleprofiles": "trainer_settings.BattleShuffleProfiles = bool(args[i + 1])",
 
-    "mdraws": "trainer_settings.MaxDraws = int(args[i + 1])",
-    "maxdraws": "trainer_settings.MaxDraws = int(args[i + 1])",
+    "mdraws": "trainer_settings.max_draws = int(args[i + 1])",
+    "maxdraws": "trainer_settings.max_draws = int(args[i + 1])",
 
-    "bbtl": "trainer_settings.BulkBattleTimeLimit = datetime.timedelta(args[i + 1])",
-    "bulkbattletimelimit": "trainer_settings.BulkBattleTimeLimit = datetime.timedelta(args[i + 1])",
+    "bbtl": "trainer_settings.bulk_battle_time_limit = datetime.timedelta(args[i + 1])",
+    "bulkbattletimelimit": "trainer_settings.bulk_battle_time_limit = datetime.timedelta(args[i + 1])",
 
     "pr": "trainer_settings.ProvisionalRules = bool(args[i + 1])",
     "provisionalrules": "trainer_settings.ProvisionalRules = bool(args[i + 1])",
@@ -178,8 +182,8 @@ arg_dict = {
     "mmaxm": "trainer_settings.MateMaxMix = float(args[i + 1])",
     "matemaxmix": "trainer_settings.MateMaxMix = float(args[i + 1])",
 
-    "mpc": "trainer_settings.MateParentCount = int(args[i + 1])",
-    "mateparentcount": "trainer_settings.MateParentCount = int(args[i + 1])",
+    "mpc": "trainer_settings.mate_parent_count = int(args[i + 1])",
+    "mateparentcount": "trainer_settings.mate_parent_count = int(args[i + 1])",
 
     "msp": "trainer_settings.MateShuffleParents = bool(args[i + 1])",
     "mateshuffleparents": "trainer_settings.MateShuffleParents = bool(args[i + 1])",
@@ -193,11 +197,11 @@ arg_dict = {
     "tmt": "trainer_settings.TurnMaxTime = datetime.timedelta(args[i + 1])",
     "turnmaxtime": "trainer_settings.TurnMaxTime = datetime.timedelta(args[i + 1])",
 
-    "btl": "trainer_settings.BattleTimeLimit = datetime.timedelta(args[i + 1])",
-    "battletimelimit": "trainer_settings.BattleTimeLimit = datetime.timedelta(args[i + 1])",
+    "btl": "trainer_settings.battle_time_limit = datetime.timedelta(args[i + 1])",
+    "battletimelimit": "trainer_settings.battle_time_limit = datetime.timedelta(args[i + 1])",
 
-    "tpp": "trainer_settings.TargetProfilePath = args[i + 1]",
-    "targetprofilepath": "trainer_settings.TargetProfilePath = args[i + 1]",
+    "tpp": "trainer_settings.target_profile_path = args[i + 1]",
+    "targetprofilepath": "trainer_settings.target_profile_path = args[i + 1]",
 
     "mht": "trainer_settings.MaxHelperThreads = int(args[i + 1])",
     "maxhelperthreads": "trainer_settings.MaxHelperThreads = int(args[i + 1])",

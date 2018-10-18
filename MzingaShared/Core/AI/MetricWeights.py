@@ -24,7 +24,7 @@ def iterate_over_weights(action):
     if action is None:
         raise ValueError("Invalid action.")
 
-    for bug_type in EnumUtils.BugTypes.values():
+    for bug_type in EnumUtils.BugTypes.keys():
         bug_type_weight_int = 0
         while bug_type_weight_int < NumBugTypeWeights:
             bug_type_weight = BugTypeWeightsByInt[bug_type_weight_int]
@@ -37,7 +37,7 @@ def get_key(bug_type, bug_type_weight):
 
 
 def get_key_name(bug_type, bug_type_weight):
-    return "".join(['.', bug_type, bug_type_weight])
+    return "".join([bug_type, '.', bug_type_weight])
 
 
 def read_metric_weights_xml(xml_elem):
