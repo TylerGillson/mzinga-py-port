@@ -90,8 +90,8 @@ class GameAI:
         self._cached_board_scores.clear()
 
     # region Move Evaluation
-    def get_best_move(self, game_board, max_depth):
-        return self.get_best_move_async(game_board, max_depth=max_depth)
+    def get_best_move(self, game_board, **kwargs):
+        return self.get_best_move_async(game_board, **kwargs)
 
     async def get_best_move_async(self, game_board, **kwargs):
         max_depth = self.MaxDepth if 'max_depth' not in kwargs else int(kwargs.pop('max_depth'))

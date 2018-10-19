@@ -32,6 +32,19 @@ def iterate_over_weights(action):
             bug_type_weight_int += 1
 
 
+def iterate_over_weights_result(action, results, **kwargs):
+    if action is None:
+        raise ValueError("Invalid action.")
+
+    for bug_type in EnumUtils.BugTypes.keys():
+        bug_type_weight_int = 0
+        while bug_type_weight_int < NumBugTypeWeights:
+            bug_type_weight = BugTypeWeightsByInt[bug_type_weight_int]
+            results.append(action(bug_type, bug_type_weight, **kwargs))
+            bug_type_weight_int += 1
+    return results
+
+
 def get_key(bug_type, bug_type_weight):
     return EnumUtils.BugTypes[bug_type] * NumBugTypeWeights + BugTypeWeights[bug_type_weight]
 

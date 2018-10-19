@@ -3,6 +3,8 @@ import os
 from os.path import dirname
 sys.path.append(dirname(os.getcwd()))  # Add root directory to PYTHONPATH
 
+import datetime
+
 from MzingaTrainer.Trainer import Trainer
 
 
@@ -56,18 +58,18 @@ class Program:
         print("Mzinga.Trainer.py [command] ([parametername] [parametervalue]...)\n")
 
         print("Example:")
-
         print("Mzinga.Trainer.py enumerate -ProfilesPath c:\\profiles\\\n")
 
         print("Commands:")
+
         print("battle                 Fight a single battle between two profiles")
         print("battleroyale           Fight every profile against each other")
-        print("cull                   Delete the lowest ranking profiles")
-        print("enumerate              List all of the profiles")
-        print("analyze                Analyze all of the profiles")
-        print("generate               Create new random profiles")
+        print("cull                   Delete the lowest ranking profiles")              # Tested
+        print("enumerate              List all of the profiles")                        # Tested
+        print("analyze                Analyze all of the profiles")                     # Tested
+        print("generate               Create new random profiles")                      # Tested
         print("lifecycle              Battle, cull, mate cycle for profiles")
-        print("mate                   Mate every profile with each other")
+        print("mate                   Mate every profile with each other")              # Tested
         print("tournament             Fight a single elimination tournament")
         print()
 
@@ -101,6 +103,61 @@ class Program:
         print("-MaxHelperThreads        The maximum helper threads for each AI to use")
         print()
 
+    @staticmethod
+    def parse_args(arg, args, i, trainer_settings):
+        if arg in ["pp", "profilespath"]:
+            trainer_settings.profiles_path = args[i + 1]
+        if arg in ["wpp", "whiteprofilepath"]:
+            trainer_settings.white_profiles_path = args[i + 1]
+        if arg in ["bpp", "blackprofilepath"]:
+            trainer_settings.black_profiles_path = args[i + 1]
+        if arg in ["ckc", "cullkeepcount"]:
+            trainer_settings.cull_keep_count = int(args[i + 1])
+        if arg in ["gc", "generatecount"]:
+            trainer_settings.generate_count = int(args[i + 1])
+        if arg in ["gminw", "generateminweight"]:
+            trainer_settings.GenerateMinWeight = float(args[i + 1])
+        if arg in ["gmaxw", "generatemaxweight"]:
+            trainer_settings.GenerateMaxWeight = float(args[i + 1])
+        if arg in ["lg", "lifecyclegenerations"]:
+            trainer_settings.lifecycle_generations = int(args[i + 1])
+        if arg in ["lb", "lifecyclebattles"]:
+            trainer_settings.LifecycleBattles = int(args[i + 1])
+        if arg in ["mb", "maxbattles"]:
+            trainer_settings.max_battles = int(args[i + 1])
+        if arg in ["mcb", "maxconcurrentbattles"]:
+            trainer_settings.max_concurrent_battles = int(args[i + 1])
+        if arg in ["bsp", "battleshuffleprofiles"]:
+            trainer_settings.BattleShuffleProfiles = bool(args[i + 1])
+        if arg in ["mdraws", "maxdraws"]:
+            trainer_settings.max_draws = int(args[i + 1])
+        if arg in ["bbtl", "bulkbattletimelimit"]:
+            trainer_settings.bulk_battle_time_limit = datetime.timedelta(args[i + 1])
+        if arg in ["pr", "provisionalrules"]:
+            trainer_settings.ProvisionalRules = bool(args[i + 1])
+        if arg in ["pgc", "provisionalgamecount"]:
+            trainer_settings.ProvisionalGameCount = int(args[i + 1])
+        if arg in ["mminm", "mateminmix"]:
+            trainer_settings.MateMinMix = float(args[i + 1])
+        if arg in ["mmaxm", "matemaxmix"]:
+            trainer_settings.MateMaxMix = float(args[i + 1])
+        if arg in ["mpc", "mateparentcount"]:
+            trainer_settings.mate_parent_count = int(args[i + 1])
+        if arg in ["msp", "mateshuffleparents"]:
+            trainer_settings.MateShuffleParents = bool(args[i + 1])
+        if arg in ["tts", "transtablesize"]:
+            trainer_settings.TransTableSize = int(args[i + 1])
+        if arg in ["mdepth", "maxdepth"]:
+            trainer_settings.MaxDepth = int(args[i + 1])
+        if arg in ["tmt", "turnmaxtime"]:
+            trainer_settings.TurnMaxTime = datetime.timedelta(int(args[i + 1]))
+        if arg in ["btl", "battletimelimit"]:
+            trainer_settings.battle_time_limit = datetime.timedelta(int(args[i + 1]))
+        if arg in ["tpp", "targetprofilepath"]:
+            trainer_settings.target_profile_path = args[i + 1]
+        if arg in ["mht", "maxhelperthreads"]:
+            trainer_settings.MaxHelperThreads = int(args[i + 1])
+
     def parse_arguments(self, args, trainer_settings):
         if args is None or len(args) == 0:
             raise ValueError("Invalid args")
@@ -117,95 +174,14 @@ class Program:
         while i < len(args):
             arg = args[i][1::].lower()
 
-            global arg_dict
             try:
-                exec(arg_dict[arg])
+                self.parse_args(arg, args, i, trainer_settings)
                 i += 2
             except KeyError:
                 raise Exception("Unknown parameter: %s" % args[i])
 
         return cmd
 
-
-arg_dict = {
-    "pp": "trainer_settings.profiles_path = args[i + 1])",
-    "profilespath": "trainer_settings.profiles_path = args[i + 1]",
-
-    "wpp": "trainer_settings.white_profiles_path = args[i + 1]",
-    "whiteprofilepath": "trainer_settings.white_profiles_path = args[i + 1]",
-
-    "bpp": "trainer_settings.black_profiles_path = args[i + 1]",
-    "blackprofilepath": "trainer_settings.black_profiles_path = args[i + 1]",
-
-    "ckc": "trainer_settings.cull_keep_count = int(args[i + 1])",
-    "cullkeepcount": "trainer_settings.cull_keep_count = int(args[i + 1])",
-
-    "gc": "trainer_settings.generate_count = int(args[i + 1])",
-    "generatecount": "trainer_settings.generate_count = int(args[i + 1])",
-
-    "gminw": "trainer_settings.GenerateMinWeight = float(args[i + 1])",
-    "generateminweight": "trainer_settings.GenerateMinWeight = float(args[i + 1])",
-
-    "gmaxw": "trainer_settings.GenerateMaxWeight = float(args[i + 1])",
-    "generatemaxweight": "trainer_settings.GenerateMaxWeight = float(args[i + 1])",
-
-    "lg": "trainer_settings.lifecycle_generations = int(args[i + 1])",
-    "lifecyclegenerations": "trainer_settings.lifecycle_generations = int(args[i + 1])",
-
-    "lb": "trainer_settings.LifecycleBattles = int(args[i + 1])",
-    "lifecyclebattles": "trainer_settings.LifecycleBattles = int(args[i + 1])",
-
-    "mb": "trainer_settings.max_battles = int(args[i + 1])",
-    "maxbattles": "trainer_settings.max_battles = int(args[i + 1])",
-
-    "mcb": "trainer_settings.max_concurrent_battles = int(args[i + 1])",
-    "maxconcurrentbattles": "trainer_settings.max_concurrent_battles = int(args[i + 1])",
-
-    "bsp": "trainer_settings.BattleShuffleProfiles = bool(args[i + 1])",
-    "battleshuffleprofiles": "trainer_settings.BattleShuffleProfiles = bool(args[i + 1])",
-
-    "mdraws": "trainer_settings.max_draws = int(args[i + 1])",
-    "maxdraws": "trainer_settings.max_draws = int(args[i + 1])",
-
-    "bbtl": "trainer_settings.bulk_battle_time_limit = datetime.timedelta(args[i + 1])",
-    "bulkbattletimelimit": "trainer_settings.bulk_battle_time_limit = datetime.timedelta(args[i + 1])",
-
-    "pr": "trainer_settings.ProvisionalRules = bool(args[i + 1])",
-    "provisionalrules": "trainer_settings.ProvisionalRules = bool(args[i + 1])",
-
-    "pgc": "trainer_settings.ProvisionalGameCount = int(args[i + 1])",
-    "provisionalgamecount": "trainer_settings.ProvisionalGameCount = int(args[i + 1])",
-
-    "mminm": "trainer_settings.MateMinMix = float(args[i + 1])",
-    "mateminmix": "trainer_settings.MateMinMix = float(args[i + 1])",
-
-    "mmaxm": "trainer_settings.MateMaxMix = float(args[i + 1])",
-    "matemaxmix": "trainer_settings.MateMaxMix = float(args[i + 1])",
-
-    "mpc": "trainer_settings.mate_parent_count = int(args[i + 1])",
-    "mateparentcount": "trainer_settings.mate_parent_count = int(args[i + 1])",
-
-    "msp": "trainer_settings.MateShuffleParents = bool(args[i + 1])",
-    "mateshuffleparents": "trainer_settings.MateShuffleParents = bool(args[i + 1])",
-
-    "tts": "trainer_settings.TransTableSize = int(args[i + 1])",
-    "transtablesize": "trainer_settings.TransTableSize = int(args[i + 1])",
-
-    "mdepth": "trainer_settings.MaxDepth = int(args[i + 1])",
-    "maxdepth": "trainer_settings.MaxDepth = int(args[i + 1])",
-
-    "tmt": "trainer_settings.TurnMaxTime = datetime.timedelta(args[i + 1])",
-    "turnmaxtime": "trainer_settings.TurnMaxTime = datetime.timedelta(args[i + 1])",
-
-    "btl": "trainer_settings.battle_time_limit = datetime.timedelta(args[i + 1])",
-    "battletimelimit": "trainer_settings.battle_time_limit = datetime.timedelta(args[i + 1])",
-
-    "tpp": "trainer_settings.target_profile_path = args[i + 1]",
-    "targetprofilepath": "trainer_settings.target_profile_path = args[i + 1]",
-
-    "mht": "trainer_settings.MaxHelperThreads = int(args[i + 1])",
-    "maxhelperthreads": "trainer_settings.MaxHelperThreads = int(args[i + 1])",
-}
 
 if __name__ == '__main__':
     Program().main(sys.argv[1:])

@@ -8,7 +8,7 @@ class TrainerSettings:
     MaxMaxBattles = -1
     MaxMaxConcurrentBattles = -1
 
-    _battleTimeLimit = datetime.timedelta(minutes=5)
+    _battleTimeLimit = datetime.timedelta(minutes=360)
     _bulkBattleTimeLimit = datetime.timedelta(minutes=60)
     _maxDraws = 1
     _maxBattles = MaxMaxBattles
@@ -23,8 +23,8 @@ class TrainerSettings:
     _black_profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/BlackProfiles/"
     _target_profile_path = None
 
-    ProvisionalRules = True
-    ProvisionalGameCount = 30
+    ProvisionalRules = False
+    ProvisionalGameCount = 10
 
     MateMinMix = 0.95
     MateMaxMix = 1.05
@@ -36,7 +36,7 @@ class TrainerSettings:
     TransTableSize = 32
     MaxDepth = -1
 
-    TurnMaxTime = datetime.timedelta(seconds=5.0)
+    TurnMaxTime = 5
 
     GenerateMinWeight = -100.0
     GenerateMaxWeight = 100.0

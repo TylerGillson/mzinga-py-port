@@ -203,7 +203,7 @@ class Profile:
             elif node.tag == "ParentA":
                 parent_a = uuid.UUID(uuid.UUID(node.text).hex)
             elif node.tag == "ParentB":
-                parent_a = uuid.UUID(uuid.UUID(node.text).hex)
+                parent_b = uuid.UUID(uuid.UUID(node.text).hex)
             elif node.tag == "EloRating":
                 elo_rating = int(node.text)
             elif node.tag == "Wins":
@@ -278,7 +278,13 @@ class Profile:
 
         creation_timestamp = datetime.datetime.now()
 
-        kwargs = dict([generation, parent_a.Id, parent_b.Id, elo_rating, creation_timestamp])
+        kwargs = {
+            "generation": generation,
+            "parent_a": parent_a.Id,
+            "parent_b": parent_b.Id,
+            "elo_rating": elo_rating,
+            "creation_timestamp": creation_timestamp
+        }
         return Profile(m_id, name, start_metric_weights, end_metric_weights, **kwargs)
 
 
