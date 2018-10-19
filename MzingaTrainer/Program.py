@@ -150,7 +150,7 @@ class Program:
         if arg in ["mdepth", "maxdepth"]:
             trainer_settings.MaxDepth = int(args[i + 1])
         if arg in ["tmt", "turnmaxtime"]:
-            trainer_settings.TurnMaxTime = datetime.timedelta(int(args[i + 1]))
+            trainer_settings.TurnMaxTime = datetime.timedelta(seconds=int(args[i + 1]))
         if arg in ["btl", "battletimelimit"]:
             trainer_settings.battle_time_limit = datetime.timedelta(int(args[i + 1]))
         if arg in ["tpp", "targetprofilepath"]:

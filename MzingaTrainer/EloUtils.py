@@ -1,18 +1,20 @@
 ﻿import math
 
+DefaultRating = 1200
+MinRating = 100
+
+ProvisionalK = 64.0
+DefaultK = 32.0
+
 
 class EloUtils:
-    DefaultRating = 1200
-    MinRating = 100
 
-    ProvisionalK = 64.0
-    DefaultK = 32.0
-
-    def update_ratings(self, white_rating, black_rating, white_score, black_score, white_k=DefaultK, black_k=DefaultK):
-        if white_rating < self.MinRating:
+    @staticmethod
+    def update_ratings(white_rating, black_rating, white_score, black_score, white_k=DefaultK, black_k=DefaultK):
+        if white_rating < MinRating:
             raise ValueError("Invalid white_rating.")
 
-        if black_rating < self.MinRating:
+        if black_rating < MinRating:
             raise ValueError("Invalid black_rating.")
 
         if white_score < 0.0 or white_score > 1.0:
@@ -33,7 +35,7 @@ class EloUtils:
         e_white = q_white / (q_white + q_black)
         e_black = q_black / (q_white + q_black)
 
-        updated_white_rating = max(self.MinRating, white_rating + round(white_k * (white_score - e_white)))
-        updated_black_rating = max(self.MinRating, black_rating + round(black_k * (black_score - e_black)))
+        updated_white_rating = max(MinRating, white_rating + round(white_k * (white_score - e_white)))
+        updated_black_rating = max(MinRating, black_rating + round(black_k * (black_score - e_black)))
 
         return updated_white_rating, updated_black_rating

@@ -12,11 +12,11 @@ class TaskQueue(object):
 
     def run(self):
         try:
-            done, _ = self.loop.run_until_complete(asyncio.wait(self.tasks))
+            done, _ = self.loop.run_until_complete(asyncio.gather(self.tasks, return_exceptions=True))
             results = [fut.result() for fut in done]
             return results
         except Exception as ex:
-            return [ex]
+            return ["Async Error:" + str(ex)]
 
     def stop(self):
         self.loop.stop()

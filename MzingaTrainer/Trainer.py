@@ -8,6 +8,7 @@ import datetime
 import random
 import math
 import queue
+import threading
 from typing import List
 
 from MzingaShared.Core.GameBoard import GameBoard
@@ -15,7 +16,8 @@ from MzingaShared.Core.AI import MetricWeights
 from MzingaShared.Core.AI.GameAI import GameAI
 from MzingaShared.Core.AI.GameAIConfig import GameAIConfig
 from MzingaTrainer.Profile import Profile
-from MzingaTrainer.EloUtils import EloUtils
+from MzingaTrainer import EloUtils
+from MzingaTrainer.EloUtils import EloUtils as EloUtilsCls
 from MzingaTrainer.TrainerSettings import TrainerSettings
 
 GameResults = ["Loss", "Draw", "Win"]
@@ -25,7 +27,10 @@ class Trainer:
     _start_time = None
     _settings = None
     _random = None
-    _progress_lock = None
+    _elo_lock = threading.Lock()
+    _progress_lock = threading.Lock()
+    _white_profile_lock = threading.Lock()
+    _black_profile_lock = threading.Lock()
 
     @property
     def start_time(self):
@@ -58,7 +63,7 @@ class Trainer:
 
     def battle(self, white_profile_path=None, black_profile_path=None):
         if white_profile_path is None and black_profile_path is None:
-            self.battle(self.trainer_settings.white_profiles_path, self.trainer_settings.black_profiles_path)
+            return self.battle(self.trainer_settings.white_profiles_path, self.trainer_settings.black_profiles_path)
 
         if white_profile_path.isspace():
             raise ValueError("Invalid white_profile_path.")
@@ -76,9 +81,9 @@ class Trainer:
         self.battle_profiles(white_profile, black_profile)
 
         # Save Profiles
-        with open(white_profile_path, "w") as output_stream:
+        with open(white_profile_path, "wb+") as output_stream:
             white_profile.write_xml(output_stream)
-        with open(black_profile_path, "w") as output_stream:
+        with open(black_profile_path, "wb+") as output_stream:
             black_profile.write_xml(output_stream)
 
     def battle_royale(self, *args):
@@ -163,18 +168,17 @@ class Trainer:
             w_s, b_s = self.to_string(w_profile), self.to_string(b_profile)
             self.log("Battle Royale match end %s vs. %s." % (w_s, b_s))
 
-            with completed:
+            with self._progress_lock:
                 completed += 1
-            with remaining:
                 remaining -= 1
 
             # Save Profiles
-            with w_profile:
+            with self._white_profile_lock:
                 w_profile_path = path + str(w_profile.Id) + ".xml"
                 with open(w_profile_path, "wb+") as f:
                     w_profile.write_xml(f)
 
-            with b_profile:
+            with self._black_profile_lock:
                 b_profile_path = path + str(b_profile.Id) + ".xml"
                 with open(b_profile_path, "wb+") as f:
                     b_profile.write_xml(f)
@@ -198,8 +202,6 @@ class Trainer:
         best = list(sorted(profile_list, key=lambda x: x.EloRating))[0]
 
         self.log("Battle Royale Highest Elo: %s" % self.to_string(best))
-
-    _elo_lock = None
 
     def battle_profiles(self, white_profile, black_profile):
         if white_profile is None:
@@ -270,27 +272,27 @@ class Trainer:
         if board_state == "Draw":
             white_score, black_score, white_result, black_result = (0.5, 0.5, "Draw", "Draw")
 
-        with white_profile:
+        with self._white_profile_lock:
             white_rating = white_profile.EloRating
             white_k = EloUtils.ProvisionalK if self.is_provisional(white_profile) else EloUtils.DefaultK
 
-        with black_profile:
+        with self._black_profile_lock:
             black_rating = black_profile.EloRating
             black_k = EloUtils.ProvisionalK if self.is_provisional(black_profile) else EloUtils.DefaultK
 
         with self._elo_lock:
-            white_end_rating, black_end_rating = EloUtils.update_ratings(
+            white_end_rating, black_end_rating = EloUtilsCls.update_ratings(
                 white_rating, black_rating, white_score, black_score, white_k, black_k)
 
-        with white_profile:
+        with self._white_profile_lock:
             white_profile.update_record(white_end_rating, white_result)
 
-        with black_profile:
+        with self._black_profile_lock:
             black_profile.update_record(black_end_rating, black_result)
 
         # Output Results
         w_s, b_s = self.to_string(white_profile), self.to_string(black_profile)
-        self.log("Battle end %s %s vs. %s" % (board_state, w_s, w_s))
+        self.log("Battle end %s %s vs. %s" % (board_state, w_s, b_s))
 
         return board_state
 
@@ -694,9 +696,8 @@ class Trainer:
                         w_s, b_s = self.to_string(white_profile), self.to_string(black_profile)
                         self.log("Tournament match end %s vs. %s." % (w_s, b_s))
 
-                        with completed:
+                        with self._progress_lock:
                             completed += 1
-                        with remaining:
                             remaining -= 1
 
                         # Add winner back into the participant queue
@@ -708,12 +709,12 @@ class Trainer:
                         self.log("Tournament advances %s." % self.to_string(winners[i]))
 
                         # Save Profiles
-                        with white_profile:
+                        with self._white_profile_lock:
                             white_profile_path = "".join([path, str(white_profile.Id), ".xml"])
                             with open(white_profile_path, "wb+") as f:
                                 white_profile.write_xml(f)
 
-                        with black_profile:
+                        with self._black_profile_lock:
                             black_profile_path = "".join([path, str(black_profile.Id), ".xml"])
                             with open(black_profile_path, "wb+") as f:
                                 black_profile.write_xml(f)

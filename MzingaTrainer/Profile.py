@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ElementTree
 
 from MzingaShared.Core.AI import MetricWeights
 from MzingaShared.Core.AI.MetricWeights import MetricWeights as MetricWeightsCls
-from MzingaTrainer.EloUtils import EloUtils
+from MzingaTrainer import EloUtils
 
 
 class Profile:

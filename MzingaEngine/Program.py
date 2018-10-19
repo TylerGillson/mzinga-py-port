@@ -33,10 +33,6 @@ class Program:
             self.engine.EndAsyncCommand.on_change.fire(self)
 
     @staticmethod
-    def print_line(str_format, arg):
-        print(str_format, arg)
-
-    @staticmethod
     def load_config(path):
         if path is None or path == '':
             raise ValueError("path is None or an empty string")
