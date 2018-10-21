@@ -62,7 +62,7 @@ class Program:
 
         print("Commands:")
 
-        print("battle                 Fight a single battle between two profiles")
+        print("battle                 Fight a single battle between two profiles")      # Tested
         print("battleroyale           Fight every profile against each other")
         print("cull                   Delete the lowest ranking profiles")              # Tested
         print("enumerate              List all of the profiles")                        # Tested

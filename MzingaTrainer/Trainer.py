@@ -4,6 +4,7 @@ from os.path import dirname
 sys.path.append(dirname(os.getcwd()))  # Add root directory to PYTHONPATH
 
 import asyncio
+import cProfile
 import datetime
 import random
 import math
@@ -21,6 +22,8 @@ from MzingaTrainer.EloUtils import EloUtils as EloUtilsCls
 from MzingaTrainer.TrainerSettings import TrainerSettings
 
 GameResults = ["Loss", "Draw", "Win"]
+
+run_profile = True
 
 
 class Trainer:
@@ -251,7 +254,17 @@ class Trainer:
                     break
 
                 ai = white_ai if game_board.current_turn_colour == "White" else black_ai
-                move = self.get_best_move(game_board, ai)
+
+                ############################################################
+                if run_profile:
+                    pr = cProfile.Profile()
+                    pr.enable()
+                    move = self.get_best_move(game_board, ai)
+                    pr.disable()
+                    pr.dump_stats('/Users/tylergillson/Desktop/output.prof')
+                ############################################################
+                else:
+                    move = self.get_best_move(game_board, ai)
                 game_board.play(move[0])
 
         except Exception as ex:
@@ -384,9 +397,12 @@ class Trainer:
             raise ValueError("Invalid path.")
 
         profile_list = []
-        files = [f for f in os.listdir(path) if f.endswith(".xml")]
-        for file_path in files:
-            with open(path + file_path, "r") as f:
+        files = []
+        for directory in ['/WhiteProfiles/', '/BlackProfiles/']:
+            files += [(f, directory) for f in os.listdir(path + directory) if f.endswith(".xml")]
+
+        for file in files:
+            with open(path + file[1] + file[0], "r") as f:
                 profile = Profile.read_xml(f)
             profile_list.append(profile)
         return profile_list
@@ -497,9 +513,10 @@ class Trainer:
                 os.mkdir(path)
 
             for i in range(count):
+                directory = '/WhiteProfiles/' if i % 2 == 0 else '/BlackProfiles/'
                 profile = Profile.generate(min_weight, max_weight)
 
-                filename = "".join([path, str(profile.Id), ".xml"])
+                filename = "".join([path, directory, str(profile.Id), ".xml"])
                 with open(filename, "wb+") as f:
                     profile.write_xml(f)
 
@@ -643,9 +660,9 @@ class Trainer:
 
             time_remaining = datetime.timedelta(seconds=self.trainer_settings.battle_time_limit.seconds * total)
             timeout_remaining = time_limit - (datetime.datetime.now() - tournament_start)
+            ts = self.to_string
 
-            s = self.to_string(timeout_remaining) \
-                if timeout_remaining < time_remaining else self.to_string(time_remaining)
+            s = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
             self.log("Tournament start, ETA: %s." % s)
 
             current_tier = self.shuffle(profiles) if shuffle_profiles else self.seed(profiles)
@@ -660,7 +677,7 @@ class Trainer:
 
                     if profile_index == len(current_tier) - 1:
                         # Odd profile out, gimme
-                        self.log("Tournament auto-advances %s." % self.to_string(current_tier[profile_index]))
+                        self.log("Tournament auto-advances %s." % ts(current_tier[profile_index]))
                         winners[i] = current_tier[profile_index]
                     else:
                         white_index = random.randrange(0, 2)  # Help mitigate top players always playing white
@@ -672,7 +689,7 @@ class Trainer:
                         white_higher_rank = white_profile.EloRating < black_profile.EloRating
                         draw_winner_profile = white_profile if white_higher_rank else black_profile
 
-                        w_s, b_s = self.to_string(white_profile), self.to_string(black_profile)
+                        w_s, b_s = ts(white_profile), ts(black_profile)
                         self.log("Tournament match start %s vs. %s." % (w_s, b_s))
 
                         if max_draws == 1:
@@ -693,7 +710,7 @@ class Trainer:
                         if round_result == "Draw":
                             round_result = "WhiteWins" if draw_winner_profile == white_profile else "BlackWins"
 
-                        w_s, b_s = self.to_string(white_profile), self.to_string(black_profile)
+                        w_s, b_s = ts(white_profile), ts(black_profile)
                         self.log("Tournament match end %s vs. %s." % (w_s, b_s))
 
                         with self._progress_lock:
@@ -706,7 +723,7 @@ class Trainer:
                         elif round_result == "BlackWins":
                             winners[i] = black_profile
 
-                        self.log("Tournament advances %s." % self.to_string(winners[i]))
+                        self.log("Tournament advances %s." % ts(winners[i]))
 
                         # Save Profiles
                         with self._white_profile_lock:
@@ -723,8 +740,7 @@ class Trainer:
                             timeout_remaining = time_limit - (datetime.datetime.now() - tournament_start)
 
                             progress, time_remaining = self.get_progress(tournament_start, completed, remaining)
-                            eta = self.to_string(timeout_remaining) \
-                                if timeout_remaining < time_remaining else self.to_string(time_remaining)
+                            eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
                             self.log("Tournament progress: %6.2f, ETA: %s." % (progress, eta))
 
                         if timeout_remaining <= datetime.timedelta.min:
@@ -739,14 +755,14 @@ class Trainer:
                     self.log("Tournament time-out.")
                     break
 
-            self.log("Tournament end, elapsed time: %s." % self.to_string(datetime.datetime.now() - tournament_start))
+            self.log("Tournament end, elapsed time: %s." % ts(datetime.datetime.now() - tournament_start))
 
             if len(current_tier) == 1 and current_tier[0] is not None:
                 winner = current_tier[0]
-                self.log("Tournament Winner: %s" % self.to_string(winner))
+                self.log("Tournament Winner: %s" % ts(winner))
 
             best = list(sorted(profiles, key=lambda x: x.EloRating))[0]
-            self.log("Tournament Highest Elo: %s" % self.to_string(best))
+            self.log("Tournament Highest Elo: %s" % ts(best))
 
     @staticmethod
     def get_progress(start_time, completed, remaining):

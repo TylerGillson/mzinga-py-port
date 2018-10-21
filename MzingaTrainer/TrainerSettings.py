@@ -8,8 +8,8 @@ class TrainerSettings:
     MaxMaxBattles = -1
     MaxMaxConcurrentBattles = -1
 
-    _battleTimeLimit = datetime.timedelta(minutes=5)
-    _bulkBattleTimeLimit = datetime.timedelta(minutes=60)
+    _battleTimeLimit = datetime.timedelta(minutes=15)
+    _bulkBattleTimeLimit = datetime.timedelta(minutes=250)
     _maxDraws = 1
     _maxBattles = MaxMaxBattles
     _maxConcurrentBattles = MaxMaxConcurrentBattles
@@ -19,8 +19,10 @@ class TrainerSettings:
     CullKeepMax = -1
 
     _profiles_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/"
-    _white_profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/WhiteProfiles/"
-    _black_profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/BlackProfiles/"
+    _white_profile_path = \
+        "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/WhiteProfiles/"
+    _black_profile_path = \
+        "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/BlackProfiles/"
     _target_profile_path = None
 
     ProvisionalRules = False
