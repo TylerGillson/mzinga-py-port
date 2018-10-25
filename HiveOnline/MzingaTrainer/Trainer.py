@@ -19,7 +19,7 @@ from HiveOnline.MzingaTrainer.TrainerSettings import TrainerSettings
 
 GameResults = ["Loss", "Draw", "Win"]
 
-run_profile = True
+run_profile = False
 
 
 class Trainer:
@@ -92,7 +92,7 @@ class Trainer:
                     self.trainer_settings.BattleShuffleProfiles, self.trainer_settings.max_concurrent_battles]
             return self.battle_royale(*args)
         else:
-            path, max_battles, max_draws, max_concurrent_battles, time_limit, shuffle_profiles = args
+            path, max_battles, max_draws, time_limit, shuffle_profiles, max_concurrent_battles = args
 
             if path.isspace():
                 raise ValueError("Invalid path.")
@@ -125,18 +125,10 @@ class Trainer:
 
         white_profiles = list(sorted(profile_list, key=lambda x: x.EloRating))
         black_profiles = list(sorted(profile_list, key=lambda x: x.EloRating, reverse=True))
-
-        matches = []
-
-        for white_profile in white_profiles:
-            for black_profile in black_profiles:
-                if white_profile != black_profile:
-                    matches.append((white_profile, black_profile))
+        matches = list(set((wp, bp) for wp in white_profiles for bp in black_profiles if wp != bp))
 
         if shuffle_profiles:
             matches = self.shuffle(matches)
-
-        matches = matches[0:remaining:]
 
         for match in matches:
             w_profile = match[0]
@@ -392,13 +384,12 @@ class Trainer:
         if path.isspace():
             raise ValueError("Invalid path.")
 
+        dirs = ['/WhiteProfiles/', '/BlackProfiles/']
+        files = [(directory, f) for directory in dirs for f in os.listdir(path + directory) if f.endswith(".xml")]
         profile_list = []
-        files = []
-        for directory in ['/WhiteProfiles/', '/BlackProfiles/']:
-            files += [(f, directory) for f in os.listdir(path + directory) if f.endswith(".xml")]
 
         for file in files:
-            with open(path + file[1] + file[0], "r") as f:
+            with open(path + file[0] + file[1], "r") as f:
                 profile = Profile.read_xml(f)
             profile_list.append(profile)
         return profile_list

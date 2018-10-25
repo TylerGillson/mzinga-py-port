@@ -100,6 +100,15 @@ class Profile:
         if "draws" in kwargs:
             self.Draws = kwargs.pop("draws")
 
+    def __eq__(self, other):
+        return self.Id == other.Id
+
+    def __repr__(self):
+        return self.Name
+
+    def __hash__(self):
+        return hash(self.Id)
+
     def update_record(self, rating, result):
         if rating < EloUtils.MinRating:
             raise ValueError("Invalid rating.")

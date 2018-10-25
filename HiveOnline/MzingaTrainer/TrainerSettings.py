@@ -8,8 +8,8 @@ class TrainerSettings:
     MaxMaxBattles = -1
     MaxMaxConcurrentBattles = -1
 
-    _battleTimeLimit = datetime.timedelta(minutes=20)
-    _bulkBattleTimeLimit = datetime.timedelta(minutes=250)
+    _battleTimeLimit = datetime.timedelta(minutes=25)
+    _bulkBattleTimeLimit = datetime.timedelta(minutes=300)
     _maxDraws = 1
     _maxBattles = MaxMaxBattles
     _maxConcurrentBattles = MaxMaxConcurrentBattles
