@@ -19,3 +19,12 @@ class GameViewSet(viewsets.ModelViewSet):
     """
     queryset = Game.objects.all()
     serializer_class = GameSerializer
+
+    def list(self, request, *args, **kwargs):
+        pass
+
+    def create(self, request, *args, **kwargs):
+        pass
+
+    def update(self, request, pk=None, *args, **kwargs):
+        pass

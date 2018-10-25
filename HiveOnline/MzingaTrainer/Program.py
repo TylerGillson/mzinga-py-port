@@ -59,14 +59,14 @@ class Program:
         print("Commands:")
 
         print("battle                 Fight a single battle between two profiles")      # Tested
-        print("battleroyale           Fight every profile against each other")
+        print("battleroyale           Fight every profile against each other")          # Tested
         print("cull                   Delete the lowest ranking profiles")              # Tested
         print("enumerate              List all of the profiles")                        # Tested
         print("analyze                Analyze all of the profiles")                     # Tested
         print("generate               Create new random profiles")                      # Tested
-        print("lifecycle              Battle, cull, mate cycle for profiles")
+        print("lifecycle              Battle, cull, mate cycle for profiles")           # Tested
         print("mate                   Mate every profile with each other")              # Tested
-        print("tournament             Fight a single elimination tournament")
+        print("tournament             Fight a single elimination tournament")           # Tested
         print()
 
         print("Parameters:")

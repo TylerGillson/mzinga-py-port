@@ -164,12 +164,12 @@ class Trainer:
 
             # Save Profiles
             with self._white_profile_lock:
-                w_profile_path = "".join([path, "WhiteProfiles/", str(w_profile.Id), ".xml"])
+                w_profile_path = "".join([path, str(w_profile.Id), ".xml"])
                 with open(w_profile_path, "wb+") as f:
                     w_profile.write_xml(f)
 
             with self._black_profile_lock:
-                b_profile_path = "".join([path, "BlackProfiles/", str(b_profile.Id), ".xml"])
+                b_profile_path = "".join([path, str(b_profile.Id), ".xml"])
                 with open(b_profile_path, "wb+") as f:
                     b_profile.write_xml(f)
 
@@ -347,13 +347,7 @@ class Trainer:
                     self.log("Kept %s." % self.to_string(p))
                     count += 1
                 else:
-                    path_elements = [path, "WhiteProfiles/", str(p.Id), ".xml"]
-                    source_file = "".join(path_elements)
-
-                    if not os.path.exists(source_file):
-                        path_elements[1] = "BlackProfiles/"
-                        source_file = "".join(path_elements)
-
+                    source_file = "".join([path, str(p.Id), ".xml"])
                     dest_file = "".join([path, "Culled/", str(p.Id), ".xml"])
 
                     os.rename(source_file, dest_file)
@@ -384,12 +378,11 @@ class Trainer:
         if path.isspace():
             raise ValueError("Invalid path.")
 
-        dirs = ['/WhiteProfiles/', '/BlackProfiles/']
-        files = [(directory, f) for directory in dirs for f in os.listdir(path + directory) if f.endswith(".xml")]
+        files = [f for f in os.listdir(path) if f.endswith(".xml")]
         profile_list = []
 
         for file in files:
-            with open(path + file[0] + file[1], "r") as f:
+            with open(path + file, "r") as f:
                 profile = Profile.read_xml(f)
             profile_list.append(profile)
         return profile_list
@@ -500,10 +493,9 @@ class Trainer:
                 os.mkdir(path)
 
             for i in range(count):
-                directory = '/WhiteProfiles/' if i % 2 == 0 else '/BlackProfiles/'
                 profile = Profile.generate(min_weight, max_weight)
+                filename = "".join([path, str(profile.Id), ".xml"])
 
-                filename = "".join([path, directory, str(profile.Id), ".xml"])
                 with open(filename, "wb+") as f:
                     profile.write_xml(f)
 
@@ -513,9 +505,9 @@ class Trainer:
 
     def lifecycle(self, path=None, generations=None, battles=None):
         if path is None:
-            self.generate(self.trainer_settings.profiles_path,
-                          self.trainer_settings.lifecycle_generations,
-                          self.trainer_settings.LifecycleBattles)
+            self.lifecycle(self.trainer_settings.profiles_path,
+                           self.trainer_settings.lifecycle_generations,
+                           self.trainer_settings.LifecycleBattles)
         else:
             if path.isspace():
                 raise ValueError("Invalid path.")
@@ -607,8 +599,6 @@ class Trainer:
                         break
                     parents.put(profiles_list[i])
 
-                colour = 0
-                colour_paths = ["WhiteProfiles/", "BlackProfiles/"]
                 while parents.qsize() >= 2:
                     parent_a = parents.get()
                     parent_b = parents.get()
@@ -617,11 +607,9 @@ class Trainer:
                     pa, pb, ch = self.to_string(parent_a), self.to_string(parent_b), self.to_string(child)
                     self.log("Mated %s and %s to sire %s." % (pa, pb, ch))
 
-                    file_path = "".join([path + colour_paths[colour], str(child.Id), ".xml"])
+                    file_path = "".join([path, str(child.Id), ".xml"])
                     with open(file_path, "wb+") as f:
                         child.write_xml(f)
-
-                    colour = (colour + 1) % 2
 
             self.log("Mate end.")
 
@@ -718,12 +706,12 @@ class Trainer:
 
                         # Save Profiles
                         with self._white_profile_lock:
-                            white_profile_path = "".join([path, "WhiteProfiles/", str(white_profile.Id), ".xml"])
+                            white_profile_path = "".join([path, str(white_profile.Id), ".xml"])
                             with open(white_profile_path, "wb+") as f:
                                 white_profile.write_xml(f)
 
                         with self._black_profile_lock:
-                            black_profile_path = "".join([path, "BlackProfiles/", str(black_profile.Id), ".xml"])
+                            black_profile_path = "".join([path, str(black_profile.Id), ".xml"])
                             with open(black_profile_path, "wb+") as f:
                                 black_profile.write_xml(f)
 
