@@ -144,7 +144,7 @@ class GameEngineConfig:
 
     def parse_report_intermediate_best_moves_value(self, raw_value):
         try:
-            self.ReportIntermediateBestMoves = bool(raw_value)
+            self.ReportIntermediateBestMoves = raw_value == 'True'
         except ValueError:
             pass
 

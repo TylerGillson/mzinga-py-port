@@ -124,13 +124,13 @@ class Program:
         if arg in ["mcb", "maxconcurrentbattles"]:
             trainer_settings.max_concurrent_battles = int(args[i + 1])
         if arg in ["bsp", "battleshuffleprofiles"]:
-            trainer_settings.BattleShuffleProfiles = bool(args[i + 1])
+            trainer_settings.BattleShuffleProfiles = args[i + 1] == 'True'
         if arg in ["mdraws", "maxdraws"]:
             trainer_settings.max_draws = int(args[i + 1])
         if arg in ["bbtl", "bulkbattletimelimit"]:
             trainer_settings.bulk_battle_time_limit = datetime.timedelta(args[i + 1])
         if arg in ["pr", "provisionalrules"]:
-            trainer_settings.ProvisionalRules = bool(args[i + 1])
+            trainer_settings.ProvisionalRules = args[i + 1] == 'True'
         if arg in ["pgc", "provisionalgamecount"]:
             trainer_settings.ProvisionalGameCount = int(args[i + 1])
         if arg in ["mminm", "mateminmix"]:
@@ -140,7 +140,7 @@ class Program:
         if arg in ["mpc", "mateparentcount"]:
             trainer_settings.mate_parent_count = int(args[i + 1])
         if arg in ["msp", "mateshuffleparents"]:
-            trainer_settings.MateShuffleParents = bool(args[i + 1])
+            trainer_settings.MateShuffleParents = args[i + 1] == 'True'
         if arg in ["tts", "transtablesize"]:
             trainer_settings.TransTableSize = int(args[i + 1])
         if arg in ["mdepth", "maxdepth"]:
