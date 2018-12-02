@@ -1,9 +1,47 @@
 <component name="ProjectDictionaryState">
   <dictionary name="tylergillson">
     <words>
+      <w>battleroyale</w>
+      <w>battleshuffleprofiles</w>
+      <w>battletimelimit</w>
+      <w>bbtl</w>
+      <w>blackprofilepath</w>
+      <w>bulkbattletimelimit</w>
+      <w>cullkeepcount</w>
       <w>elems</w>
+      <w>generatecount</w>
+      <w>generatemaxweight</w>
+      <w>generateminweight</w>
+      <w>gmaxw</w>
+      <w>gminw</w>
+      <w>lifecyclebattles</w>
+      <w>lifecyclegenerations</w>
+      <w>matemaxmix</w>
+      <w>mateminmix</w>
+      <w>mateparentcount</w>
+      <w>mateshuffleparents</w>
+      <w>maxbattles</w>
+      <w>maxconcurrentbattles</w>
+      <w>maxdepth</w>
+      <w>maxdraws</w>
+      <w>maxhelperthreads</w>
+      <w>mdepth</w>
+      <w>mdraws</w>
+      <w>mmaxm</w>
+      <w>mminm</w>
+      <w>mzinga</w>
+      <w>parametername</w>
+      <w>parametervalue</w>
+      <w>profilespath</w>
+      <w>provisionalgamecount</w>
+      <w>provisionalrules</w>
+      <w>royale</w>
       <w>strs</w>
+      <w>targetprofilepath</w>
+      <w>transtablesize</w>
+      <w>turnmaxtime</w>
       <w>unshuffled</w>
+      <w>whiteprofilepath</w>
       <w>zobrist</w>
     </words>
   </dictionary>

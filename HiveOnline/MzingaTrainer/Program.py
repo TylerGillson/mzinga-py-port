@@ -54,7 +54,7 @@ class Program:
         print("Mzinga.Trainer.py [command] ([parametername] [parametervalue]...)\n")
 
         print("Example:")
-        print("Mzinga.Trainer.py enumerate -ProfilesPath c:\\profiles\\\n")
+        print("Mzinga.Trainer.py enumerate -ProfilesPath /Users/<username>/<path_to_profiles>/\n")
 
         print("Commands:")
 
@@ -79,7 +79,7 @@ class Program:
         print("-GenerateMinWeight       The minimum weight value for random profiles")
         print("-GenerateMaxWeight       The maximum weight value for random profiles")
         print("-LifecycleGenerations    The number of generations to run")
-        print("-LifecycleBattles        The number/type of battles in each generation")
+        print("-LifecycleBattles        The number/type of battles in each generation.")
         print("-MaxBattles              The max number of battles in a battle royale")
         print("-MaxConcurrentBattles    The max number of battles at the same time")
         print("-BattleShuffleProfiles   Whether or not to have profiles fight in random order")
@@ -128,7 +128,7 @@ class Program:
         if arg in ["mdraws", "maxdraws"]:
             trainer_settings.max_draws = int(args[i + 1])
         if arg in ["bbtl", "bulkbattletimelimit"]:
-            trainer_settings.bulk_battle_time_limit = datetime.timedelta(args[i + 1])
+            trainer_settings.bulk_battle_time_limit = int(args[i + 1])
         if arg in ["pr", "provisionalrules"]:
             trainer_settings.ProvisionalRules = args[i + 1] == 'True'
         if arg in ["pgc", "provisionalgamecount"]:
@@ -148,7 +148,7 @@ class Program:
         if arg in ["tmt", "turnmaxtime"]:
             trainer_settings.TurnMaxTime = datetime.timedelta(seconds=int(args[i + 1]))
         if arg in ["btl", "battletimelimit"]:
-            trainer_settings.battle_time_limit = datetime.timedelta(int(args[i + 1]))
+            trainer_settings.battle_time_limit = int(args[i + 1])
         if arg in ["tpp", "targetprofilepath"]:
             trainer_settings.target_profile_path = args[i + 1]
         if arg in ["mht", "maxhelperthreads"]:

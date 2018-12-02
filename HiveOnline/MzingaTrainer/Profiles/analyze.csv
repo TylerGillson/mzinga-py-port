@@ -1,4 +1,4 @@
 Id,Name,EloRating,Generation,ParentA,ParentB,Wins,Losses,Draws
-3124c365-c2f6-470a-be99-5b53c496c6c5,Makakwani,1200,0,4acac33a-7b03-4754-ade1-17ffdeb1b912,5208e8cc-3a68-40c0-987e-a4c3505f3d94,0,0,0
-4acac33a-7b03-4754-ade1-17ffdeb1b912,Molini,1209,0,,,0,0,4
-5208e8cc-3a68-40c0-987e-a4c3505f3d94,Nakishaji,1244,0,,,2,0,4
+b0165d3c-6f04-4aff-aaac-de5261b22064,Nahiba,1200,0,,,0,0,0
+2c689e42-ac1d-4510-a427-03df4437bbb9,Mji,1200,0,,,0,0,0
+d5bcde40-5124-4a91-af95-4b9aff6a13ed,Imaba,1200,0,b0165d3c-6f04-4aff-aaac-de5261b22064,2c689e42-ac1d-4510-a427-03df4437bbb9,0,0,0
