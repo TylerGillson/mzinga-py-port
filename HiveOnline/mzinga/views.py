@@ -1,4 +1,4 @@
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
@@ -17,10 +17,10 @@ from MzingaShared.Engine.GameEngine import GameEngine
 engine = GameEngine("HiveOnline", GameEngineConfig.get_default_config())
 
 
-# Notify Human player:
+# Send an email update to a game's human player:
 def notify_human_player(g):
     send_mail(
-        'HiveOnline - Game ID:' + str(g.id),
+        'HiveOnline - Game ID: ' + str(g.id),
         'The ball is in your court!\n\nGame ID: %s\n\nBoard String: %s' % (str(g.id), g.board_string),
         'noreply@hiveonline.com',
         [g.player_1.email],
@@ -41,6 +41,7 @@ class GameViewSet(viewsets.ModelViewSet):
     """
     queryset = Game.objects.all()
     serializer_class = GameSerializer
+    http_method_names = ['get', 'delete']
 
     def get_queryset(self):
         return Game.objects.all()
@@ -69,10 +70,11 @@ class NewGame(viewsets.ViewSet):
         Initiate a new game of Hive.
 
         :param request: an HTTP request object
-        :param kwargs: {
-            "colour": ['Black', 'White'],
-            "ai_config": ["time 10", "depth 1"]
-        }
+        Expected request body:
+            {
+                "colour": ['Black', 'White'],
+                "ai_config": ["time 10", "depth 1"]
+            }
         :return: JSON serialization of newly created game
         """
         # Init game, then add players:
@@ -90,12 +92,14 @@ class NewGame(viewsets.ViewSet):
             best_move = engine.parse_command("bestmove " + ai_config)
             g.board_string = engine.parse_command("play " + str(best_move))
             g.status = 'InProgress'
+            g.current_turn = g.player_1
             notify_human_player(g)
 
         # Human plays first --> init game:
         elif colour == 'White':
             g.status = 'NotStarted'
             g.board_string = g.status + ";White[1]"
+            g.current_turn = g.player_2
             notify_human_player(g)
 
         # Save model instance & return serialized data:
@@ -124,8 +128,8 @@ class PlayMove(viewsets.ViewSet):
 
         try:
             g = Game.objects.get(id=game_id)
-        except ObjectDoesNotExist:
-            return get_object_or_404(Game, name="game")
+        except ValidationError or ObjectDoesNotExist:
+            return get_object_or_404(Game)
 
         engine.parse_command("newgame " + g.board_string)  # Load game from board_string
         g.board_string = engine.parse_command("play " + move_str)  # Get updated board_string
@@ -135,8 +139,3 @@ class PlayMove(viewsets.ViewSet):
         # Return updated game:
         serializer = GameSerializer(g, many=False, context={'request': request})
         return Response(serializer.data)
-
-# Common Functionality:
-#   - Start game (choose Black or White)
-#   - Play move (including turn & end game notifications)
-#   - End game notifications

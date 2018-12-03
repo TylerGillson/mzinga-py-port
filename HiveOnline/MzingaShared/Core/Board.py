@@ -157,10 +157,10 @@ class Board:
 
     def __init__(self, board_string):
         self.init_state_vars()
+        self.init_pieces()
 
         # New game constructor
         if board_string == "START":
-            self.init_pieces()
             return
 
         if board_string is None or board_string.isspace():
@@ -168,26 +168,27 @@ class Board:
 
         # Board history string constructor:
         split = board_string.split(';')
-        board_state_string = split[1]
+        board_state_string = split[0]
 
         if board_state_string not in BoardStates:
             raise ValueError("%s%s" % ("Couldn't parse board state. ", board_string))
 
-        current_turn_split = list(filter(None, split[2].replace('[', ']').split(']')))
+        current_turn_split = list(filter(None, split[1].replace('[', ']').split(']')))
         current_turn_colour_string = current_turn_split[0]
 
         if current_turn_colour_string not in ColoursByInt.values():
             raise ValueError("%s%s" % ("Couldn't parse current turn colour. ", board_string))
 
         current_player_turn_string = current_turn_split[1]
-        self.current_turn = 2 * (int(current_player_turn_string) - 1) + Colours.get(current_turn_colour_string)
+        self.current_turn = 2 * (int(current_player_turn_string) - 1) + Colours[current_turn_colour_string]
 
         parsed_pieces = queue.Queue(EnumUtils.NumPieceNames)
-        i = 3
+        i = 2
         while i < len(split):
-            parsed_pieces.put(Piece(split[i]))
+            parsed_pieces.put(Piece(None, piece_string=split[i]))
+            i += 1
 
-        while parsed_pieces.not_empty:
+        while not parsed_pieces.empty():
             parsed_piece = parsed_pieces.get()
             if parsed_piece.in_play:
                 if parsed_piece.position.stack > 0 and not self.has_piece_at(parsed_piece.position.get_below()):
@@ -198,6 +199,7 @@ class Board:
 
         if not self.is_one_hive():
             raise ValueError("The board_string violates the one-hive rule: %s" % board_string)
+        return
 
     def init_pieces(self):
         for i in range(EnumUtils.NumPieceNames):
