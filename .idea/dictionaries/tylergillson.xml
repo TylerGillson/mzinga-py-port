@@ -8,6 +8,7 @@
       <w>blackprofilepath</w>
       <w>bulkbattletimelimit</w>
       <w>cullkeepcount</w>
+      <w>dest</w>
       <w>elems</w>
       <w>generatecount</w>
       <w>generatemaxweight</w>
@@ -36,6 +37,7 @@
       <w>provisionalgamecount</w>
       <w>provisionalrules</w>
       <w>royale</w>
+      <w>royales</w>
       <w>strs</w>
       <w>targetprofilepath</w>
       <w>transtablesize</w>

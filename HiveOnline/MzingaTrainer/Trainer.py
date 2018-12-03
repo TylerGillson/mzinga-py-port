@@ -316,9 +316,9 @@ class Trainer:
 
     def cull(self, path=None, keep_count=None, provisional_rules=None):
         if path is None:
-            self.cull(self.trainer_settings.profiles_path,
-                      self.trainer_settings.cull_keep_count,
-                      self.trainer_settings.ProvisionalRules)
+            return self.cull(self.trainer_settings.profiles_path,
+                             self.trainer_settings.cull_keep_count,
+                             self.trainer_settings.ProvisionalRules)
         else:
             if path.isspace():
                 raise ValueError("Invalid path.")
@@ -357,7 +357,7 @@ class Trainer:
 
     def enumerate(self, path=None):
         if path is None:
-            self.enumerate(self.trainer_settings.profiles_path)
+            return self.enumerate(self.trainer_settings.profiles_path)
         else:
             if path.isspace():
                 raise ValueError("Invalid path.")
@@ -429,7 +429,7 @@ class Trainer:
 
     def analyze(self, path=None):
         if path is None:
-            self.analyze(self.trainer_settings.profiles_path)
+            return self.analyze(self.trainer_settings.profiles_path)
         else:
             if path.isspace():
                 raise ValueError("Invalid path.")
@@ -476,10 +476,10 @@ class Trainer:
 
     def generate(self, path=None, count=None, min_weight=None, max_weight=None):
         if path is None:
-            self.generate(self.trainer_settings.profiles_path,
-                          self.trainer_settings.generate_count,
-                          self.trainer_settings.GenerateMinWeight,
-                          self.trainer_settings.GenerateMaxWeight)
+            return self.generate(self.trainer_settings.profiles_path,
+                                 self.trainer_settings.generate_count,
+                                 self.trainer_settings.GenerateMinWeight,
+                                 self.trainer_settings.GenerateMaxWeight)
         else:
             if path.isspace():
                 raise ValueError("Invalid path.")
@@ -505,9 +505,9 @@ class Trainer:
 
     def lifecycle(self, path=None, generations=None, battles=None):
         if path is None:
-            self.lifecycle(self.trainer_settings.profiles_path,
-                           self.trainer_settings.lifecycle_generations,
-                           self.trainer_settings.LifecycleBattles)
+            return self.lifecycle(self.trainer_settings.profiles_path,
+                                  self.trainer_settings.lifecycle_generations,
+                                  self.trainer_settings.LifecycleBattles)
         else:
             if path.isspace():
                 raise ValueError("Invalid path.")

@@ -31,7 +31,6 @@ class GameEngine:
         "info": "self.info()",
         "help": "self.help()",
         "board": "self.board() if param_count == 0 else self.board(split[1])",
-        "newgame": "self.new_game()",
         "play": "self.raise_command_exception() if param_count < 1 else self.play(split[1])",
         "pass": "self.pass_turn()",
         "validmoves": "self.valid_moves()",
@@ -99,6 +98,11 @@ class GameEngine:
                     return self.options_set(split[2], split[3])
                 else:
                     self.raise_command_exception()
+            elif cmd == "newgame":
+                if param_count == 0:
+                    return self.new_game()
+                else:
+                    return self.new_game(board_string=split[1])
             else:
                 return eval(self.cmd_dict[cmd])
 
@@ -143,21 +147,19 @@ class GameEngine:
             if not (board_string is None or board_string.isspace()):
                 self._game_board = GameBoard(board_string)
                 self._game_ai.reset_caches()
-
         if self._game_board is None:
             raise NoBoardException
-
         print(self._game_board)
 
-    def new_game(self):
-        self._game_board = GameBoard("START")
+    def new_game(self, **kwargs):
+        self._game_board = GameBoard("START") if not kwargs else GameBoard(kwargs.pop("board_string"))
         self._game_ai.reset_caches()
         print(self._game_board)
+        return str(self._game_board)
 
     def check_board(self, check_game_over=True):
         if self._game_board is None:
             raise NoBoardException
-
         if check_game_over:
             if self._game_board.game_is_over:
                 raise GameIsOverException
@@ -166,6 +168,7 @@ class GameEngine:
         self.check_board()
         self._game_board.play(Move(move_string=move_string))
         print(self._game_board)
+        return str(self._game_board)
 
     def pass_turn(self):
         self.check_board()
@@ -176,13 +179,13 @@ class GameEngine:
         self.check_board()
         valid_moves = self._game_board.get_valid_moves()
         print(valid_moves)
+        return str(self._game_board)
 
     def best_move(self, **kwargs):
         self.check_board()
 
         if 'max_time' not in kwargs and 'max_depth' not in kwargs:
             raise ValueError("You must specify either a max_depth or a max_time!")
-
         if 'max_time' in kwargs:
             kwargs['max_time'] = datetime.timedelta(seconds=int(kwargs.get('max_time')))
 
@@ -201,6 +204,7 @@ class GameEngine:
             raise ValueError(best_move)
 
         print(best_move)
+        return best_move
 
     def undo(self, moves=1):
         self.check_board(check_game_over=False)

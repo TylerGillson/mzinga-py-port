@@ -1,4 +1,4 @@
 Id,Name,EloRating,Generation,ParentA,ParentB,Wins,Losses,Draws
-b0165d3c-6f04-4aff-aaac-de5261b22064,Nahiba,1200,0,,,0,0,0
-2c689e42-ac1d-4510-a427-03df4437bbb9,Mji,1200,0,,,0,0,0
-d5bcde40-5124-4a91-af95-4b9aff6a13ed,Imaba,1200,0,b0165d3c-6f04-4aff-aaac-de5261b22064,2c689e42-ac1d-4510-a427-03df4437bbb9,0,0,0
+b0165d3c-6f04-4aff-aaac-de5261b22064,Nahiba,1168,0,,,0,1,7
+2c689e42-ac1d-4510-a427-03df4437bbb9,Mji,1200,0,,,0,0,5
+190fbad8-36ac-4122-bb13-a69627d68391,Kuhishaita,1200,0,b0165d3c-6f04-4aff-aaac-de5261b22064,2c689e42-ac1d-4510-a427-03df4437bbb9,0,0,0
