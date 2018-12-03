@@ -1,9 +1,9 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from . serializers import UserSerializer, GameSerializer
@@ -11,6 +11,8 @@ from . models import Game
 
 from MzingaShared.Engine import GameEngineConfig
 from MzingaShared.Engine.GameEngine import GameEngine
+
+engine = GameEngine("HiveOnline", GameEngineConfig.get_default_config())
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -34,38 +36,37 @@ class GameViewSet(viewsets.ModelViewSet):
 
 
 class NewGame(viewsets.ViewSet):
+    permission_classes = (IsAuthenticated,)
 
     @staticmethod
-    @login_required
-    def create(request, **kwargs):
+    def create(request):
         """
         Initiate a new game of Hive.
 
         :param request: an HTTP request object
         :param kwargs: {
             "colour": ['Black', 'White'],
-            "ai_config": ["max_time 10", "max_depth 1"]
+            "ai_config": ["time 10", "depth 1"]
         }
         :return: JSON serialization of newly created game
         """
         g = Game()
         g.player_1 = request.user
         g.player_2 = User.objects.get_by_natural_key("AI")
-        g.status = 'NotStarted'
 
         ai_config = request.data['ai_config']
         colour = request.data['colour']
 
         # AI plays first:
         if colour == 'Black':
-            config = GameEngineConfig.get_default_config()
-            engine = GameEngine("HiveOnline", config)
             engine.parse_command("newgame")
             best_move = engine.parse_command("bestmove " + ai_config)
-            g.board_string = engine.parse_command("play " + best_move)
+            g.board_string = engine.parse_command("play " + str(best_move))
+            g.status = 'InProgress'
 
         # Human plays first:
         elif colour == 'White':
+            g.status = 'NotStarted'
             g.board_string = g.status + ";White[1]"
 
         g.save()
@@ -74,9 +75,10 @@ class NewGame(viewsets.ViewSet):
 
 
 class PlayMove(viewsets.ViewSet):
-    engine = GameEngine("HiveOnline", GameEngineConfig.get_default_config())
+    permission_classes = (IsAuthenticated,)
 
-    def create(self, request):
+    @staticmethod
+    def create(request):
         """
         Play a turn on an existing game of Hive.
 
@@ -95,8 +97,8 @@ class PlayMove(viewsets.ViewSet):
         except ObjectDoesNotExist:
             return get_object_or_404(Game, name="game")
 
-        self.engine.parse_command("newgame " + g.board_string)  # Load game from board_string
-        g.board_string = self.engine.parse_command("play " + move_str)  # Get updated board_string
+        engine.parse_command("newgame " + g.board_string)  # Load game from board_string
+        g.board_string = engine.parse_command("play " + move_str)  # Get updated board_string
 
         # Do turn notifications
 

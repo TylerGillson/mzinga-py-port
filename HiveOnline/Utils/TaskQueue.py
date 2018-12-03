@@ -5,7 +5,11 @@ class TaskQueue(object):
 
     def __init__(self):
         self.tasks = []
-        self.loop = asyncio.get_event_loop()
+        try:
+            self.loop = asyncio.get_event_loop()
+        except RuntimeError:
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
 
     def enqueue(self, callback, *args, **kwargs):
         self.tasks.append(asyncio.ensure_future(callback(*args, **kwargs)))
