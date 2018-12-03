@@ -1,5 +1,5 @@
-from HiveOnline.MzingaShared.Core import EnumUtils
-from HiveOnline.MzingaShared.Core.PieceMetrics import PieceMetrics
+from MzingaShared.Core import EnumUtils
+from MzingaShared.Core.PieceMetrics import PieceMetrics
 
 
 class BoardMetrics:

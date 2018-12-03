@@ -1,7 +1,7 @@
-from HiveOnline.MzingaShared.Core import Move, EnumUtils
-from HiveOnline.MzingaShared.Core.Board import Board, InvalidMoveException
-from HiveOnline.MzingaShared.Core.BoardHistory import BoardHistory
-from HiveOnline.Utils.Events import Broadcaster
+from MzingaShared.Core import Move, EnumUtils
+from MzingaShared.Core.Board import Board, InvalidMoveException
+from MzingaShared.Core.BoardHistory import BoardHistory
+from Utils.Events import Broadcaster
 
 
 class GameBoard(Board):

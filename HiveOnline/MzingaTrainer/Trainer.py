@@ -8,14 +8,14 @@ import threading
 import os
 from typing import List
 
-from HiveOnline.MzingaShared.Core.GameBoard import GameBoard
-from HiveOnline.MzingaShared.Core.AI import MetricWeights
-from HiveOnline.MzingaShared.Core.AI.GameAI import GameAI
-from HiveOnline.MzingaShared.Core.AI.GameAIConfig import GameAIConfig
-from HiveOnline.MzingaTrainer.Profile import Profile
-from HiveOnline.MzingaTrainer import EloUtils
-from HiveOnline.MzingaTrainer.EloUtils import EloUtils as EloUtilsCls
-from HiveOnline.MzingaTrainer.TrainerSettings import TrainerSettings
+from MzingaShared.Core.GameBoard import GameBoard
+from MzingaShared.Core.AI import MetricWeights
+from MzingaShared.Core.AI.GameAI import GameAI
+from MzingaShared.Core.AI.GameAIConfig import GameAIConfig
+from MzingaTrainer.Profile import Profile
+from MzingaTrainer import EloUtils
+from MzingaTrainer.EloUtils import EloUtils as EloUtilsCls
+from MzingaTrainer.TrainerSettings import TrainerSettings
 
 GameResults = ["Loss", "Draw", "Win"]
 

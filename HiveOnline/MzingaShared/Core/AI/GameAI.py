@@ -2,18 +2,18 @@
 import functools
 import datetime
 
-from HiveOnline.MzingaShared.Core import EnumUtils
-from HiveOnline.MzingaShared.Core.EnumUtils import EnumUtils as EnumUtilsCls
-from HiveOnline.Utils.Events import Broadcaster
-from HiveOnline.MzingaShared.Core.FixedCache import FixedCache
-from HiveOnline.MzingaShared.Core.Move import Move
-from HiveOnline.MzingaShared.Core.MoveSet import MoveSet
-from HiveOnline.MzingaShared.Core.AI.EvaluatedMove import EvaluatedMove
-from HiveOnline.MzingaShared.Core.AI.EvaluatedMoveCollection import EvaluatedMoveCollection
-from HiveOnline.MzingaShared.Core.AI.ListExtensions import ListExtensions
-from HiveOnline.MzingaShared.Core.AI.MetricWeights import MetricWeights
-from HiveOnline.MzingaShared.Core.AI.TranspositionTable import TranspositionTable, TranspositionTableEntry, \
-                                                               TranspositionTableEntryType
+from MzingaShared.Core import EnumUtils
+from MzingaShared.Core.EnumUtils import EnumUtils as EnumUtilsCls
+from Utils.Events import Broadcaster
+from MzingaShared.Core.FixedCache import FixedCache
+from MzingaShared.Core.Move import Move
+from MzingaShared.Core.MoveSet import MoveSet
+from MzingaShared.Core.AI.EvaluatedMove import EvaluatedMove
+from MzingaShared.Core.AI.EvaluatedMoveCollection import EvaluatedMoveCollection
+from MzingaShared.Core.AI.ListExtensions import ListExtensions
+from MzingaShared.Core.AI.MetricWeights import MetricWeights
+from MzingaShared.Core.AI.TranspositionTable import TranspositionTable, TranspositionTableEntry, \
+                                                    TranspositionTableEntryType
 
 depths = []
 

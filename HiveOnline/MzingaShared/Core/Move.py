@@ -1,6 +1,6 @@
-from HiveOnline.MzingaShared.Core.EnumUtils import EnumUtils
-from HiveOnline.MzingaShared.Core.EnumUtils import PieceNames
-from HiveOnline.MzingaShared.Core.PiecePositionBase import PiecePositionBase
+from MzingaShared.Core.EnumUtils import EnumUtils
+from MzingaShared.Core.EnumUtils import PieceNames
+from MzingaShared.Core.PiecePositionBase import PiecePositionBase
 
 PassString = "PASS"
 _pass = None

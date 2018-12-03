@@ -1,5 +1,5 @@
-from HiveOnline.MzingaShared.Core.EnumUtils import PieceNames, EnumUtils
-from HiveOnline.MzingaShared.Core import Position
+from MzingaShared.Core.EnumUtils import PieceNames, EnumUtils
+from MzingaShared.Core import Position
 
 
 class PiecePositionBase:

@@ -1,6 +1,6 @@
 ﻿import sys
 
-from HiveOnline.MzingaShared.Core.FixedCache import FixedCache
+from MzingaShared.Core.FixedCache import FixedCache
 
 
 class TranspositionTableEntryType:

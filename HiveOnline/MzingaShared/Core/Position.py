@@ -1,6 +1,6 @@
 import queue
 
-from HiveOnline.MzingaShared.Core import EnumUtils
+from MzingaShared.Core import EnumUtils
 
 MaxStack = 5
 

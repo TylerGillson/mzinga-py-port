@@ -1,6 +1,6 @@
 import threading
 
-from HiveOnline.MzingaShared.Core.CacheMetrics import CacheMetrics
+from MzingaShared.Core.CacheMetrics import CacheMetrics
 
 DefaultCapacity = 1024
 

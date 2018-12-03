@@ -1,8 +1,8 @@
 import sys
 
-from HiveOnline.MzingaShared.Engine import GameEngineConfig
-from HiveOnline.MzingaShared.Engine.GameEngine import GameEngine
-from HiveOnline.MzingaShared.Engine.GameEngineConfig import GameEngineConfig as GameEngineConfigCls
+from MzingaShared.Engine import GameEngineConfig
+from MzingaShared.Engine.GameEngine import GameEngine
+from MzingaShared.Engine.GameEngineConfig import GameEngineConfig as GameEngineConfigCls
 
 
 class Program:

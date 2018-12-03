@@ -18,9 +18,9 @@ class TrainerSettings:
     CullMinKeepCount = 2
     CullKeepMax = -1
 
-    _profiles_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/"
-    _white_profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/WhiteProfiles/"
-    _black_profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/BlackProfiles/"
+    _profiles_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/"
+    _white_profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/WhiteProfiles/"
+    _black_profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/BlackProfiles/"
     _target_profile_path = None
 
     ProvisionalRules = False

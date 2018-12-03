@@ -2,7 +2,7 @@
 from typing import List
 from copy import deepcopy
 
-from HiveOnline.MzingaShared.Core import EnumUtils
+from MzingaShared.Core import EnumUtils
 
 BugTypeWeights = {
     "InPlayWeight": 0,

@@ -5,6 +5,8 @@ from . import views
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'games', views.GameViewSet)
+router.register(r'new_game', views.NewGame, base_name='new_game')
+router.register(r'play_move', views.PlayMove, base_name='play_move')
 
 urlpatterns = [
     url(r'^', include(router.urls)),

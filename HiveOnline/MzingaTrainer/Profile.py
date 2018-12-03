@@ -3,9 +3,9 @@ import random
 import uuid
 import xml.etree.ElementTree as ElementTree
 
-from HiveOnline.MzingaShared.Core.AI import MetricWeights
-from HiveOnline.MzingaShared.Core.AI.MetricWeights import MetricWeights as MetricWeightsCls
-from HiveOnline.MzingaTrainer import EloUtils
+from MzingaShared.Core.AI import MetricWeights
+from MzingaShared.Core.AI.MetricWeights import MetricWeights as MetricWeightsCls
+from MzingaTrainer import EloUtils
 
 
 class Profile:

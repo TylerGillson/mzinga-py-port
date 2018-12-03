@@ -2,10 +2,10 @@
 import platform
 import xml.etree.ElementTree as ElementTree
 
-from HiveOnline.MzingaShared.Core.AI import MetricWeights
-from HiveOnline.MzingaShared.Core.AI.GameAI import GameAI
-from HiveOnline.MzingaShared.Core.AI.GameAIConfig import GameAIConfig
-from HiveOnline.MzingaShared.Core.AI.TranspositionTable import TranspositionTable
+from MzingaShared.Core.AI import MetricWeights
+from MzingaShared.Core.AI.GameAI import GameAI
+from MzingaShared.Core.AI.GameAIConfig import GameAIConfig
+from MzingaShared.Core.AI.TranspositionTable import TranspositionTable
 
 is_64 = platform.architecture() == "64bit"
 

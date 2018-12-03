@@ -1,16 +1,16 @@
 import datetime
-import asyncio
-from copy import deepcopy
+# import asyncio
+# from copy import deepcopy
 
-from HiveOnline.MzingaShared.Core.Board import InvalidMoveException
-from HiveOnline.MzingaShared.Core.BoardHistory import BoardHistory
-from HiveOnline.MzingaShared.Core.GameBoard import GameBoard
-from HiveOnline.MzingaShared.Core.Move import Move
-from HiveOnline.Utils.Events import Broadcaster
-from HiveOnline.Utils.TaskQueue import TaskQueue
+from MzingaShared.Core.Board import InvalidMoveException
+from MzingaShared.Core.BoardHistory import BoardHistory
+from MzingaShared.Core.GameBoard import GameBoard
+from MzingaShared.Core.Move import Move
+from Utils.Events import Broadcaster
+from Utils.TaskQueue import TaskQueue
 
 debug = False
-loop = asyncio.get_event_loop()
+# loop = asyncio.get_event_loop()
 
 
 class GameEngine:
@@ -228,6 +228,7 @@ class GameEngine:
         self.options_get("TranspositionTableSizeMB")
         self.options_get("ReportIntermediateBestMoves")
 
+    # noinspection PyMethodMayBeStatic
     def options_get(self, opt_key):
         if opt_key is None or opt_key.isspace():
             raise ValueError("opt_key is None or whitespace")
@@ -272,6 +273,7 @@ class GameEngine:
         if refresh_ai:
             self.init_ai()
 
+    """
     def start_ponder(self):
         if self.config.PonderDuringIdle != "Disabled" and not self._is_pondering and \
                 self._game_board is not None and self._game_board.game_in_progress:
@@ -301,6 +303,7 @@ class GameEngine:
 
             if self.config.ReportIntermediateBestMoves:
                 self._game_ai.BestMoveFound.on_change += self.on_best_move_found
+    """
 
     def on_start_async_command(self):
         return self._async_queue.run()

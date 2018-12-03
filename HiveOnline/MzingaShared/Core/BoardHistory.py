@@ -1,6 +1,6 @@
-from HiveOnline.MzingaShared.Core import Move
-from HiveOnline.MzingaShared.Core.Move import Move as MoveCls
-from HiveOnline.MzingaShared.Core.Piece import Piece
+from MzingaShared.Core import Move
+from MzingaShared.Core.Move import Move as MoveCls
+from MzingaShared.Core.Piece import Piece
 
 
 class BoardHistory:

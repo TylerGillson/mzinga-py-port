@@ -1,5 +1,5 @@
-from HiveOnline.MzingaShared.Core.Move import Move
-from HiveOnline.MzingaShared.Core.EnumUtils import PieceNames
+from MzingaShared.Core.Move import Move
+from MzingaShared.Core.EnumUtils import PieceNames
 
 
 class MoveSet:

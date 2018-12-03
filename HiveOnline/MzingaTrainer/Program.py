@@ -1,7 +1,7 @@
 ﻿import sys
 import datetime
 
-from HiveOnline.MzingaTrainer.Trainer import Trainer
+from MzingaTrainer.Trainer import Trainer
 
 
 class Program:

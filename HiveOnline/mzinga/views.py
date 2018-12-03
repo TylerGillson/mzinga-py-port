@@ -1,14 +1,16 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets
-from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from . serializers import UserSerializer, GameSerializer
 from . models import Game
 
-from HiveOnline.MzingaShared.Engine import GameEngineConfig
-from HiveOnline.MzingaShared.Engine.GameEngine import GameEngine
+from MzingaShared.Engine import GameEngineConfig
+from MzingaShared.Engine.GameEngine import GameEngine
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -27,27 +29,32 @@ class GameViewSet(viewsets.ModelViewSet):
     serializer_class = GameSerializer
 
     def list(self, request, *args, **kwargs):
-        serializer = GameSerializer(self.queryset, many=True)
+        serializer = GameSerializer(self.queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
-    def create(self, request, *args, **kwargs):
+
+class NewGame(viewsets.ViewSet):
+
+    @staticmethod
+    @login_required
+    def create(request, **kwargs):
         """
         Initiate a new game of Hive.
+
         :param request: an HTTP request object
-        :param args: None
         :param kwargs: {
-            'colour'=['Black', 'White'],
-            'ai_config'=["max_time 10", "max_depth 1"]
+            "colour": ['Black', 'White'],
+            "ai_config": ["max_time 10", "max_depth 1"]
         }
-        :return: a unique game URI
+        :return: JSON serialization of newly created game
         """
         g = Game()
-        g.player_1 = request.user.id
-        g.player_2 = User.objects.get_by_natural_key("ai")
+        g.player_1 = request.user
+        g.player_2 = User.objects.get_by_natural_key("AI")
         g.status = 'NotStarted'
 
-        ai_config = kwargs.get('ai_config')
-        colour = kwargs.get('colour')
+        ai_config = request.data['ai_config']
+        colour = request.data['colour']
 
         # AI plays first:
         if colour == 'Black':
@@ -61,35 +68,41 @@ class GameViewSet(viewsets.ModelViewSet):
         elif colour == 'White':
             g.board_string = g.status + ";White[1]"
 
-        serializer = GameSerializer(g, many=False)
+        g.save()
+        serializer = GameSerializer(g, many=False, context={'request': request})
         return Response(serializer.data)
 
 
-class PlayMove(APIView):
+class PlayMove(viewsets.ViewSet):
+    engine = GameEngine("HiveOnline", GameEngineConfig.get_default_config())
 
-    def __init__(self):
-        super().__init__()
-        config = GameEngineConfig.get_default_config()
-        self.engine = GameEngine("HiveOnline", config)
-
-    def play_move(self, session, move_string):
-        return move_string
-
-    def load_game(self, board_string):
-        return self.engine.parse_command("newgame " + board_string)
-
-    def post(self, **kwargs):
+    def create(self, request):
         """
-        """
-        move = kwargs.get('move')
-        game_id = kwargs.get('game_id')
+        Play a turn on an existing game of Hive.
 
-        game = Game.objects.get(id=game_id)
-        session = self.load_game(game.board_string)
-        self.play_move(session, move)
-        game.board_string = session.get_board_string()
+        Args:
+            - game_id: The ID of the game session you are playing on, i.e., "1"
+            - move: A move string representing the desired move, i.e., "WB1[0,0,0]"
+
+        :param request: an HTTP request object
+        :return: JSON serialization of updated game
+        """
+        move_str = request.data['move']
+        game_id = request.data['game_id']
+
+        try:
+            g = Game.objects.get(id=game_id)
+        except ObjectDoesNotExist:
+            return get_object_or_404(Game, name="game")
+
+        self.engine.parse_command("newgame " + g.board_string)  # Load game from board_string
+        g.board_string = self.engine.parse_command("play " + move_str)  # Get updated board_string
 
         # Do turn notifications
+
+        # Return updated game:
+        serializer = GameSerializer(g, many=False, context={'request': request})
+        return Response(serializer.data)
 
 # Common Functionality:
 #   - Start game (choose Black or White)

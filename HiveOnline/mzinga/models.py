@@ -8,5 +8,5 @@ class Game(models.Model):
     player_1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='p1')
     player_2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='p2')
     status = models.CharField(max_length=16)
-    board_string = models.CharField(max_length=2048)
+    board_string = models.CharField(default=None, max_length=2048)
     objects = models.Manager()

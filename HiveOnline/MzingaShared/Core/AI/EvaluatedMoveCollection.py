@@ -1,4 +1,4 @@
-﻿from HiveOnline.Utils.BinarySearch import binary_search_ext
+﻿from Utils.BinarySearch import binary_search_ext
 
 
 class EvaluatedMoveCollection:

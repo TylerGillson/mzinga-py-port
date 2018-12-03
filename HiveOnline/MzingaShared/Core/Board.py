@@ -1,31 +1,31 @@
 import queue
 
-from HiveOnline.MzingaShared.Core import Move as MoveCls, EnumUtils
-from HiveOnline.MzingaShared.Core.BoardMetrics import BoardMetrics
-from HiveOnline.MzingaShared.Core.CacheMetricsSet import CacheMetricsSet
-from HiveOnline.MzingaShared.Core.Move import Move
-from HiveOnline.MzingaShared.Core.MoveSet import MoveSet
-from HiveOnline.MzingaShared.Core.Piece import Piece
-from HiveOnline.MzingaShared.Core import Position as PositionCls
-from HiveOnline.MzingaShared.Core.Position import Position
-from HiveOnline.MzingaShared.Core.ZobristHash import ZobristHash
-from HiveOnline.MzingaShared.Core.EnumUtils import Colours, ColoursByInt, PieceNamesByInt, PieceNames, \
-                                                   EnumUtils as EnumUtilsCls
+from MzingaShared.Core import Move as MoveCls, EnumUtils
+from MzingaShared.Core.BoardMetrics import BoardMetrics
+from MzingaShared.Core.CacheMetricsSet import CacheMetricsSet
+from MzingaShared.Core.Move import Move
+from MzingaShared.Core.MoveSet import MoveSet
+from MzingaShared.Core.Piece import Piece
+from MzingaShared.Core import Position as PositionCls
+from MzingaShared.Core.Position import Position
+from MzingaShared.Core.ZobristHash import ZobristHash
+from MzingaShared.Core.EnumUtils import Colours, ColoursByInt, PieceNamesByInt, PieceNames, \
+                                        EnumUtils as EnumUtilsCls
 
 BoardStates = ["NotStarted", "InProgress", "Draw", "WhiteWins", "BlackWins"]
 
 
 class Board:
     BoardState = "NotStarted"
-    _board_metrics = BoardMetrics()
+    _board_metrics = None
     _current_turn = 0
-    _zobrist_hash = ZobristHash()
+    _zobrist_hash = None
     _pieces = []
     _pieces_by_position = {}
     _last_piece_moved = list(PieceNames.keys())[0]  # "INVALID"
 
     # CACHES
-    ValidMoveCacheMetricsSet = CacheMetricsSet()
+    ValidMoveCacheMetricsSet = None
     ValidMoveCacheResets = 0
     _cached_valid_moves_by_piece = None
     _cached_valid_placement_positions = None
