@@ -23,9 +23,39 @@ def notify_player_turn(g, recipient=None):
     send_mail(
         'HiveOnline - Game ID: ' + str(g.id),
         'The ball is in your court!\n\nGame ID: %s\n\nBoard String: %s\n\nCurrent Turn: %s'
-        % (str(g.id), g.board_string, g.current_turn.name),
+        % (str(g.id), g.board_string, g.current_turn.username),
         'noreply@hiveonline.com',
         [recipient_email],
+    )
+
+
+# Send an email asking an invited player to join a newly created game:
+def notify_join_game(g, recipient):
+    send_mail(
+        'HiveOnline - Game ID: ' + str(g.id),
+        'You\'ve been invited to a game of Hive.\n\n' +
+        'Don\'t have an account? See /rest-auth/registration/.\n\n' +
+        'Once you\'ve authenticated, POST to: /hive-online/join_game/ with JSON content:' +
+        '{"game_id": "' + str(g.id) + '"} to join.\n\n' +
+        'You must join before attempting to make a move.',
+        'noreply@hiveonline.com',
+        [recipient],
+    )
+
+
+# Email a game's players to inform them of a game's result:
+def notify_game_over(g):
+    if g.status != "Draw":
+        winner = g.player_1 if g.current_turn == g.player_2 else g.player_2
+        msg = 'Game Over!\n\nStatus: %s\n\nWinner: %s' % (g.status, winner)
+    else:
+        msg = 'Game Over!\n\nStatus: %s' % g.status
+
+    send_mail(
+        'HiveOnline - Game ID: ' + str(g.id),
+        msg,
+        'noreply@hiveonline.com',
+        [g.player_1.email, g.player_2.email],
     )
 
 
@@ -76,20 +106,20 @@ class NewGame(viewsets.ViewSet):
             {
                 "colour": ['Black', 'White'],         (Initiating player colour)
                 "opponent": ['AI', '<email>'],        ('AI', or specify opponent email)
-                "ai_config": ["time 10", "depth 1"]   (AI turn timeout, or search max depth)
+                "ai_config": ["time 10", "depth 1"]   (OPTIONAL: AI turn timeout, or search max depth)
             }
         :return: JSON serialization of newly created game
         """
         # Extract args from request body:
         colour = request.data['colour']
         opponent = request.data['opponent']
-        ai_config = request.data['ai_config']
 
         # Init game, then add players:
         g = Game()
         g.player_1 = request.user
         if opponent == 'AI':
             g.player_2 = User.objects.get_by_natural_key(opponent)
+            g.ai_config = request.data['ai_config']
 
         # Initiator plays first:
         if colour == 'White':
@@ -97,14 +127,15 @@ class NewGame(viewsets.ViewSet):
             g.board_string = g.status + ";White[1]"
             g.current_turn = g.player_1
             notify_player_turn(g)
+            notify_join_game(g, opponent)
 
         # Opponent plays first:
         elif colour == 'Black':
-            engine.parse_command("newgame")
 
             # If playing AI, calculate, then play best move according to ai_config:
             if opponent == 'AI':
-                best_move = engine.parse_command("bestmove " + ai_config)
+                engine.parse_command("newgame")
+                best_move = engine.parse_command("bestmove " + g.ai_config)
                 g.board_string = engine.parse_command("play " + str(best_move))
                 g.status = 'InProgress'
                 g.current_turn = g.player_1
@@ -112,13 +143,10 @@ class NewGame(viewsets.ViewSet):
 
             # Otherwise, notify opponent:
             else:
-                send_mail(
-                    'HiveOnline - Game ID: ' + str(g.id),
-                    'You\'ve been invited to a game of Hive.\n\nPOST to: /hive-online/join_game/ with JSON content: \
-                        {"game_id": "' + str(g.id) + '"} to join.',
-                    'noreply@hiveonline.com',
-                    [opponent],
-                )
+                g.status = 'NotStarted'
+                g.board_string = g.status + ";White[1]"
+                notify_join_game(g, opponent)
+                notify_player_turn(g, opponent)
 
         # Save model instance & return serialized data:
         g.save()
@@ -132,7 +160,8 @@ class PlayMove(viewsets.ViewSet):
     @staticmethod
     def create(request):
         """
-        Play a turn on an existing game of Hive.
+        Play a turn on an existing game of Hive. If playing against the AI, it will respond
+        to your move immediately.
 
         Args:
             - game_id: UUID of the game session you are playing to
@@ -151,16 +180,44 @@ class PlayMove(viewsets.ViewSet):
             return Response({'ERROR': 'Invalid game_id.'}, status=status.HTTP_404_NOT_FOUND)
         if g.current_turn != request.user:
             return Response({'ERROR': 'It is not your turn!'}, status=status.HTTP_403_FORBIDDEN)
+        if g.current_turn is None:
+            return Response({'ERROR': 'You must join the game before playing!'}, status=status.HTTP_403_FORBIDDEN)
 
-        # Load game & play move:
+        # Load game, play move, update status and turn:
         engine.parse_command("newgame " + g.board_string)
-        g.board_string = engine.parse_command("play " + move_str)
+        result = engine.parse_command("play " + move_str)
 
-        # Update turn & send notification:
+        # Catch invalid move errors:
+        if type(result) == tuple:
+            return Response({'ERROR': str(result[1])}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            g.board_string = result
+
+        # Update game's status & current turn:
+        g.status = g.board_string[0:g.board_string.index(';'):]
         g.current_turn = g.player_1 if g.current_turn == g.player_2 else g.player_2
-        notify_player_turn(g, g.current_turn.email)
 
-        # Return updated game:
+        # Check for game over:
+        if g.status in ["Draw", "WhiteWins", "BlackWins"]:
+            notify_game_over(g)
+        else:
+            # Opponent is human:
+            if g.current_turn != User.objects.get_by_natural_key("AI"):
+                notify_player_turn(g, g.current_turn.email)
+
+            # Opponent is an AI:
+            else:
+                best_move = engine.parse_command("bestmove " + g.ai_config)
+                g.board_string = engine.parse_command("play " + str(best_move))
+                g.status = g.board_string[0:g.board_string.index(';'):]
+                g.current_turn = g.player_1
+                if g.status in ["Draw", "WhiteWins", "BlackWins"]:
+                    notify_game_over(g)
+                else:
+                    notify_player_turn(g)
+
+        # Save & return updated game:
+        g.save()
         serializer = GameSerializer(g, many=False, context={'request': request})
         return Response(serializer.data)
 
@@ -191,13 +248,15 @@ class JoinGame(viewsets.ViewSet):
 
         # Update game:
         g.player_2 = request.user
+        if g.current_turn is None:
+            g.current_turn = request.user
         g.save()
 
         # Notify opponent:
         send_mail(
             'HiveOnline - Game ID: ' + str(g.id),
             'Your opponent has joined the game!\n\nGame ID: %s\n\nBoard String: %s\n\nCurrent Turn: %s'
-            % (str(g.id), g.board_string, g.current_turn.name),
+            % (str(g.id), g.board_string, g.current_turn.username),
             'noreply@hiveonline.com',
             [g.player_1.email],
         )

@@ -74,6 +74,7 @@ class GameEngine:
         command = command.replace('\t', ' ')
         split = list(filter(None, command.split()))
         err = False
+        err_msg = None
 
         try:
             cmd = split[0].lower()
@@ -107,17 +108,22 @@ class GameEngine:
                 return eval(self.cmd_dict[cmd])
 
         except KeyError:
-            print("Invalid command")
+            err_msg = "Invalid Command"
+            print(err_msg)
             err = True
         except InvalidMoveException as ex:
             print("invalidmove %s", ex.message)
+            err_msg = ex.message
             err = True
         except Exception as ex:
             print("err %s" % ex)
+            err_msg = ex
             err = True
 
         if not err:
             print("ok")
+        else:
+            return err, err_msg  # return error tuple to avoid crashing engine
         # self.start_ponder()
 
     def raise_command_exception(self):

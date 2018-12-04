@@ -8,6 +8,7 @@ class Game(models.Model):
     player_1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='p1')
     player_2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='p2', null=True)
     current_turn = models.ForeignKey(User, on_delete=models.CASCADE, related_name='turn')
+    ai_config = models.CharField(max_length=16, null=True)
     status = models.CharField(max_length=16)
     board_string = models.CharField(default=None, max_length=2048)
     objects = models.Manager()
