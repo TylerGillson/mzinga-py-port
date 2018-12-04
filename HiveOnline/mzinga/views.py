@@ -8,13 +8,16 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from threading import Lock
+
 from . serializers import UserSerializer, GameSerializer
 from . models import Game
 
 from MzingaShared.Engine import GameEngineConfig
 from MzingaShared.Engine.GameEngine import GameEngine
 
-engine = GameEngine("HiveOnline", GameEngineConfig.get_default_config())
+ENGINE = GameEngine("HiveOnline", GameEngineConfig.get_default_config())
+LOCK = Lock()
 
 
 # Send an email update to a game's human player:
@@ -134,9 +137,10 @@ class NewGame(viewsets.ViewSet):
 
             # If playing AI, calculate, then play best move according to ai_config:
             if opponent == 'AI':
-                engine.parse_command("newgame")
-                best_move = engine.parse_command("bestmove " + g.ai_config)
-                g.board_string = engine.parse_command("play " + str(best_move))
+                with LOCK:
+                    ENGINE.parse_command("newgame")
+                    best_move = ENGINE.parse_command("bestmove " + g.ai_config)
+                    g.board_string = ENGINE.parse_command("play " + str(best_move))
                 g.status = 'InProgress'
                 g.current_turn = g.player_1
                 notify_player_turn(g)
@@ -184,8 +188,9 @@ class PlayMove(viewsets.ViewSet):
             return Response({'ERROR': 'You must join the game before playing!'}, status=status.HTTP_403_FORBIDDEN)
 
         # Load game, play move, update status and turn:
-        engine.parse_command("newgame " + g.board_string)
-        result = engine.parse_command("play " + move_str)
+        with LOCK:
+            ENGINE.parse_command("newgame " + g.board_string)
+            result = ENGINE.parse_command("play " + move_str)
 
         # Catch invalid move errors:
         if type(result) == tuple:
@@ -201,20 +206,24 @@ class PlayMove(viewsets.ViewSet):
         if g.status in ["Draw", "WhiteWins", "BlackWins"]:
             notify_game_over(g)
         else:
-            # Opponent is human:
-            if g.current_turn != User.objects.get_by_natural_key("AI"):
-                notify_player_turn(g, g.current_turn.email)
+            if g.current_turn is not None:
+                # Opponent is human:
+                if g.current_turn != User.objects.get_by_natural_key("AI"):
+                    notify_player_turn(g, g.current_turn.email)
 
-            # Opponent is an AI:
-            else:
-                best_move = engine.parse_command("bestmove " + g.ai_config)
-                g.board_string = engine.parse_command("play " + str(best_move))
-                g.status = g.board_string[0:g.board_string.index(';'):]
-                g.current_turn = g.player_1
-                if g.status in ["Draw", "WhiteWins", "BlackWins"]:
-                    notify_game_over(g)
+                # Opponent is an AI:
                 else:
-                    notify_player_turn(g)
+                    with LOCK:
+                        ENGINE.parse_command("newgame " + g.board_string)
+                        best_move = ENGINE.parse_command("bestmove " + g.ai_config)
+                        g.board_string = ENGINE.parse_command("play " + str(best_move))
+
+                    g.status = g.board_string[0:g.board_string.index(';'):]
+                    g.current_turn = g.player_1
+                    if g.status in ["Draw", "WhiteWins", "BlackWins"]:
+                        notify_game_over(g)
+                    else:
+                        notify_player_turn(g)
 
         # Save & return updated game:
         g.save()
