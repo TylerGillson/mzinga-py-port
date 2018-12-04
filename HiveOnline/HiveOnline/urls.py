@@ -23,7 +23,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('mzinga/', include('mzinga.urls'), name='mzinga'),
+    path('hive-online/', include('mzinga.urls'), name='hive-online'),
     url(r'^login/$', auth_views.LoginView.as_view(), name='login'),
-    url(r'^logout/$', auth_views.LogoutView.as_view(), {'next_page': 'mzinga'}, name='logout'),
+    url(r'^logout/$', auth_views.LogoutView.as_view(), {'next_page': 'hive-online'}, name='logout'),
 ]

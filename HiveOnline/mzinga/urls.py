@@ -6,6 +6,7 @@ router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'games', views.GameViewSet, base_name='games')
 router.register(r'new_game', views.NewGame, base_name='new_game')
+router.register(r'join_game', views.JoinGame, base_name='join_game')
 router.register(r'play_move', views.PlayMove, base_name='play_move')
 
 urlpatterns = [

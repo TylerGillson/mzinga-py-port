@@ -18,12 +18,14 @@ engine = GameEngine("HiveOnline", GameEngineConfig.get_default_config())
 
 
 # Send an email update to a game's human player:
-def notify_human_player(g):
+def notify_player_turn(g, recipient=None):
+    recipient_email = recipient if recipient else g.player_1.email
     send_mail(
         'HiveOnline - Game ID: ' + str(g.id),
-        'The ball is in your court!\n\nGame ID: %s\n\nBoard String: %s' % (str(g.id), g.board_string),
+        'The ball is in your court!\n\nGame ID: %s\n\nBoard String: %s\n\nCurrent Turn: %s'
+        % (str(g.id), g.board_string, g.current_turn.name),
         'noreply@hiveonline.com',
-        [g.player_1.email],
+        [recipient_email],
     )
 
 
@@ -72,35 +74,51 @@ class NewGame(viewsets.ViewSet):
         :param request: an HTTP request object
         Expected request body:
             {
-                "colour": ['Black', 'White'],
-                "ai_config": ["time 10", "depth 1"]
+                "colour": ['Black', 'White'],         (Initiating player colour)
+                "opponent": ['AI', '<email>'],        ('AI', or specify opponent email)
+                "ai_config": ["time 10", "depth 1"]   (AI turn timeout, or search max depth)
             }
         :return: JSON serialization of newly created game
         """
+        # Extract args from request body:
+        colour = request.data['colour']
+        opponent = request.data['opponent']
+        ai_config = request.data['ai_config']
+
         # Init game, then add players:
         g = Game()
         g.player_1 = request.user
-        g.player_2 = User.objects.get_by_natural_key("AI")
+        if opponent == 'AI':
+            g.player_2 = User.objects.get_by_natural_key(opponent)
 
-        # Extract args from request body:
-        ai_config = request.data['ai_config']
-        colour = request.data['colour']
-
-        # AI plays first --> calculate, then play best move according to ai_config:
-        if colour == 'Black':
-            engine.parse_command("newgame")
-            best_move = engine.parse_command("bestmove " + ai_config)
-            g.board_string = engine.parse_command("play " + str(best_move))
-            g.status = 'InProgress'
-            g.current_turn = g.player_1
-            notify_human_player(g)
-
-        # Human plays first --> init game:
-        elif colour == 'White':
+        # Initiator plays first:
+        if colour == 'White':
             g.status = 'NotStarted'
             g.board_string = g.status + ";White[1]"
-            g.current_turn = g.player_2
-            notify_human_player(g)
+            g.current_turn = g.player_1
+            notify_player_turn(g)
+
+        # Opponent plays first:
+        elif colour == 'Black':
+            engine.parse_command("newgame")
+
+            # If playing AI, calculate, then play best move according to ai_config:
+            if opponent == 'AI':
+                best_move = engine.parse_command("bestmove " + ai_config)
+                g.board_string = engine.parse_command("play " + str(best_move))
+                g.status = 'InProgress'
+                g.current_turn = g.player_1
+                notify_player_turn(g)
+
+            # Otherwise, notify opponent:
+            else:
+                send_mail(
+                    'HiveOnline - Game ID: ' + str(g.id),
+                    'You\'ve been invited to a game of Hive.\n\nPOST to: /hive-online/join_game/ with JSON content: \
+                        {"game_id": "' + str(g.id) + '"} to join.',
+                    'noreply@hiveonline.com',
+                    [opponent],
+                )
 
         # Save model instance & return serialized data:
         g.save()
@@ -117,7 +135,7 @@ class PlayMove(viewsets.ViewSet):
         Play a turn on an existing game of Hive.
 
         Args:
-            - game_id: The ID of the game session you are playing on, i.e., "1"
+            - game_id: UUID of the game session you are playing to
             - move: A move string representing the desired move, i.e., "WB1[0,0,0]"
 
         :param request: an HTTP request object
@@ -126,15 +144,63 @@ class PlayMove(viewsets.ViewSet):
         move_str = request.data['move']
         game_id = request.data['game_id']
 
+        # Perform validation:
         try:
             g = Game.objects.get(id=game_id)
         except ValidationError or ObjectDoesNotExist:
-            return get_object_or_404(Game)
+            return Response({'ERROR': 'Invalid game_id.'}, status=status.HTTP_404_NOT_FOUND)
+        if g.current_turn != request.user:
+            return Response({'ERROR': 'It is not your turn!'}, status=status.HTTP_403_FORBIDDEN)
 
-        engine.parse_command("newgame " + g.board_string)  # Load game from board_string
-        g.board_string = engine.parse_command("play " + move_str)  # Get updated board_string
+        # Load game & play move:
+        engine.parse_command("newgame " + g.board_string)
+        g.board_string = engine.parse_command("play " + move_str)
 
-        # Do turn notifications
+        # Update turn & send notification:
+        g.current_turn = g.player_1 if g.current_turn == g.player_2 else g.player_2
+        notify_player_turn(g, g.current_turn.email)
+
+        # Return updated game:
+        serializer = GameSerializer(g, many=False, context={'request': request})
+        return Response(serializer.data)
+
+
+class JoinGame(viewsets.ViewSet):
+    permission_classes = (IsAuthenticated,)
+
+    @staticmethod
+    def create(request):
+        """
+        Join an existing game of Hive.
+
+        Args:
+            - game_id: UUID of the game session you wish to join
+
+        :param request: an HTTP request object
+        :return: JSON serialization of updated game
+        """
+        game_id = request.data['game_id']
+
+        # Perform validation:
+        try:
+            g = Game.objects.get(id=game_id)
+        except ValidationError or ObjectDoesNotExist:
+            return Response({'ERROR': 'Invalid game_id'}, status=status.HTTP_404_NOT_FOUND)
+        if g.player_2 is not None:
+            return Response({'ERROR': 'Game already has two players!'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Update game:
+        g.player_2 = request.user
+        g.save()
+
+        # Notify opponent:
+        send_mail(
+            'HiveOnline - Game ID: ' + str(g.id),
+            'Your opponent has joined the game!\n\nGame ID: %s\n\nBoard String: %s\n\nCurrent Turn: %s'
+            % (str(g.id), g.board_string, g.current_turn.name),
+            'noreply@hiveonline.com',
+            [g.player_1.email],
+        )
 
         # Return updated game:
         serializer = GameSerializer(g, many=False, context={'request': request})
