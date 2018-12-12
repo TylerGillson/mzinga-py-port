@@ -1,5 +1,8 @@
 import queue
 
+import timeit
+from MzingaShared.Core.ZobristHashC import ZobristHashC
+
 from MzingaShared.Core import Move as MoveCls, EnumUtils
 from MzingaShared.Core.BoardMetrics import BoardMetrics
 from MzingaShared.Core.CacheMetricsSet import CacheMetricsSet
@@ -142,6 +145,10 @@ class Board:
         self.BoardState = "NotStarted"
         self._board_metrics = BoardMetrics()
         self._current_turn = 0
+
+        # print("Cythonized:\t", min(timeit.Timer(ZobristHashC).repeat(number=3)))
+        # print("Original:\t", min(timeit.Timer(ZobristHash).repeat(number=3)))
+
         self._zobrist_hash = ZobristHash()
         self._pieces = []
         self._pieces_by_position = {}
@@ -378,18 +385,13 @@ class Board:
                     p.InPlay = 0
 
                 # Set noisy/quiet move counts
-                is_pinned, n_count, q_count = self.is_pinned(piece_name)
-                p.NoisyMoveCount = n_count
-                p.QuietMoveCount = q_count
-
+                is_pinned, p.NoisyMoveCount, p.QuietMoveCount = self.is_pinned(piece_name)
                 is_below = target_piece.in_play and target_piece.piece_above is not None
                 p.IsPinned = 1 if is_pinned else 0
                 p.IsCovered = 1 if is_below else 0
 
                 # Set neighbor counts
-                total, f_count, e_count = self.count_neighbors(piece=target_piece)
-                p.FriendlyNeighborCount = f_count
-                p.EnemyNeighborCount = e_count
+                total, p.FriendlyNeighborCount, p.EnemyNeighborCount = self.count_neighbors(piece=target_piece)
 
     def count_neighbors(self, piece_name=None, piece=None):
         if piece_name and not piece:
@@ -414,6 +416,7 @@ class Board:
         quiet_count = 0
         is_pinned = True
         is_noisy_move = self.is_noisy_move
+        is_quiet_move = self.is_quiet_move
 
         for move in self.get_valid_moves(piece_name):
             if move.piece_name == piece_name:
@@ -421,9 +424,43 @@ class Board:
 
             if is_noisy_move(move):
                 noisy_count += 1
-            else:
+            elif is_quiet_move(piece_name, move):
                 quiet_count += 1
+
         return is_pinned, noisy_count, quiet_count
+
+    def is_quiet_move(self, piece_name, move):
+        if move is None or move.is_pass:
+            return False
+
+        moving_piece = self.get_piece(piece_name)
+        original_position = self.get_piece_position(piece_name)
+
+        if original_position is None:
+            return True
+
+        curr_pos_neighbour_at = original_position.neighbor_at
+        get_piece = self.get_piece
+        valid_moves = self.get_valid_moves
+
+        # Get list of neighbours that are currently trapped:
+        trapped_neighbours = []
+        for i in range(EnumUtils.NumDirections):
+            n = get_piece(curr_pos_neighbour_at(i))
+            if n is None:
+                continue
+
+            if not valid_moves(piece_name=n.piece_name):
+                trapped_neighbours.append(n.piece_name)
+
+        # Check if any trapped neighbours will be freed by the move:
+        for n in trapped_neighbours:
+            self.move_piece(moving_piece, move.position, False)
+            freed = valid_moves(piece_name=n)
+            self.move_piece(moving_piece, original_position, False)
+            if freed:
+                return False
+        return True
 
     def is_noisy_move(self, move):
         if move is None or move.is_pass:
@@ -684,7 +721,7 @@ class Board:
 
     def get_valid_soldier_ant_movements(self, target_piece):
         # Get all slides all the way around
-        return self.get_valid_slides(target_piece, None)
+        return self.get_valid_slides(target_piece, max_range=None)
 
     def get_valid_slides(self, target_piece, max_range=None):
         valid_moves = MoveSet()
@@ -708,7 +745,6 @@ class Board:
             right_of = EnumUtilsCls.right_of
             left_of = EnumUtilsCls.left_of
             has_piece_at = self.has_piece_at
-            num_valid_moves = valid_moves.count
             vm_add = valid_moves.add
             vp_add = visited_positions.add
             get_valid_slides_rec = self.get_valid_slides_rec
@@ -728,9 +764,10 @@ class Board:
                         # Can slide into slide position
                         move = Move(piece_name=target, position=slide_position)
 
-                        old_len = num_valid_moves
+                        old_len = valid_moves.count
                         vm_add(move)
-                        if num_valid_moves > old_len:
+
+                        if valid_moves.count > old_len:
                             # Sliding from this position has not been tested yet
                             vp_add(move.position)
                             get_valid_slides_rec(
