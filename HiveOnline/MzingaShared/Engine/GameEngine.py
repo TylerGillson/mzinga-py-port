@@ -233,6 +233,7 @@ class GameEngine:
         self.options_get("PonderDuringIdle")
         self.options_get("TranspositionTableSizeMB")
         self.options_get("ReportIntermediateBestMoves")
+        self.options_get("GameType")
 
     # noinspection PyMethodMayBeStatic
     def options_get(self, opt_key):
@@ -270,6 +271,9 @@ class GameEngine:
             refresh_ai = True
         elif opt_key == "ReportIntermediateBestMoves":
             self.config.parse_report_intermediate_best_moves_value(value)
+            refresh_ai = True
+        elif opt_key == "GameType":
+            self.config.parse_game_type_value(value)
             refresh_ai = True
         else:
             print("The option \"%s\" is not valid." % opt_key)
@@ -328,6 +332,7 @@ opt_key_dict = {
     "PonderDuringIdle": "self.config.get_ponder_during_idle_value()",
     "TranspositionTableSizeMB": "self.config.get_transposition_table_size_mb_value()",
     "ReportIntermediateBestMoves": "self.config.get_report_intermediate_best_moves_value()",
+    "GameType": "self.config.get_game_type_value()",
 }
 
 

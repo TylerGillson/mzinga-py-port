@@ -33,6 +33,7 @@ class GameEngineConfig:
 
     MaxBranchingFactor = None
     ReportIntermediateBestMoves = False
+    GameType = "Original"
 
     def __init__(self, input_stream):
         self.load_config(input_stream)
@@ -73,6 +74,8 @@ class GameEngineConfig:
                     self.parse_max_branching_factor_value(elem.text)
                 if elem.tag == "ReportIntermediateBestMoves":
                     self.parse_report_intermediate_best_moves_value(elem.text)
+                if elem.tag == "AIType":
+                    self.parse_game_type_value(elem.text)
 
     def parse_transposition_table_size_mb_value(self, raw_value):
         int_value = int(raw_value)
@@ -154,12 +157,22 @@ class GameEngineConfig:
         values = ""
         return r_type, value, values
 
+    def parse_game_type_value(self, raw_value):
+        if raw_value in GameTypes:
+            self.GameType = raw_value
+
+    def get_game_type_value(self):
+        r_type = "string"
+        value = self.GameType
+        values = "%s;" % GameTypes
+        return r_type, value, values
+
     def get_game_ai(self):
         return GameAI(GameAIConfig(
             self.StartMetricWeights,
             self.EndMetricWeights if self.EndMetricWeights else self.StartMetricWeights,
             self.MaxBranchingFactor,
-            self.TranspositionTableSizeMB
+            self.TranspositionTableSizeMB,
         ))
 
 
@@ -169,6 +182,7 @@ def get_default_config():
 
 MaxHelperThreadsTypes = ["Auto", "None"]
 PonderDuringIdleTypes = ["Disabled", "SingleThreaded", "MultiThreaded"]
+GameTypes = ["Original", "Extended"]
 
 DefaultConfig = """
 <?xml version="1.0" encoding="utf-8" ?>

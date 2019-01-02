@@ -14,8 +14,11 @@ from MzingaShared.Core.Position import Position
 from MzingaShared.Core.ZobristHash import ZobristHash
 from MzingaShared.Core.EnumUtils import Colours, ColoursByInt, PieceNamesByInt, PieceNames, \
                                         EnumUtils as EnumUtilsCls
+from MzingaShared.Engine.GameEngineConfig import GameEngineConfig
+
 
 BoardStates = ["NotStarted", "InProgress", "Draw", "WhiteWins", "BlackWins"]
+GameType = GameEngineConfig.GameType
 
 
 class Board:
@@ -424,8 +427,12 @@ class Board:
 
             if is_noisy_move(move):
                 noisy_count += 1
-            elif is_quiet_move(piece_name, move):
-                quiet_count += 1
+            else:
+                if GameType == "Original":
+                    quiet_count += 1
+                else:
+                    if is_quiet_move(piece_name, move):
+                        quiet_count += 1
 
         return is_pinned, noisy_count, quiet_count
 
@@ -441,22 +448,22 @@ class Board:
 
         curr_pos_neighbour_at = original_position.neighbor_at
         get_piece = self.get_piece
-        valid_moves = self.get_valid_moves
 
         # Get list of neighbours that are currently trapped:
-        trapped_neighbours = []
+        trapped_enemy_neighbours = []
         for i in range(EnumUtils.NumDirections):
             n = get_piece(curr_pos_neighbour_at(i))
             if n is None:
                 continue
 
-            if not valid_moves(piece_name=n.piece_name):
-                trapped_neighbours.append(n.piece_name)
+            if n.colour != self.current_turn_colour: 
+                if not self.can_move_without_breaking_hive(n):
+                    trapped_enemy_neighbours.append(n)
 
-        # Check if any trapped neighbours will be freed by the move:
-        for n in trapped_neighbours:
+        # Check if any trapped enemy neighbours will be freed by the move:
+        for n in trapped_enemy_neighbours:
             self.move_piece(moving_piece, move.position, False)
-            freed = valid_moves(piece_name=n)
+            freed = self.can_move_without_breaking_hive(n)
             self.move_piece(moving_piece, original_position, False)
             if freed:
                 return False
