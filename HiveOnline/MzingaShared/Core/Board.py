@@ -14,15 +14,14 @@ from MzingaShared.Core.Position import Position
 from MzingaShared.Core.ZobristHash import ZobristHash
 from MzingaShared.Core.EnumUtils import Colours, ColoursByInt, PieceNamesByInt, PieceNames, \
                                         EnumUtils as EnumUtilsCls
-from MzingaShared.Engine.GameEngineConfig import GameEngineConfig
-
 
 BoardStates = ["NotStarted", "InProgress", "Draw", "WhiteWins", "BlackWins"]
-GameType = GameEngineConfig.GameType
 
 
 class Board:
-    BoardState = "NotStarted"
+    BoardState = None
+    GameType = None
+
     _board_metrics = None
     _current_turn = 0
     _zobrist_hash = None
@@ -144,8 +143,10 @@ class Board:
         self._last_piece_moved = value
     # END PIECE STATE PROPERTIES
 
-    def init_state_vars(self):
+    def init_state_vars(self, game_type):
         self.BoardState = "NotStarted"
+        self.GameType = game_type
+
         self._board_metrics = BoardMetrics()
         self._current_turn = 0
 
@@ -165,8 +166,8 @@ class Board:
         self._visited_placements = set()
         self._cached_enemy_queen_neighbors = None
 
-    def __init__(self, board_string):
-        self.init_state_vars()
+    def __init__(self, board_string, game_type):
+        self.init_state_vars(game_type)
         self.init_pieces()
 
         # New game constructor
@@ -321,7 +322,7 @@ class Board:
 
                 # Check all pieces at this stack level
                 for i in range(EnumUtils.NumDirections):
-                    neighbor = current_piece.position.neighbor_at(i)
+                    neighbor = current_piece.position.neighbour_at(i)
                     neighbor_piece = self.get_piece(neighbor)
                     if neighbor_piece is not None and not part_of_hive[PieceNames[neighbor_piece.piece_name]]:
                         pieces_to_look_at.put(neighbor_piece)
@@ -376,7 +377,6 @@ class Board:
     def _set_current_player_metrics(self):
         for piece_name in self.current_turn_pieces:
             target_piece = self.get_piece(piece_name)
-
             p = self._board_metrics[piece_name]
 
             if target_piece is not None:
@@ -405,7 +405,7 @@ class Board:
 
             if piece.in_play:
                 for i in range(EnumUtils.NumDirections):
-                    neighbor = self.get_piece(piece.position.neighbor_at(i))
+                    neighbor = self.get_piece(piece.position.neighbour_at(i))
                     if neighbor is not None:
                         if neighbor.colour == piece.colour:
                             friendly_count += 1
@@ -428,7 +428,7 @@ class Board:
             if is_noisy_move(move):
                 noisy_count += 1
             else:
-                if GameType == "Original":
+                if self.GameType == "Original":
                     quiet_count += 1
                 else:
                     if is_quiet_move(piece_name, move):
@@ -442,25 +442,11 @@ class Board:
 
         moving_piece = self.get_piece(piece_name)
         original_position = self.get_piece_position(piece_name)
-
         if original_position is None:
             return True
 
-        curr_pos_neighbour_at = original_position.neighbor_at
-        get_piece = self.get_piece
-
-        # Get list of neighbours that are currently trapped:
-        trapped_enemy_neighbours = []
-        for i in range(EnumUtils.NumDirections):
-            n = get_piece(curr_pos_neighbour_at(i))
-            if n is None:
-                continue
-
-            if n.colour != self.current_turn_colour: 
-                if not self.can_move_without_breaking_hive(n):
-                    trapped_enemy_neighbours.append(n)
-
         # Check if any trapped enemy neighbours will be freed by the move:
+        trapped_enemy_neighbours = self.get_trapped_neighbours(original_position, enemies_only=True)
         for n in trapped_enemy_neighbours:
             self.move_piece(moving_piece, move.position, False)
             freed = self.can_move_without_breaking_hive(n)
@@ -473,6 +459,7 @@ class Board:
         if move is None or move.is_pass:
             return False
 
+        # Determine enemy queen neighbours:
         if self._cached_enemy_queen_neighbors is None:
             self._cached_enemy_queen_neighbors = set()
             enemy_queen_name = "BlackQueenBee" if self.current_turn_colour == "White" else "WhiteQueenBee"
@@ -481,14 +468,45 @@ class Board:
             if enemy_queen_position is not None:
                 # Add queen's neighboring positions
                 add = self._cached_enemy_queen_neighbors.add
-                neighbor_at = enemy_queen_position.neighbor_at
+                neighbour_at = enemy_queen_position.neighbour_at
 
                 for i in range(EnumUtils.NumDirections):
-                    add(neighbor_at(i))
+                    add(neighbour_at(i))
 
         move_to_adjacent = move.position in self._cached_enemy_queen_neighbors
         piece_already_adjacent = self.get_piece_position(move.piece_name) in self._cached_enemy_queen_neighbors
-        return move_to_adjacent and not piece_already_adjacent
+
+        if self.GameType == "Original":
+            return move_to_adjacent and not piece_already_adjacent
+        else:
+            moving_piece = self.get_piece(move.piece_name)
+            original_position = moving_piece.position
+
+            if original_position is None:
+                return move_to_adjacent and not piece_already_adjacent
+
+            # Determine whether the move traps any pieces:
+            pre_move_trapped_neighbours = set(self.get_trapped_neighbours(move.position))
+            self.move_piece(moving_piece, move.position, False)
+            post_move_trapped_neighbours = set(self.get_trapped_neighbours(move.position))
+            self.move_piece(moving_piece, original_position, False)
+
+            newly_trapped = list(post_move_trapped_neighbours - pre_move_trapped_neighbours)
+            newly_trapped_against_queen = [p for p in newly_trapped if p.position in self._cached_enemy_queen_neighbors]
+            return len(newly_trapped_against_queen) > 0
+
+    def get_trapped_neighbours(self, position, enemies_only=False):
+        trapped_neighbours = []
+        for i in range(EnumUtils.NumDirections):
+            n = self.get_piece(position.neighbour_at(i))
+            if n is None:
+                continue
+            if not self.can_move_without_breaking_hive(n):
+                if enemies_only and n.colour != self.current_turn_colour:
+                    trapped_neighbours.append(n)
+                else:
+                    trapped_neighbours.append(n)
+        return trapped_neighbours
     # END METRICS
 
     # VALID MOVES
@@ -552,7 +570,7 @@ class Board:
                 # Optimize:
                 valid_moves = MoveSet()
                 add = valid_moves.add
-                neighbor_at = PositionCls.origin.neighbor_at
+                neighbour_at = PositionCls.origin.neighbour_at
                 origin = PositionCls.origin
 
                 # First move must be at the origin and not the White Queen Bee
@@ -565,7 +583,7 @@ class Board:
 
                     for i in range(EnumUtils.NumDirections):
                         # noinspection PyUnresolvedReferences
-                        neighbor = neighbor_at(i)
+                        neighbor = neighbour_at(i)
                         add(Move(piece_name=piece_name, position=neighbor))
                     return valid_moves
 
@@ -615,7 +633,7 @@ class Board:
                     self._visited_placements.add(bottom_position)
 
                     for j in range(EnumUtils.NumDirections):
-                        neighbor = bottom_position.neighbor_at(j)
+                        neighbor = bottom_position.neighbour_at(j)
 
                         # Neighboring position is a potential, verify its neighbors are empty or same color
                         old_len = len(self._visited_placements)
@@ -624,7 +642,7 @@ class Board:
                         if len(self._visited_placements) > old_len and not self.has_piece_at(neighbor):
                             valid_placement = True
                             for k in range(EnumUtils.NumDirections):
-                                surrounding_position = neighbor.neighbor_at(k)
+                                surrounding_position = neighbor.neighbour_at(k)
                                 surrounding_piece = self.get_piece_on_top_internal(surrounding_position)
 
                                 if surrounding_piece is not None and surrounding_piece.colour != target_colour:
@@ -670,14 +688,14 @@ class Board:
 
         # Look in all directions
         for direction in EnumUtils.Directions.keys():
-            new_position = target_piece.position.neighbor_at(direction)
+            new_position = target_piece.position.neighbour_at(direction)
             top_neighbor = self.get_piece_on_top_internal(new_position)
 
             # Get positions to left and right or direction we're heading
             left_of_target = EnumUtilsCls.left_of(direction)
             right_of_target = EnumUtilsCls.right_of(direction)
-            left_neighbor_position = target_piece.position.neighbor_at(left_of_target)
-            right_neighbor_position = target_piece.position.neighbor_at(right_of_target)
+            left_neighbor_position = target_piece.position.neighbour_at(left_of_target)
+            right_neighbor_position = target_piece.position.neighbour_at(right_of_target)
 
             top_left_neighbor = self.get_piece_on_top_internal(left_neighbor_position)
             top_right_neighbor = self.get_piece_on_top_internal(right_neighbor_position)
@@ -711,12 +729,12 @@ class Board:
         starting_position = target_piece.position
 
         for direction in EnumUtils.Directions:
-            landing_position = starting_position.neighbor_at(direction)
+            landing_position = starting_position.neighbour_at(direction)
             distance = 0
 
             while self.has_piece_at(landing_position):
                 # Jump one more in the same direction
-                landing_position = landing_position.neighbor_at(direction)
+                landing_position = landing_position.neighbour_at(direction)
                 distance += 1
 
             if distance > 0:
@@ -748,7 +766,7 @@ class Board:
         if max_range is None or current_range < max_range:
 
             # Optimize loop:
-            neighbor_at = current_pos.neighbor_at
+            neighbour_at = current_pos.neighbour_at
             right_of = EnumUtilsCls.right_of
             left_of = EnumUtilsCls.left_of
             has_piece_at = self.has_piece_at
@@ -757,15 +775,15 @@ class Board:
             get_valid_slides_rec = self.get_valid_slides_rec
 
             for slide_direction in EnumUtils.Directions:
-                slide_position = neighbor_at(slide_direction)
+                slide_position = neighbour_at(slide_direction)
 
                 if slide_position not in visited_positions and not has_piece_at(slide_position):
                     # Slide position is open
                     right = right_of(slide_direction)
                     left = left_of(slide_direction)
 
-                    right_occupied = has_piece_at(neighbor_at(right))
-                    left_occupied = has_piece_at(neighbor_at(left))
+                    right_occupied = has_piece_at(neighbour_at(right))
+                    left_occupied = has_piece_at(neighbour_at(left))
 
                     if right_occupied != left_occupied:  # Hive is not "tight"
                         # Can slide into slide position
@@ -787,7 +805,7 @@ class Board:
             last_has_piece = None
 
             for i in range(EnumUtils.NumDirections):
-                neighbor = target_piece.position.neighbor_at(i)
+                neighbor = target_piece.position.neighbour_at(i)
 
                 has_piece = self.has_piece_at(neighbor)
                 if last_has_piece is not None:

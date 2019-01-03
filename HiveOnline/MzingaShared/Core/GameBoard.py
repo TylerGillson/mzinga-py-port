@@ -31,9 +31,9 @@ class GameBoard(Board):
     def board_history(self):
         return self._board_history
 
-    def __init__(self, board_string=None):
+    def __init__(self, board_string=None, game_type=None):
         self._board_history = BoardHistory()
-        super().__init__(board_string=board_string)
+        super().__init__(board_string=board_string, game_type=game_type)
 
     def __repr__(self):
         return super().__repr__()

@@ -201,7 +201,7 @@ class Trainer:
             raise ValueError("Profile cannot battle itself.")
 
         # Create Game
-        game_board = GameBoard("START")
+        game_board = GameBoard(board_string="START", game_type=self.trainer_settings.GameType)
 
         # Create AIs
         white_ai = GameAI(GameAIConfig(

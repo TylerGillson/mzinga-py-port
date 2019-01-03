@@ -33,7 +33,7 @@ class GameEngineConfig:
 
     MaxBranchingFactor = None
     ReportIntermediateBestMoves = False
-    GameType = "Original"
+    GameType = "Extended"  # "Original"
 
     def __init__(self, input_stream):
         self.load_config(input_stream)
@@ -74,7 +74,7 @@ class GameEngineConfig:
                     self.parse_max_branching_factor_value(elem.text)
                 if elem.tag == "ReportIntermediateBestMoves":
                     self.parse_report_intermediate_best_moves_value(elem.text)
-                if elem.tag == "AIType":
+                if elem.tag == "GameType":
                     self.parse_game_type_value(elem.text)
 
     def parse_transposition_table_size_mb_value(self, raw_value):
@@ -171,13 +171,17 @@ class GameEngineConfig:
         return GameAI(GameAIConfig(
             self.StartMetricWeights,
             self.EndMetricWeights if self.EndMetricWeights else self.StartMetricWeights,
-            self.MaxBranchingFactor,
             self.TranspositionTableSizeMB,
+            self.GameType,
+            self.MaxBranchingFactor,
         ))
 
 
 def get_default_config():
-    return GameEngineConfig(DefaultConfig)
+    if GameEngineConfig.GameType == "Original":
+        return GameEngineConfig(DefaultConfig)
+    elif GameEngineConfig.GameType == "Extended":
+        return GameEngineConfig(ExtendedConfig)
 
 
 MaxHelperThreadsTypes = ["Auto", "None"]
@@ -268,4 +272,7 @@ DefaultConfig = """
 </EndMetricWeights>
 </GameAI>
 </Mzinga.Engine>
+"""
+
+ExtendedConfig = """
 """

@@ -93,16 +93,16 @@ class Position:
             raise ValueError("piece_position")
 
         for i in range(EnumUtils.NumDirections):
-            if self.neighbor_at(i) == piece_position:
+            if self.neighbour_at(i) == piece_position:
                 return True
         return False
 
-    def neighbor_at(self, direction):
+    def neighbour_at(self, direction):
         if isinstance(direction, int):
             direction = direction % EnumUtils.NumDirections
             return self.cache_lookup(direction)
         else:
-            return self.neighbor_at(EnumUtils.Directions[direction])
+            return self.neighbour_at(EnumUtils.Directions[direction])
 
     def get_above(self):
         return self.cache_lookup(EnumUtils.NumDirections)

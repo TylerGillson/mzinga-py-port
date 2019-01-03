@@ -7,6 +7,7 @@ class TrainerSettings:
     LifecycleBattles = 1
     MaxMaxBattles = -1
     MaxMaxConcurrentBattles = -1
+    GameType = "Original"
 
     _battleTimeLimit = datetime.timedelta(minutes=25)
     _bulkBattleTimeLimit = datetime.timedelta(minutes=300)

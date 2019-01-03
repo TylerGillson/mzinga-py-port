@@ -55,6 +55,7 @@ class GameAI:
     DefaultBoardScoresCacheSize = 516240
     QuiescentSearchMaxDepth = 3  # To prevent runaway stack overflows
     MaxDepth = 10
+    GameType = None
 
     _max_branching_factor = MaxMaxBranchingFactor  # To prevent search explosion
     _transposition_table = None
@@ -77,9 +78,12 @@ class GameAI:
                 if config.MaxBranchingFactor <= 0:
                     raise ValueError("Invalid config.MaxBranchingFactor.")
                 self._max_branching_factor = config.MaxBranchingFactor
+
+            self.GameType = config.GameType
         else:
             self.StartMetricWeights = MetricWeights()
             self.EndMetricWeights = MetricWeights()
+            self.GameType = "Original"
             self._transposition_table = TranspositionTable()
 
     def reset_caches(self):
@@ -359,10 +363,8 @@ class GameAI:
             bm = best_move.move if best_move else None
             valid_moves = self.get_presorted_valid_moves(game_board, bm)
             evaluated_moves = []
-
             for move in valid_moves:
                 evaluated_moves.append(best_move if move == bm else EvaluatedMove(move))
-
             return evaluated_moves
         elif isinstance(best_move, Move) or best_move is None:
             valid_moves = game_board.get_valid_moves()
@@ -372,10 +374,9 @@ class GameAI:
             )
             valid_moves = MoveSet(moves_list=valid_moves)
 
+            # Too many moves, reduce branching factor:
             if valid_moves.count > self._max_branching_factor:
-                # Too many moves, reduce branching factor
                 valid_moves.remove_range(self._max_branching_factor)
-
             return valid_moves
         else:
             raise ValueError("Invalid best_move.")
