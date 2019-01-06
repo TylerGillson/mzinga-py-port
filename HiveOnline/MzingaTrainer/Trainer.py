@@ -9,7 +9,7 @@ import os
 from typing import List
 
 from MzingaShared.Core.GameBoard import GameBoard
-from MzingaShared.Core.AI import MetricWeights
+from MzingaShared.Core.AI.MetricWeights import MetricWeights as MetricWeightsCls
 from MzingaShared.Core.AI.GameAI import GameAI
 from MzingaShared.Core.AI.GameAIConfig import GameAIConfig
 from MzingaTrainer.Profile import Profile
@@ -59,6 +59,8 @@ class Trainer:
 
     def __init__(self):
         self.trainer_settings = TrainerSettings()
+        self.metrics_weights_cls = MetricWeightsCls(self._settings.GameType)
+        self.start_time = None
 
     def battle(self, white_profile_path=None, black_profile_path=None):
         if white_profile_path is None and black_profile_path is None:
@@ -73,17 +75,17 @@ class Trainer:
 
         # Load Profiles
         with open(white_profile_path, "r") as input_stream:
-            white_profile = Profile.read_xml(input_stream)
+            white_profile = Profile.read_xml(input_stream, self._settings.GameType)
         with open(black_profile_path, "r") as input_stream:
-            black_profile = Profile.read_xml(input_stream)
+            black_profile = Profile.read_xml(input_stream, self._settings.GameType)
 
         self.battle_profiles(white_profile, black_profile)
 
         # Save Profiles
         with open(white_profile_path, "wb+") as output_stream:
-            white_profile.write_xml(output_stream)
+            white_profile.write_xml(output_stream, self._settings.GameType)
         with open(black_profile_path, "wb+") as output_stream:
-            black_profile.write_xml(output_stream)
+            black_profile.write_xml(output_stream, self._settings.GameType)
 
     def battle_royale(self, *args):
         if len(args) == 0:
@@ -166,12 +168,12 @@ class Trainer:
             with self._white_profile_lock:
                 w_profile_path = "".join([path, str(w_profile.Id), ".xml"])
                 with open(w_profile_path, "wb+") as f:
-                    w_profile.write_xml(f)
+                    w_profile.write_xml(f, self._settings.GameType)
 
             with self._black_profile_lock:
                 b_profile_path = "".join([path, str(b_profile.Id), ".xml"])
                 with open(b_profile_path, "wb+") as f:
-                    b_profile.write_xml(f)
+                    b_profile.write_xml(f, self._settings.GameType)
 
             with self._progress_lock:
                 timeout_remaining = time_limit - (datetime.datetime.now() - br_start)
@@ -207,12 +209,14 @@ class Trainer:
         white_ai = GameAI(GameAIConfig(
             white_profile.StartMetricWeights,
             white_profile.EndMetricWeights,
-            self.trainer_settings.TransTableSize)
+            self.trainer_settings.TransTableSize,
+            self._settings.GameType)
         )
         black_ai = GameAI(GameAIConfig(
             black_profile.StartMetricWeights,
             black_profile.EndMetricWeights,
-            self.trainer_settings.TransTableSize)
+            self.trainer_settings.TransTableSize,
+            self._settings.GameType)
         )
         time_limit = self.trainer_settings.battle_time_limit
 
@@ -373,8 +377,7 @@ class Trainer:
 
             self.log("Enumerate end.")
 
-    @staticmethod
-    def load_profiles(path) -> List[Profile]:
+    def load_profiles(self, path) -> List[Profile]:
         if path.isspace():
             raise ValueError("Invalid path.")
 
@@ -383,7 +386,7 @@ class Trainer:
 
         for file in files:
             with open(path + file, "r") as f:
-                profile = Profile.read_xml(f)
+                profile = Profile.read_xml(f, self._settings.GameType)
             profile_list.append(profile)
         return profile_list
 
@@ -448,7 +451,7 @@ class Trainer:
                     return "".join([",Start%s.%s" % (bug_type, bug_type_weight),
                                     ",End%s.%s" % (bug_type, bug_type_weight)])
 
-                MetricWeights.iterate_over_weights_result(add_csv_weights, [])
+                self.metrics_weights_cls.iterate_over_weights_result(add_csv_weights, [])
                 f.write(header)
                 f.write("\n")
 
@@ -466,8 +469,8 @@ class Trainer:
 
                     sn = p.StartMetricWeights.get_normalized()
                     en = p.EndMetricWeights.get_normalized()
-                    MetricWeights.iterate_over_weights_result(add_csv_norm_weights, [],
-                                                              start_normalized=sn, end_normalized=en)
+                    self.metrics_weights_cls.iterate_over_weights_result(
+                        add_csv_norm_weights, [], start_normalized=sn, end_normalized=en)
 
                     f.write(profile_str)
                     f.write("\n")
@@ -493,11 +496,11 @@ class Trainer:
                 os.mkdir(path)
 
             for i in range(count):
-                profile = Profile.generate(min_weight, max_weight)
+                profile = Profile.generate(min_weight, max_weight, self._settings.GameType)
                 filename = "".join([path, str(profile.Id), ".xml"])
 
                 with open(filename, "wb+") as f:
-                    profile.write_xml(f)
+                    profile.write_xml(f, self._settings.GameType)
 
                 self.log("Generated %s." % self.to_string(profile))
 
@@ -609,7 +612,7 @@ class Trainer:
 
                     file_path = "".join([path, str(child.Id), ".xml"])
                     with open(file_path, "wb+") as f:
-                        child.write_xml(f)
+                        child.write_xml(f, self._settings.GameType)
 
             self.log("Mate end.")
 
@@ -708,12 +711,12 @@ class Trainer:
                         with self._white_profile_lock:
                             white_profile_path = "".join([path, str(white_profile.Id), ".xml"])
                             with open(white_profile_path, "wb+") as f:
-                                white_profile.write_xml(f)
+                                white_profile.write_xml(f, self._settings.GameType)
 
                         with self._black_profile_lock:
                             black_profile_path = "".join([path, str(black_profile.Id), ".xml"])
                             with open(black_profile_path, "wb+") as f:
-                                black_profile.write_xml(f)
+                                black_profile.write_xml(f, self._settings.GameType)
 
                         with self._progress_lock:
                             timeout_remaining = time_limit - (datetime.datetime.now() - tournament_start)

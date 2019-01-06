@@ -8,6 +8,7 @@ from Utils.Events import Broadcaster
 from MzingaShared.Core.FixedCache import FixedCache
 from MzingaShared.Core.Move import Move
 from MzingaShared.Core.MoveSet import MoveSet
+from MzingaShared.Core.AI.BoardMetricWeights import BoardMetricWeights
 from MzingaShared.Core.AI.EvaluatedMove import EvaluatedMove
 from MzingaShared.Core.AI.EvaluatedMoveCollection import EvaluatedMoveCollection
 from MzingaShared.Core.AI.ListExtensions import ListExtensions
@@ -63,9 +64,14 @@ class GameAI:
 
     def __init__(self, config=None):
         if config:
+            self.GameType = config.GameType
+
+            self.BoardMetricWeights = config.BoardMetricWeights.clone() \
+                if config.BoardMetricWeights else BoardMetricWeights()
             self.StartMetricWeights = config.StartMetricWeights.clone() \
-                if config.StartMetricWeights else MetricWeights()
-            self.EndMetricWeights = config.EndMetricWeights.clone() if config.EndMetricWeights else MetricWeights()
+                if config.StartMetricWeights else MetricWeights(self.GameType)
+            self.EndMetricWeights = config.EndMetricWeights.clone() \
+                if config.EndMetricWeights else MetricWeights(self.GameType)
 
             if config.TranspositionTableSizeMB is not None:
                 if config.TranspositionTableSizeMB <= 0:
@@ -78,12 +84,11 @@ class GameAI:
                 if config.MaxBranchingFactor <= 0:
                     raise ValueError("Invalid config.MaxBranchingFactor.")
                 self._max_branching_factor = config.MaxBranchingFactor
-
-            self.GameType = config.GameType
         else:
-            self.StartMetricWeights = MetricWeights()
-            self.EndMetricWeights = MetricWeights()
             self.GameType = "Original"
+            self.BoardMetricWeights = BoardMetricWeights()
+            self.StartMetricWeights = MetricWeights(self.GameType)
+            self.EndMetricWeights = MetricWeights(self.GameType)
             self._transposition_table = TranspositionTable()
 
     def reset_caches(self):
@@ -117,8 +122,9 @@ class GameAI:
         self.BestMoveFound.on_change.fire(self, best_move_params, evaluated_moves.best_move, handler_key=0)
 
         _ = datetime.datetime.now() - kwargs.get('start_time')
-        global depths
-        depths.append(best_move_params.BestMove.depth)
+
+        # global depths
+        # depths.append(best_move_params.BestMove.depth)
 
         return best_move_params.BestMove.move
 
@@ -443,7 +449,6 @@ class GameAI:
                 return 0.0
 
             key = game_board.zobrist_key
-
             flag, score = self._cached_board_scores.try_lookup(key)
             if flag:
                 return score
@@ -451,8 +456,8 @@ class GameAI:
             board_metrics = game_board.get_board_metrics()
             score = self.calculate_board_score(None, board_metrics, self.StartMetricWeights, self.EndMetricWeights)
             self._cached_board_scores.store(key, score)
-
             return score
+
         elif start_weights and end_weights:
             end_score = self.calculate_board_score(None, board_metrics, end_weights=end_weights)
 
@@ -462,7 +467,6 @@ class GameAI:
             else:
                 # Pieces still in hand, blend start and end scores
                 start_score = self.calculate_board_score(None, board_metrics, start_weights=start_weights)
-
                 start_ratio = board_metrics.PiecesInHand / (board_metrics.PiecesInHand + board_metrics.PiecesInPlay)
                 end_ratio = 1 - start_ratio
 
@@ -475,6 +479,19 @@ class GameAI:
             get_bug_type = EnumUtilsCls.get_bug_type
             get_colour = EnumUtilsCls.get_colour
             get = mw.get
+
+            if self.GameType == "Extended":
+                bmw_get = self.BoardMetricWeights.get
+                queen_bee_life_weight = bmw_get("QueenBeeLifeWeight")
+                non_sliding_queen_bee_spaces_weight = bmw_get("NonSlidingQueenBeeSpacesWeight")
+                noisy_ring_weight = bmw_get("NoisyRingWeight")
+
+                score += board_metrics.BlackQueenLife * -queen_bee_life_weight
+                score += board_metrics.WhiteQueenLife * queen_bee_life_weight
+                score += board_metrics.BlackNonSlidingQueenSpaces * -non_sliding_queen_bee_spaces_weight
+                score += board_metrics.WhiteNonSlidingQueenSpaces * non_sliding_queen_bee_spaces_weight
+                score += board_metrics.BlackNoisyRing * -noisy_ring_weight
+                score += board_metrics.WhiteNoisyRing * noisy_ring_weight
 
             for piece_name in EnumUtils.PieceNames:
                 if piece_name == 'INVALID':

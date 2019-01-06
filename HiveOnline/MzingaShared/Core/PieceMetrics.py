@@ -15,3 +15,13 @@ class PieceMetrics:
         self.QuietMoveCount = 0
         self.FriendlyNeighborCount = 0
         self.EnemyNeighborCount = 0
+
+
+class ExtendedPieceMetrics(PieceMetrics):
+    CanMakeNoisyRing = 0
+    CanMakeDefenseRing = 0
+
+    def reset(self):
+        super().reset()
+        self.CanMakeNoisyRing = 0
+        self.CanMakeDefenseRing = 0

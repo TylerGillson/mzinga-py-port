@@ -147,7 +147,7 @@ class Board:
         self.BoardState = "NotStarted"
         self.GameType = game_type
 
-        self._board_metrics = BoardMetrics()
+        self._board_metrics = BoardMetrics(game_type)
         self._current_turn = 0
 
         # print("Cythonized:\t", min(timeit.Timer(ZobristHashC).repeat(number=3)))
@@ -387,14 +387,111 @@ class Board:
                     self._board_metrics.PiecesInHand += 1
                     p.InPlay = 0
 
-                # Set noisy/quiet move counts
-                is_pinned, p.NoisyMoveCount, p.QuietMoveCount = self.is_pinned(piece_name)
+                # Set noisy/quiet move, and ring metric counts:
+                metric_counts = self.is_pinned(piece_name)
+                is_pinned, p.NoisyMoveCount, p.QuietMoveCount = metric_counts[0:4]
+                if self.GameType == "Extended":
+                    p.CanMakeNoisyRing, p.CanMakeDefenseRing = metric_counts[4:]
+
                 is_below = target_piece.in_play and target_piece.piece_above is not None
                 p.IsPinned = 1 if is_pinned else 0
                 p.IsCovered = 1 if is_below else 0
 
                 # Set neighbor counts
                 total, p.FriendlyNeighborCount, p.EnemyNeighborCount = self.count_neighbors(piece=target_piece)
+
+        # Optionally calculate extended board metrics:
+        if self.GameType == "Extended":
+            self.get_queen_metrics()
+            self.get_board_ring_metrics()
+
+    def get_board_ring_metrics(self):
+        self._board_metrics.BlackNoisyRing = 0
+        self._board_metrics.WhiteNoisyRing = 0
+        empty_positions = set()
+
+        # Find all empty positions:
+        for p in self._pieces_by_position:
+            neighbour_at = p.position.neighbour_at
+            if p.IsPinned == 1:
+                continue
+
+            for i in range(EnumUtils.NumDirections):
+                pos = neighbour_at(i)
+                if self.get_piece(pos) is None:
+                    empty_positions.add(pos)
+
+        # Filter candidates to find ring centres:
+        for pos in empty_positions:
+            neighbour_count = 0
+            n_white = 0
+            n_black = 0
+            neighbour_bees = set()
+
+            # Check for neighbours in each direction:
+            for i in range(EnumUtils.NumDirections):
+                neighbour_i_pos = pos.neighbour_at(i)
+                piece_at_dir_i = self.get_piece(neighbour_i_pos)
+
+                if piece_at_dir_i is not None:
+                    if piece_at_dir_i.colour == "White":
+                        n_white += 1
+                    else:
+                        n_black += 1
+
+                    if piece_at_dir_i.piece_name[-3::] == "Bee":
+                        neighbour_bees.add(piece_at_dir_i.colour)
+
+                    neighbour_count += 1
+
+            # Pos is a ring centre:
+            if neighbour_count == 6:
+                if n_black > n_white:
+                    self._board_metrics.BlackNoisyRing += 1
+                elif n_black < n_white:
+                    self._board_metrics.WhiteNoisyRing += 1
+                else:
+                    self._board_metrics.BlackNoisyRing += 1
+                    self._board_metrics.WhiteNoisyRing += 1
+
+                # Additionally increment counter if bees are included in the ring:
+                for bee_colour in neighbour_bees:
+                    if bee_colour == "White":
+                        self._board_metrics.WhiteNoisyRing += 1
+                    else:
+                        self._board_metrics.BlackNoisyRing += 1
+
+    def get_queen_metrics(self):
+        white_queen_position = self.get_piece_position("WhiteQueenBee")
+        black_queen_position = self.get_piece_position("BlackQueenBee")
+
+        wq_metrics = self.count_queen_neighbours(white_queen_position)
+        self._board_metrics.WhiteQueenLife, self._board_metrics.WhiteNonSlidingQueenSpaces = wq_metrics
+
+        bq_metrics = self.count_queen_neighbours(black_queen_position)
+        self._board_metrics.BlackQueenLife = self._board_metrics.BlackNonSlidingQueenSpaces = bq_metrics
+
+    def count_queen_neighbours(self, queen_position):
+        neighbour_count = 0
+        non_sliding_neighbour_positions = 0
+
+        if queen_position is not None:
+            neighbour_at = queen_position.neighbour_at
+
+            for i in range(EnumUtils.NumDirections):
+                pos = neighbour_at(i)
+
+                # Count occupied neighbouring spaces:
+                if self.get_piece(pos) is not None:
+                    neighbour_count += 1
+
+                # Count 'tight' neighbouring spaces:
+                valid_moves = MoveSet()
+                self.get_valid_slides_rec("WhiteQueenBee", pos, set(pos), 0, valid_moves, 1)
+                if valid_moves.count > 0:
+                    non_sliding_neighbour_positions += 1
+
+        return 6 - neighbour_count, non_sliding_neighbour_positions
 
     def count_neighbors(self, piece_name=None, piece=None):
         if piece_name and not piece:
@@ -434,7 +531,7 @@ class Board:
                     if is_quiet_move(piece_name, move):
                         quiet_count += 1
 
-        return is_pinned, noisy_count, quiet_count
+        return is_pinned, noisy_count, quiet_count, can_make_noisy_ring, can_make_defense_ring
 
     def is_quiet_move(self, piece_name, move):
         if move is None or move.is_pass:
@@ -752,8 +849,7 @@ class Board:
         valid_moves = MoveSet()
         starting_position = target_piece.position
 
-        visited_positions = set()
-        visited_positions.add(starting_position)
+        visited_positions = set(starting_position)
         piece_name = target_piece.piece_name
 
         self.move_piece(target_piece, None, False)

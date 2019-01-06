@@ -11,6 +11,7 @@
       <w>cullkeepcount</w>
       <w>dest</w>
       <w>elems</w>
+      <w>gametype</w>
       <w>generatecount</w>
       <w>generatemaxweight</w>
       <w>generateminweight</w>
@@ -40,6 +41,7 @@
       <w>royale</w>
       <w>royales</w>
       <w>strs</w>
+      <w>subelem</w>
       <w>targetprofilepath</w>
       <w>transtablesize</w>
       <w>turnmaxtime</w>

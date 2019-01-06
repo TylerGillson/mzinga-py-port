@@ -71,6 +71,7 @@ class Program:
 
         print("Parameters:")
 
+        print("-GameType                Original or Extended AI")
         print("-ProfilesPath            Where the profiles are stored")
         print("-WhiteProfilePath        The white profile in a single battle")
         print("-BlackProfilePath        The black profile in a single battle")
@@ -101,6 +102,8 @@ class Program:
 
     @staticmethod
     def parse_args(arg, args, i, trainer_settings):
+        if arg in ["gt", "  gametype"]:
+            trainer_settings.GameType = args[i + 1]
         if arg in ["pp", "profilespath"]:
             trainer_settings.profiles_path = args[i + 1]
         if arg in ["wpp", "whiteprofilepath"]:
