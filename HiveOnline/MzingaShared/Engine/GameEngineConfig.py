@@ -36,7 +36,7 @@ class GameEngineConfig:
 
     MaxBranchingFactor = None
     ReportIntermediateBestMoves = False
-    GameType = "Original"  # "Original"
+    GameType = "Extended"  # "Original"
 
     def __init__(self, input_stream):
         self.load_config(input_stream)

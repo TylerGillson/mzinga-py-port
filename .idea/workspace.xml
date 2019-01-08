@@ -5,17 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aa05651a-1eca-4dbd-9b9c-26b22eb664c0" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/BaseMetricWeights.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/BoardMetricWeights.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/BoardMetricWeights.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAI.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAI.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAIConfig.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAIConfig.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/MetricWeights.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/MetricWeights.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Piece.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Piece.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/PiecePositionBase.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/PiecePositionBase.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/EnumUtils.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/EnumUtils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Engine/GameEngineConfig.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Engine/GameEngineConfig.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profile.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profile.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -25,11 +17,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="688">
-              <caret line="478" column="53" selection-start-line="478" selection-start-column="53" selection-end-line="478" selection-end-column="53" />
+            <state relative-caret-position="541">
+              <caret line="619" column="20" lean-forward="true" selection-start-line="619" selection-start-column="20" selection-end-line="619" selection-end-column="20" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
                 <element signature="e#1268#1293#0" />
@@ -64,13 +56,14 @@
                 <element signature="e#9787#9826#0" />
                 <element signature="e#9863#11978#0" />
                 <element signature="e#12035#13401#0" />
+                <element signature="e#13779#15127#0" />
                 <element signature="e#15113#17211#0" />
                 <element signature="e#17202#17690#0" />
-                <element signature="e#17792#18574#0" />
                 <element signature="e#14574#15220#0" />
                 <element signature="e#19271#20030#0" />
+                <element signature="e#20580#21759#0" />
                 <element signature="e#15913#17086#0" />
-                <element signature="e#16912#18747#0" />
+                <element signature="e#21437#23405#0" />
                 <element signature="e#18501#19029#0" />
                 <element signature="e#16762#18295#0" />
                 <element signature="e#18359#21416#0" />
@@ -93,6 +86,15 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/EnumUtils.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1038">
+              <caret line="92" lean-forward="true" selection-start-line="92" selection-end-line="92" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAI.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="3436">
@@ -106,10 +108,10 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Engine/GameEngineConfig.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="280">
+            <state relative-caret-position="342">
               <caret line="38" column="39" lean-forward="true" selection-start-line="38" selection-start-column="39" selection-end-line="38" selection-end-column="39" />
               <folding>
                 <element signature="e#0#22#0" expanded="true" />
@@ -130,11 +132,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>get_board</find>
-      <find>seed</find>
-      <find>mate</find>
-      <find>_set_curr</find>
-      <find>calculate_board_score</find>
       <find>is_noisy_move</find>
       <find>TranspositionTableSize</find>
       <find>GameBoard</find>
@@ -160,6 +157,11 @@
       <find>self._board_metrics.</find>
       <find>\.position</find>
       <find>\.stack</find>
+      <find>_cached_enemy_</find>
+      <find>_cached_enemy_queen_neighbors</find>
+      <find>_cached_enemy_queen_neighbours</find>
+      <find>enemy_queen_neighbors</find>
+      <find>_cached_enemy_queen</find>
     </findStrings>
     <replaceStrings>
       <replace>list(PieceNames\.keys\(\))\[0\]</replace>
@@ -182,6 +184,8 @@
       <replace>from Utils</replace>
       <replace />
       <replace>neighbour_at</replace>
+      <replace>_cached_enemy_queen_neighbours</replace>
+      <replace>enemy_queen_neighbours</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -190,7 +194,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/MzingaShared/Core/MoveSet.py" />
         <option value="$PROJECT_DIR$/MzingaTrainer/Profile.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Engine/GameEngineConfig.py" />
         <option value="$PROJECT_DIR$/MzingaShared/Core/AI/MetricWeights.py" />
@@ -239,8 +242,9 @@
         <option value="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Piece.py" />
         <option value="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/BoardMetricWeights.py" />
         <option value="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAI.py" />
-        <option value="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py" />
         <option value="$PROJECT_DIR$/HiveOnline/MzingaShared/Engine/GameEngineConfig.py" />
+        <option value="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/EnumUtils.py" />
+        <option value="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py" />
       </list>
     </option>
   </component>
@@ -625,19 +629,19 @@
     <frame x="0" y="23" width="1440" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49492902" visible="true" weight="0.16701902" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49492902" visible="true" weight="0.16701902" />
       <window_info id="Structure" order="1" sideWeight="0.505071" side_tool="true" weight="0.16701902" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.3299363" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.28917196" />
-      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49753347" visible="true" weight="0.37197453" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49753347" weight="0.37197453" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32948717" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="8" weight="0.32948717" />
-      <window_info anchor="bottom" id="Terminal" order="9" sideWeight="0.49964765" weight="0.32866243" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="9" sideWeight="0.49964765" visible="true" weight="0.32866243" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5024665" side_tool="true" weight="0.37197453" />
       <window_info anchor="bottom" id="Inspection Results" order="11" weight="0.32948717" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -855,13 +859,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/EnumUtils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="94">
-          <caret line="98" selection-start-line="98" selection-end-line="98" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/local/Cellar/python/3.6.5/Frameworks/Python.framework/Versions/3.6/lib/python3.6/urllib/parse.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="156">
@@ -981,23 +978,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/ZobristHash.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/PiecePositionBase.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="13" lean-forward="true" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
-          <folding>
-            <element signature="e#0#61#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/HiveOnline/Utils/TaskQueue.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="357">
@@ -1039,92 +1019,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Position.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="386">
-          <caret line="102" selection-start-line="102" selection-end-line="102" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Move.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="918">
           <caret line="56" selection-start-line="56" selection-end-line="56" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Piece.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="20" column="24" lean-forward="true" selection-start-line="20" selection-start-column="24" selection-end-line="20" selection-end-column="24" />
-          <folding>
-            <element signature="e#0#50#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="688">
-          <caret line="478" column="53" selection-start-line="478" selection-start-column="53" selection-end-line="478" selection-end-column="53" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-            <element signature="e#1268#1293#0" />
-            <element signature="e#1363#1651#0" />
-            <element signature="e#1710#1756#0" />
-            <element signature="e#1815#1850#0" />
-            <element signature="e#1906#1960#0" />
-            <element signature="e#2012#2072#0" />
-            <element signature="e#2124#2441#0" />
-            <element signature="e#2492#2523#0" />
-            <element signature="e#2557#2581#0" />
-            <element signature="e#2702#2846#0" />
-            <element signature="e#2900#3046#0" />
-            <element signature="e#3096#3247#0" />
-            <element signature="e#3297#3473#0" />
-            <element signature="e#3600#3646#0" />
-            <element signature="e#3705#3751#0" />
-            <element signature="e#3817#3984#0" />
-            <element signature="e#4046#4213#0" />
-            <element signature="e#4376#4406#0" />
-            <element signature="e#4480#5074#0" />
-            <element signature="e#5122#6900#0" />
-            <element signature="e#6937#7046#0" />
-            <element signature="e#7094#7137#0" />
-            <element signature="e#7193#7353#0" />
-            <element signature="e#7404#7674#0" />
-            <element signature="e#7723#8113#0" />
-            <element signature="e#8174#8392#0" />
-            <element signature="e#8456#8551#0" />
-            <element signature="e#8630#9611#0" />
-            <element signature="e#9678#9717#0" />
-            <element signature="e#9787#9826#0" />
-            <element signature="e#9863#11978#0" />
-            <element signature="e#12035#13401#0" />
-            <element signature="e#15113#17211#0" />
-            <element signature="e#17202#17690#0" />
-            <element signature="e#17792#18574#0" />
-            <element signature="e#14574#15220#0" />
-            <element signature="e#19271#20030#0" />
-            <element signature="e#15913#17086#0" />
-            <element signature="e#16912#18747#0" />
-            <element signature="e#18501#19029#0" />
-            <element signature="e#16762#18295#0" />
-            <element signature="e#18359#21416#0" />
-            <element signature="e#21477#23761#0" />
-            <element signature="e#23830#23909#0" />
-            <element signature="e#23975#24503#0" />
-            <element signature="e#24569#26773#0" />
-            <element signature="e#26844#27537#0" />
-            <element signature="e#27608#27700#0" />
-            <element signature="e#27772#28229#0" />
-            <element signature="e#28359#29976#0" />
-            <element signature="e#30046#31091#0" />
-            <element signature="e#31192#31374#0" />
-            <element signature="e#31412#31595#0" />
-            <element signature="e#31617#32460#0" />
-            <element signature="e#32506#32742#0" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1162,10 +1060,117 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Engine/GameEngineConfig.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="280">
+        <state relative-caret-position="342">
           <caret line="38" column="39" lean-forward="true" selection-start-line="38" selection-start-column="39" selection-end-line="38" selection-end-column="39" />
           <folding>
             <element signature="e#0#22#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/ZobristHash.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="121">
+          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Position.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1700">
+          <caret line="102" selection-start-line="102" selection-end-line="102" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Piece.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="106">
+          <caret line="20" column="24" lean-forward="true" selection-start-line="20" selection-start-column="24" selection-end-line="20" selection-end-column="24" />
+          <folding>
+            <element signature="e#0#50#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/PiecePositionBase.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="10" column="13" lean-forward="true" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
+          <folding>
+            <element signature="e#0#61#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/EnumUtils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1038">
+          <caret line="92" lean-forward="true" selection-start-line="92" selection-end-line="92" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="541">
+          <caret line="619" column="20" lean-forward="true" selection-start-line="619" selection-start-column="20" selection-end-line="619" selection-end-column="20" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+            <element signature="e#1268#1293#0" />
+            <element signature="e#1363#1651#0" />
+            <element signature="e#1710#1756#0" />
+            <element signature="e#1815#1850#0" />
+            <element signature="e#1906#1960#0" />
+            <element signature="e#2012#2072#0" />
+            <element signature="e#2124#2441#0" />
+            <element signature="e#2492#2523#0" />
+            <element signature="e#2557#2581#0" />
+            <element signature="e#2702#2846#0" />
+            <element signature="e#2900#3046#0" />
+            <element signature="e#3096#3247#0" />
+            <element signature="e#3297#3473#0" />
+            <element signature="e#3600#3646#0" />
+            <element signature="e#3705#3751#0" />
+            <element signature="e#3817#3984#0" />
+            <element signature="e#4046#4213#0" />
+            <element signature="e#4376#4406#0" />
+            <element signature="e#4480#5074#0" />
+            <element signature="e#5122#6900#0" />
+            <element signature="e#6937#7046#0" />
+            <element signature="e#7094#7137#0" />
+            <element signature="e#7193#7353#0" />
+            <element signature="e#7404#7674#0" />
+            <element signature="e#7723#8113#0" />
+            <element signature="e#8174#8392#0" />
+            <element signature="e#8456#8551#0" />
+            <element signature="e#8630#9611#0" />
+            <element signature="e#9678#9717#0" />
+            <element signature="e#9787#9826#0" />
+            <element signature="e#9863#11978#0" />
+            <element signature="e#12035#13401#0" />
+            <element signature="e#13779#15127#0" />
+            <element signature="e#15113#17211#0" />
+            <element signature="e#17202#17690#0" />
+            <element signature="e#14574#15220#0" />
+            <element signature="e#19271#20030#0" />
+            <element signature="e#20580#21759#0" />
+            <element signature="e#15913#17086#0" />
+            <element signature="e#21437#23405#0" />
+            <element signature="e#18501#19029#0" />
+            <element signature="e#16762#18295#0" />
+            <element signature="e#18359#21416#0" />
+            <element signature="e#21477#23761#0" />
+            <element signature="e#23830#23909#0" />
+            <element signature="e#23975#24503#0" />
+            <element signature="e#24569#26773#0" />
+            <element signature="e#26844#27537#0" />
+            <element signature="e#27608#27700#0" />
+            <element signature="e#27772#28229#0" />
+            <element signature="e#28359#29976#0" />
+            <element signature="e#30046#31091#0" />
+            <element signature="e#31192#31374#0" />
+            <element signature="e#31412#31595#0" />
+            <element signature="e#31617#32460#0" />
+            <element signature="e#32506#32742#0" />
           </folding>
         </state>
       </provider>

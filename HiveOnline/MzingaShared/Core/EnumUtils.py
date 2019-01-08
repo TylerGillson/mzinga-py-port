@@ -81,6 +81,15 @@ PieceShortNames = [
     "BA3",
 ]
 
+Rings = [
+    ["Up", "UpRight", "DownRight", "Down", "DownLeft"],
+    ["UpRight", "DownRight", "Down", "DownLeft", "UpLeft"],
+    ["DownRight", "Down", "DownLeft", "UpLeft", "Up"],
+    ["Down", "DownLeft", "UpLeft", "Up", "UpRight"],
+    ["DownLeft", "UpLeft", "Up", "UpRight", "DownRight"],
+    ["UpLeft", "Up", "UpRight", "DownRight", "Down"],
+]
+
 
 class EnumUtils:
     # DIRECTIONS

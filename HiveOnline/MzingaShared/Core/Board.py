@@ -1,7 +1,7 @@
 import queue
 
-import timeit
-from MzingaShared.Core.ZobristHashC import ZobristHashC
+# import timeit
+# from MzingaShared.Core.ZobristHashC import ZobristHashC
 
 from MzingaShared.Core import Move as MoveCls, EnumUtils
 from MzingaShared.Core.BoardMetrics import BoardMetrics
@@ -13,7 +13,7 @@ from MzingaShared.Core import Position as PositionCls
 from MzingaShared.Core.Position import Position
 from MzingaShared.Core.ZobristHash import ZobristHash
 from MzingaShared.Core.EnumUtils import Colours, ColoursByInt, PieceNamesByInt, PieceNames, \
-                                        EnumUtils as EnumUtilsCls
+                                        EnumUtils as EnumUtilsCls, Rings, Directions
 
 BoardStates = ["NotStarted", "InProgress", "Draw", "WhiteWins", "BlackWins"]
 
@@ -35,7 +35,8 @@ class Board:
     _cached_valid_moves_by_piece = None
     _cached_valid_placement_positions = None
     _visited_placements = set()
-    _cached_enemy_queen_neighbors = None
+    _cached_enemy_queen_neighbours = None
+    _cached_friendly_queen_neighbours = None
 
     # END CACHES
 
@@ -164,7 +165,8 @@ class Board:
         self._cached_valid_moves_by_piece = None
         self._cached_valid_placement_positions = None
         self._visited_placements = set()
-        self._cached_enemy_queen_neighbors = None
+        self._cached_enemy_queen_neighbours = None
+        self._cached_friendly_queen_neighbours = None
 
     def __init__(self, board_string, game_type):
         self.init_state_vars(game_type)
@@ -354,8 +356,11 @@ class Board:
         valid_placement_positions = self._cached_valid_placement_positions
         self._cached_valid_placement_positions = None
 
-        enemy_queen_neighbors = self._cached_enemy_queen_neighbors
-        self._cached_enemy_queen_neighbors = None
+        enemy_queen_neighbours = self._cached_enemy_queen_neighbours
+        self._cached_enemy_queen_neighbours = None
+
+        friendly_queen_neighbours = self._cached_friendly_queen_neighbours
+        self._cached_friendly_queen_neighbours = None
 
         last_piece_moved = self._last_piece_moved
         self._last_piece_moved = list(PieceNames.keys())[0]  # "INVALID"
@@ -369,7 +374,8 @@ class Board:
 
         # Returned, so reload saved valid moves/placements into cache
         self._last_piece_moved = last_piece_moved
-        self._cached_enemy_queen_neighbors = enemy_queen_neighbors
+        self._cached_enemy_queen_neighbours = enemy_queen_neighbours
+        self._cached_friendly_queen_neighbours = friendly_queen_neighbours
         self._cached_valid_placement_positions = valid_placement_positions
         self._cached_valid_moves_by_piece = valid_moves_by_piece
 
@@ -470,35 +476,48 @@ class Board:
         white_queen_position = self.get_piece_position("WhiteQueenBee")
         black_queen_position = self.get_piece_position("BlackQueenBee")
 
-        wq_metrics = self.count_queen_neighbours(white_queen_position)
+        wq_metrics = self.count_queen_neighbours(white_queen_position, "White")
         self._board_metrics.WhiteQueenLife, self._board_metrics.WhiteNonSlidingQueenSpaces = wq_metrics
 
-        bq_metrics = self.count_queen_neighbours(black_queen_position)
+        bq_metrics = self.count_queen_neighbours(black_queen_position, "Black")
         self._board_metrics.BlackQueenLife, self._board_metrics.BlackNonSlidingQueenSpaces = bq_metrics
 
-    def count_queen_neighbours(self, queen_position):
+    def count_queen_neighbours(self, queen_position, colour):
         neighbour_count = 0
         non_sliding_neighbour_positions = 0
+        friendly = self.current_turn_colour == colour
+
+        if self._cached_friendly_queen_neighbours is None:
+            self._cached_friendly_queen_neighbours = set()
 
         if queen_position is not None:
             neighbour_at = queen_position.neighbour_at
+            fqn_add = self._cached_friendly_queen_neighbours.add
 
             for i in range(EnumUtils.NumDirections):
                 pos = neighbour_at(i)
+
+                # Build friendly_queen_neighbours cache:
+                if friendly:
+                    fqn_add(pos)
 
                 # Count occupied neighbouring spaces:
                 if self.get_piece(pos) is not None:
                     neighbour_count += 1
 
-                # Use dummy queen to count 'tight' neighbouring spaces:
-                self.dummy_queen.move(pos)
-                valid_moves = self.get_valid_slides(self.dummy_queen, 1, dummy=True)
-                self.dummy_queen.move(None)
-
+                # Count 'tight' neighbouring spaces:
+                valid_moves = self.get_moves_from_pos(pos)
                 if valid_moves.count == 0:
                     non_sliding_neighbour_positions += 1
 
         return 6 - neighbour_count, non_sliding_neighbour_positions
+
+    def get_moves_from_pos(self, pos):
+        # Use dummy queen to check a position for 'tightness':
+        self.dummy_queen.move(pos)
+        valid_moves = self.get_valid_slides(self.dummy_queen, 1, dummy=True)
+        self.dummy_queen.move(None)
+        return valid_moves
 
     def count_neighbors(self, piece_name=None, piece=None):
         if piece_name and not piece:
@@ -526,6 +545,8 @@ class Board:
         makes_noisy_ring, makes_defense_ring = self.makes_noisy_ring, self.makes_defense_ring
 
         for move in self.get_valid_moves(piece_name):
+            if move is None or move.is_pass:
+                continue
             if move.piece_name == piece_name:
                 is_pinned = False
 
@@ -534,26 +555,71 @@ class Board:
             else:
                 if self.GameType == "Original":
                     quiet_count += 1
-                else:  # Compute extended piece metrics:
+                # Compute extended piece metrics:
+                else:
                     if is_quiet_move(piece_name, move):
                         quiet_count += 1
-                    if makes_noisy_ring(piece_name, move):
+                    if makes_noisy_ring(move):
                         can_make_noisy_ring = 1
                     if makes_defense_ring(piece_name, move):
                         can_make_defense_ring = 1
 
         return is_pinned, noisy_count, quiet_count, can_make_noisy_ring, can_make_defense_ring
 
-    def makes_noisy_ring(self, piece_name, move):
+    def makes_noisy_ring(self, move):
+        origin = move.position
+        get_piece = self.get_piece
+
+        # Check for a ring in all six directions:
+        for ring in Rings:
+            ring_pieces = []
+            referent = origin
+
+            for angle in ring:
+                referent = referent.neighbour_at(Directions[angle])
+                n = get_piece(referent)
+                if n is None:
+                    break
+                ring_pieces.append(n.piece_name)
+
+            # If the move makes a ring, check for queen bee presence and/or piece ratio:
+            if len(ring_pieces) == 6:
+                white_pcs, black_pcs = 0, 0
+
+                for piece_name in ring_pieces:
+                    if piece_name[-3:] == "Bee" and piece_name[0:5] == self.current_turn_colour:
+                        return True
+
+                    if piece_name[0:5] == "White":
+                        white_pcs += 1
+                    else:
+                        black_pcs += 1
+
+                noisy_for_white = self.current_turn_colour == "White" and white_pcs > black_pcs
+                noisy_for_black = self.current_turn_colour == "Black" and black_pcs > white_pcs
+                if noisy_for_white or noisy_for_black:
+                    return True
+
         return False
 
     def makes_defense_ring(self, piece_name, move):
+        # Determine current number of non_sliding_neighbour_positions:
+        tight_positions_1 = [p for p in self._cached_friendly_queen_neighbours if self.get_moves_from_pos(p).count == 0]
+
+        # Mock move, check again, then undo:
+        piece = self.get_piece(piece_name)
+        original_pos = piece.position
+
+        self.move_piece(piece, move.position, update_zobrist=False)
+        tight_positions_2 = [p for p in self._cached_friendly_queen_neighbours if self.get_moves_from_pos(p).count == 0]
+        self.move_piece(piece, original_pos, update_zobrist=False)
+
+        # If a non-sliding-neighbour position was added to the friendly queen's neighbours, a defense ring was formed:
+        if tight_positions_2.count > tight_positions_1.count:
+            return True
         return False
 
     def is_quiet_move(self, piece_name, move):
-        if move is None or move.is_pass:
-            return False
-
         moving_piece = self.get_piece(piece_name)
         original_position = self.get_piece_position(piece_name)
         if original_position is None:
@@ -570,29 +636,32 @@ class Board:
         return True
 
     def is_noisy_move(self, move):
-        if move is None or move.is_pass:
-            return False
-
         # Determine enemy queen neighbours:
-        if self._cached_enemy_queen_neighbors is None:
-            self._cached_enemy_queen_neighbors = set()
+        if self._cached_enemy_queen_neighbours is None:
+            self._cached_enemy_queen_neighbours = set()
             enemy_queen_name = "BlackQueenBee" if self.current_turn_colour == "White" else "WhiteQueenBee"
             enemy_queen_position = self.get_piece_position(enemy_queen_name)
 
             if enemy_queen_position is not None:
                 # Add queen's neighboring positions
-                add = self._cached_enemy_queen_neighbors.add
+                add = self._cached_enemy_queen_neighbours.add
                 neighbour_at = enemy_queen_position.neighbour_at
 
                 for i in range(EnumUtils.NumDirections):
                     add(neighbour_at(i))
 
-        move_to_adjacent = move.position in self._cached_enemy_queen_neighbors
-        piece_already_adjacent = self.get_piece_position(move.piece_name) in self._cached_enemy_queen_neighbors
+        move_to_adjacent = move.position in self._cached_enemy_queen_neighbours
+        piece_already_adjacent = self.get_piece_position(move.piece_name) in self._cached_enemy_queen_neighbours
+        classically_noisy = move_to_adjacent and not piece_already_adjacent
 
         if self.GameType == "Original":
-            return move_to_adjacent and not piece_already_adjacent
+            return classically_noisy
+        # Extended AI checks for moves which trap pieces into a space adjacent to the enemy queen:
         else:
+            # Avoid extra work if the move is already noisy in the original sense:
+            if classically_noisy:
+                return classically_noisy
+
             moving_piece = self.get_piece(move.piece_name)
             original_position = moving_piece.position
 
@@ -606,7 +675,7 @@ class Board:
             self.move_piece(moving_piece, original_position, False)
 
             newly_trapped = list(post_move_trapped_neighbours - pre_move_trapped_neighbours)
-            newly_trapped_against_queen = [p for p in newly_trapped if p.position in self._cached_enemy_queen_neighbors]
+            newly_trapped_against_queen = [p for p in newly_trapped if p.position in self._cached_enemy_queen_neighbours]
             return len(newly_trapped_against_queen) > 0
 
     def get_trapped_neighbours(self, position, enemies_only=False):
@@ -965,7 +1034,8 @@ class Board:
     def reset_caches(self):
         self._cached_valid_moves_by_piece = None
         self._cached_valid_placement_positions = None
-        self._cached_enemy_queen_neighbors = None
+        self._cached_enemy_queen_neighbours = None
+        self._cached_friendly_queen_neighbours = None
         self.ValidMoveCacheResets += 1
 
 
