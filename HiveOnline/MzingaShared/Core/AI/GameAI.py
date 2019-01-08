@@ -480,6 +480,7 @@ class GameAI:
             get_colour = EnumUtilsCls.get_colour
             get = mw.get
 
+            # Optionally compute extended board metrics:
             if self.GameType == "Extended":
                 bmw_get = self.BoardMetricWeights.get
                 queen_bee_life_weight = bmw_get("QueenBeeLifeWeight")
@@ -509,4 +510,12 @@ class GameAI:
                                       * board_metrics[piece_name].FriendlyNeighborCount
                 score += colour_value * get(bug_type, "EnemyNeighborWeight") \
                                       * board_metrics[piece_name].EnemyNeighborCount
+
+                # Optionally compute extended piece metrics:
+                if self.GameType == "Extended":
+                    score += colour_value * get(bug_type, "CanMakeNoisyRingWeight") \
+                        * board_metrics[piece_name].CanMakeNoisyRing
+                    score += colour_value * get(bug_type, "CanMakeDefenseRingWeight") \
+                        * board_metrics[piece_name].CanMakeDefenseRing
+
             return score

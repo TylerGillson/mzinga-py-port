@@ -169,6 +169,7 @@ class Board:
     def __init__(self, board_string, game_type):
         self.init_state_vars(game_type)
         self.init_pieces()
+        self.dummy_queen = Piece("WhiteQueenBee")
 
         # New game constructor
         if board_string == "START":
@@ -389,9 +390,9 @@ class Board:
 
                 # Set noisy/quiet move, and ring metric counts:
                 metric_counts = self.is_pinned(piece_name)
-                is_pinned, p.NoisyMoveCount, p.QuietMoveCount = metric_counts[0:4]
+                is_pinned, p.NoisyMoveCount, p.QuietMoveCount = metric_counts[0:3]
                 if self.GameType == "Extended":
-                    p.CanMakeNoisyRing, p.CanMakeDefenseRing = metric_counts[4:]
+                    p.CanMakeNoisyRing, p.CanMakeDefenseRing = metric_counts[3:]
 
                 is_below = target_piece.in_play and target_piece.piece_above is not None
                 p.IsPinned = 1 if is_pinned else 0
@@ -406,14 +407,18 @@ class Board:
             self.get_board_ring_metrics()
 
     def get_board_ring_metrics(self):
-        self._board_metrics.BlackNoisyRing = 0
-        self._board_metrics.WhiteNoisyRing = 0
+        bm = self._board_metrics
+        bm.BlackNoisyRing = 0
+        bm.WhiteNoisyRing = 0
         empty_positions = set()
 
         # Find all empty positions:
-        for p in self._pieces_by_position:
-            neighbour_at = p.position.neighbour_at
-            if p.IsPinned == 1:
+        for piece in self._pieces_by_position.values():
+            if piece is None or piece.in_hand:
+                continue
+
+            neighbour_at = piece.position.neighbour_at
+            if bm[piece.piece_name].IsPinned == 1:
                 continue
 
             for i in range(EnumUtils.NumDirections):
@@ -447,19 +452,19 @@ class Board:
             # Pos is a ring centre:
             if neighbour_count == 6:
                 if n_black > n_white:
-                    self._board_metrics.BlackNoisyRing += 1
+                    bm.BlackNoisyRing += 1
                 elif n_black < n_white:
-                    self._board_metrics.WhiteNoisyRing += 1
+                    bm.WhiteNoisyRing += 1
                 else:
-                    self._board_metrics.BlackNoisyRing += 1
-                    self._board_metrics.WhiteNoisyRing += 1
+                    bm.BlackNoisyRing += 1
+                    bm.WhiteNoisyRing += 1
 
                 # Additionally increment counter if bees are included in the ring:
                 for bee_colour in neighbour_bees:
                     if bee_colour == "White":
-                        self._board_metrics.WhiteNoisyRing += 1
+                        bm.WhiteNoisyRing += 1
                     else:
-                        self._board_metrics.BlackNoisyRing += 1
+                        bm.BlackNoisyRing += 1
 
     def get_queen_metrics(self):
         white_queen_position = self.get_piece_position("WhiteQueenBee")
@@ -469,7 +474,7 @@ class Board:
         self._board_metrics.WhiteQueenLife, self._board_metrics.WhiteNonSlidingQueenSpaces = wq_metrics
 
         bq_metrics = self.count_queen_neighbours(black_queen_position)
-        self._board_metrics.BlackQueenLife = self._board_metrics.BlackNonSlidingQueenSpaces = bq_metrics
+        self._board_metrics.BlackQueenLife, self._board_metrics.BlackNonSlidingQueenSpaces = bq_metrics
 
     def count_queen_neighbours(self, queen_position):
         neighbour_count = 0
@@ -485,10 +490,12 @@ class Board:
                 if self.get_piece(pos) is not None:
                     neighbour_count += 1
 
-                # Count 'tight' neighbouring spaces:
-                valid_moves = MoveSet()
-                self.get_valid_slides_rec("WhiteQueenBee", pos, set(pos), 0, valid_moves, 1)
-                if valid_moves.count > 0:
+                # Use dummy queen to count 'tight' neighbouring spaces:
+                self.dummy_queen.move(pos)
+                valid_moves = self.get_valid_slides(self.dummy_queen, 1, dummy=True)
+                self.dummy_queen.move(None)
+
+                if valid_moves.count == 0:
                     non_sliding_neighbour_positions += 1
 
         return 6 - neighbour_count, non_sliding_neighbour_positions
@@ -512,11 +519,11 @@ class Board:
             return friendly_count + enemy_count, friendly_count, enemy_count
 
     def is_pinned(self, piece_name):
-        noisy_count = 0
-        quiet_count = 0
+        noisy_count, quiet_count = 0, 0
+        can_make_noisy_ring, can_make_defense_ring = 0, 0
         is_pinned = True
-        is_noisy_move = self.is_noisy_move
-        is_quiet_move = self.is_quiet_move
+        is_noisy_move, is_quiet_move = self.is_noisy_move, self.is_quiet_move
+        makes_noisy_ring, makes_defense_ring = self.makes_noisy_ring, self.makes_defense_ring
 
         for move in self.get_valid_moves(piece_name):
             if move.piece_name == piece_name:
@@ -527,11 +534,21 @@ class Board:
             else:
                 if self.GameType == "Original":
                     quiet_count += 1
-                else:
+                else:  # Compute extended piece metrics:
                     if is_quiet_move(piece_name, move):
                         quiet_count += 1
+                    if makes_noisy_ring(piece_name, move):
+                        can_make_noisy_ring = 1
+                    if makes_defense_ring(piece_name, move):
+                        can_make_defense_ring = 1
 
         return is_pinned, noisy_count, quiet_count, can_make_noisy_ring, can_make_defense_ring
+
+    def makes_noisy_ring(self, piece_name, move):
+        return False
+
+    def makes_defense_ring(self, piece_name, move):
+        return False
 
     def is_quiet_move(self, piece_name, move):
         if move is None or move.is_pass:
@@ -845,16 +862,23 @@ class Board:
         # Get all slides all the way around
         return self.get_valid_slides(target_piece, max_range=None)
 
-    def get_valid_slides(self, target_piece, max_range=None):
+    def get_valid_slides(self, target_piece, max_range=None, dummy=False):
         valid_moves = MoveSet()
         starting_position = target_piece.position
 
-        visited_positions = set(starting_position)
+        visited_positions = set()
+        visited_positions.add(starting_position)
         piece_name = target_piece.piece_name
 
-        self.move_piece(target_piece, None, False)
-        self.get_valid_slides_rec(piece_name, starting_position, visited_positions, 0, valid_moves, max_range)
-        self.move_piece(target_piece, starting_position, False)
+        # Avoid invoking self.move_piece when checking dummy_queen slides:
+        if dummy:
+            target_piece.move(None)
+            self.get_valid_slides_rec(piece_name, starting_position, visited_positions, 0, valid_moves, max_range)
+            target_piece.move(starting_position)
+        else:
+            self.move_piece(target_piece, None, False)
+            self.get_valid_slides_rec(piece_name, starting_position, visited_positions, 0, valid_moves, max_range)
+            self.move_piece(target_piece, starting_position, False)
 
         return valid_moves
 

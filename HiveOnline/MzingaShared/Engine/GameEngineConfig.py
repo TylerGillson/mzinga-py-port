@@ -1,8 +1,9 @@
 ﻿import multiprocessing
 import platform
 import xml.etree.ElementTree as ElementTree
+from typing import Union
 
-from MzingaShared.Core import BoardMetrics
+from MzingaShared.Core.AI import BoardMetricWeights
 from MzingaShared.Core.AI import MetricWeights
 from MzingaShared.Core.AI.GameAI import GameAI
 from MzingaShared.Core.AI.GameAIConfig import GameAIConfig
@@ -28,14 +29,14 @@ class GameEngineConfig:
 
     MinMaxBranchingFactor = 1
 
-    _max_helper_threads = None
+    _max_helper_threads: Union[int, None] = None
     # Hard min is 0, hard max is (Environment.ProcessorCount / 2) - 1
     hard_max = min(_max_helper_threads, MaxMaxHelperThreads) if _max_helper_threads is not None else MaxMaxHelperThreads
     MaxHelperThreads = max(MinMaxHelperThreads, hard_max)
 
     MaxBranchingFactor = None
     ReportIntermediateBestMoves = False
-    GameType = "Extended"  # "Original"
+    GameType = "Original"  # "Original"
 
     def __init__(self, input_stream):
         self.load_config(input_stream)
@@ -65,7 +66,7 @@ class GameEngineConfig:
                 if elem.tag == "TranspositionTableSizeMB":
                     self.parse_transposition_table_size_mb_value(elem.text)
                 if elem.tag == "BoardMetricWeights":
-                    self.BoardMetricWeights = BoardMetrics.read_metric_weights_xml(elem)
+                    self.BoardMetricWeights = BoardMetricWeights.read_metric_weights_xml(elem)
                 if elem.tag in ["MetricWeights", "StartMetricWeights"]:
                     self.StartMetricWeights = MetricWeights.read_metric_weights_xml(elem, self.GameType)
                 if elem.tag == "EndMetricWeights":
@@ -178,6 +179,7 @@ class GameEngineConfig:
             self.TranspositionTableSizeMB,
             self.GameType,
             self.MaxBranchingFactor,
+            self.BoardMetricWeights,
         ))
 
 
@@ -390,4 +392,3 @@ ExtendedConfig = """
 </GameAI>
 </Mzinga.Engine>
 """
-

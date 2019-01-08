@@ -15,6 +15,9 @@ class Piece(PiecePositionBase):
         return self.position is None
 
     def __init__(self, piece_name, position=None, piece_string=None):
+        self.piece_name = list(PieceNames.keys())[0]  # "INVALID"
+        self.position = None
+
         if piece_string:
             if piece_string.isspace():
                 raise ValueError("Invalid piece_string.")

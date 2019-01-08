@@ -34,11 +34,11 @@ class PiecePositionBase:
             sep = piece_string.find('[')
             name_string = piece_string[0:sep:]
             position_string = (piece_string[sep::]).replace('[', '').replace(']', '')
-            self.piece_name = EnumUtils.parse_short_name(name_string)
+            self._piece_name = EnumUtils.parse_short_name(name_string)
             self.position = Position.parse(position_string)
             return True
         except ValueError:
-            self.piece_name = list(PieceNames.keys())[0]
+            self._piece_name = list(PieceNames.keys())[0]
             self.position = None
             return False
 

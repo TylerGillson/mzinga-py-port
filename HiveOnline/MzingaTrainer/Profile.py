@@ -327,8 +327,8 @@ class Profile:
             "elo_rating": elo_rating,
             "creation_timestamp": creation_timestamp
         }
-        return Profile(m_id, name, board_metric_weights,
-                       start_metric_weights, end_metric_weights,
+        return Profile(m_id, name,
+                       board_metric_weights, start_metric_weights, end_metric_weights,
                        parent_a.game_type, **kwargs)
 
 

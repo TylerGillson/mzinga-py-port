@@ -1,8 +1,7 @@
-﻿import math
-from typing import List
-from copy import deepcopy
+﻿from typing import List
 
 from MzingaShared.Core import EnumUtils
+from MzingaShared.Core.AI.BaseMetricWeights import BaseMetricWeights
 
 BugTypeWeights = {
     "InPlayWeight": 0,
@@ -18,8 +17,8 @@ NumBugTypeWeights = 7
 
 # Define constructs for extended version:
 ExtendedBugTypeWeights = {
-    "CanMakeNoisyRing": 7,
-    "CanMakeDefenseRing": 8,
+    "CanMakeNoisyRingWeight": 7,
+    "CanMakeDefenseRingWeight": 8,
 }
 ExtendedBugTypeWeightsByInt = {v: k for k, v in dict(BugTypeWeights, **ExtendedBugTypeWeights).items()}
 ExtendedNumBugTypeWeights = 9
@@ -116,39 +115,13 @@ class MetricWeights(MetricWeightsBase):
         self._bug_type_weights = source.bug_type_weights
 
     def clone(self):
-        return deepcopy(self)
+        return BaseMetricWeights.clone(self)
 
     def get_normalized(self, target_max_value=100.0, is_round=True, decimals=6):
-        if target_max_value <= 0.0:
-            raise ValueError("Invalid target_max_value")
-
-        clone = self.clone()
-
-        # Copy bug weights into local array
-        dbl_weights: List[float] = clone._bug_type_weights
-
-        max_weight = float("-inf")
-        for weight in dbl_weights:
-            max_weight = max(max_weight, abs(weight))
-
-        # Normalize to new range
-        for i in range(len(dbl_weights)):
-            val = dbl_weights[i]
-            dbl_weights[i] = math.copysign((abs(val) / max_weight) * target_max_value, val)
-
-        # Populate clone with normalized weights
-        for i in range(len(clone._bug_type_weights)):
-            clone._bug_type_weights[i] = round(dbl_weights[i], decimals) if is_round else dbl_weights[i]
-
-        return clone
+        return BaseMetricWeights.get_normalized(self, "_bug_type_weights", target_max_value, is_round, decimals)
 
     def add(self, a):
-        if a is None:
-            raise ValueError("a")
-
-        for i in range(len(self._bug_type_weights)):
-            self._bug_type_weights[i] += a.bug_type_weights[i]
+        self._bug_type_weights = BaseMetricWeights.add(self._bug_type_weights, a, "_bug_type_weights")
 
     def scale(self, factor):
-        for i in range(len(self._bug_type_weights)):
-            self._bug_type_weights[i] *= factor
+        self._bug_type_weights = BaseMetricWeights.scale(self, factor, "_bug_type_weights")
