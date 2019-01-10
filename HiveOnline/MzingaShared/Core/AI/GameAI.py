@@ -55,7 +55,7 @@ class GameAI:
     MaxMaxBranchingFactor = 500
     DefaultBoardScoresCacheSize = 516240
     QuiescentSearchMaxDepth = 3  # To prevent runaway stack overflows
-    MaxDepth = 10
+    MaxDepth = 3  # 10
     GameType = None
 
     _max_branching_factor = MaxMaxBranchingFactor  # To prevent search explosion
@@ -121,8 +121,7 @@ class GameAI:
         # Make sure at least one move is reported
         self.BestMoveFound.on_change.fire(self, best_move_params, evaluated_moves.best_move, handler_key=0)
 
-        _ = datetime.datetime.now() - kwargs.get('start_time')
-
+        # _ = datetime.datetime.now() - kwargs.get('start_time')
         # global depths
         # depths.append(best_move_params.BestMove.depth)
 

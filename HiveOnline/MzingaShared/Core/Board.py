@@ -382,6 +382,12 @@ class Board:
         return self._board_metrics
 
     def _set_current_player_metrics(self):
+        # Optionally calculate extended board metrics:
+        if self.GameType == "Extended":
+            self.get_queen_metrics()
+            self.get_board_ring_metrics()
+
+        # Calculate piece metrics:
         for piece_name in self.current_turn_pieces:
             target_piece = self.get_piece(piece_name)
             p = self._board_metrics[piece_name]
@@ -406,11 +412,6 @@ class Board:
 
                 # Set neighbor counts
                 total, p.FriendlyNeighborCount, p.EnemyNeighborCount = self.count_neighbors(piece=target_piece)
-
-        # Optionally calculate extended board metrics:
-        if self.GameType == "Extended":
-            self.get_queen_metrics()
-            self.get_board_ring_metrics()
 
     def get_board_ring_metrics(self):
         bm = self._board_metrics
@@ -501,14 +502,13 @@ class Board:
                 if friendly:
                     fqn_add(pos)
 
-                # Count occupied neighbouring spaces:
+                # Count occupied neighbouring spaces and check empty neighbours for tightness:
                 if self.get_piece(pos) is not None:
                     neighbour_count += 1
-
-                # Count 'tight' neighbouring spaces:
-                valid_moves = self.get_moves_from_pos(pos)
-                if valid_moves.count == 0:
-                    non_sliding_neighbour_positions += 1
+                else:
+                    valid_moves = self.get_moves_from_pos(pos)
+                    if valid_moves.count == 0:
+                        non_sliding_neighbour_positions += 1
 
         return 6 - neighbour_count, non_sliding_neighbour_positions
 
@@ -555,19 +555,31 @@ class Board:
             else:
                 if self.GameType == "Original":
                     quiet_count += 1
-                # Compute extended piece metrics:
                 else:
                     if is_quiet_move(piece_name, move):
                         quiet_count += 1
+
+            # Optionally compute extended piece metrics:
+            if self.GameType == "Extended":
+                if can_make_noisy_ring != 1:
                     if makes_noisy_ring(move):
                         can_make_noisy_ring = 1
+
+                if can_make_defense_ring != 1:
                     if makes_defense_ring(piece_name, move):
                         can_make_defense_ring = 1
 
         return is_pinned, noisy_count, quiet_count, can_make_noisy_ring, can_make_defense_ring
 
     def makes_noisy_ring(self, move):
+        # Verify move position has at least two neighbours before checking for rings:
+        move_occupied_neighbours = [move.position.neighbour_at(i) for i in EnumUtils.Directions.values()
+                                    if self.get_piece(move.position.neighbour_at(i)) is not None]
+        if len(move_occupied_neighbours) < 2:
+            return False
+
         origin = move.position
+        piece_colour = move.piece_name[0:5]
         get_piece = self.get_piece
 
         # Check for a ring in all six directions:
@@ -580,17 +592,20 @@ class Board:
                 n = get_piece(referent)
                 if n is None:
                     break
-                ring_pieces.append(n.piece_name)
+                if n.piece_name != move.piece_name:
+                    ring_pieces.append(n.piece_name)
 
             # If the move makes a ring, check for queen bee presence and/or piece ratio:
-            if len(ring_pieces) == 6:
-                white_pcs, black_pcs = 0, 0
+            if len(ring_pieces) == 5:
+                white_pcs = 1 if piece_colour == "White" else 0
+                black_pcs = 1 - white_pcs
 
                 for piece_name in ring_pieces:
-                    if piece_name[-3:] == "Bee" and piece_name[0:5] == self.current_turn_colour:
-                        return True
+                    ring_piece_colour = piece_name[0:5]
 
-                    if piece_name[0:5] == "White":
+                    if piece_name[-3:] == "Bee":
+                        return ring_piece_colour == self.current_turn_colour
+                    if ring_piece_colour == "White":
                         white_pcs += 1
                     else:
                         black_pcs += 1
@@ -603,19 +618,33 @@ class Board:
         return False
 
     def makes_defense_ring(self, piece_name, move):
+        # Determine which set of positions to inspect:
+        if piece_name[0:5] == self.current_turn_colour:
+            queen_neighbour_set = self._cached_friendly_queen_neighbours
+        else:
+            queen_neighbour_set = self._cached_enemy_queen_neighbours
+
+        if len(queen_neighbour_set) == 0:
+            return False
+
         # Determine current number of non_sliding_neighbour_positions:
-        tight_positions_1 = [p for p in self._cached_friendly_queen_neighbours if self.get_moves_from_pos(p).count == 0]
+        tight_positions_1 = [p for p in queen_neighbour_set
+                             if self.get_piece(p) is None and self.get_moves_from_pos(p).count == 0]
 
         # Mock move, check again, then undo:
         piece = self.get_piece(piece_name)
         original_pos = piece.position
 
         self.move_piece(piece, move.position, update_zobrist=False)
-        tight_positions_2 = [p for p in self._cached_friendly_queen_neighbours if self.get_moves_from_pos(p).count == 0]
+        if piece_name[-3:] == "Bee":
+            queen_neighbour_set = [move.position.neighbour_at(i) for i in EnumUtils.Directions.values()]
+
+        tight_positions_2 = [p for p in queen_neighbour_set
+                             if self.get_piece(p) is None and self.get_moves_from_pos(p).count == 0]
         self.move_piece(piece, original_pos, update_zobrist=False)
 
         # If a non-sliding-neighbour position was added to the friendly queen's neighbours, a defense ring was formed:
-        if tight_positions_2.count > tight_positions_1.count:
+        if len(tight_positions_2) > len(tight_positions_1):
             return True
         return False
 
