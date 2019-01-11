@@ -54,7 +54,7 @@ class Program:
         print("Mzinga.Trainer.py [command] ([parametername] [parametervalue]...)\n")
 
         print("Example:")
-        print("Mzinga.Trainer.py enumerate -ProfilesPath /Users/<username>/<path_to_profiles>/\n")
+        print("Mzinga.Trainer.py enumerate -ProfilePath /Users/<username>/<path_to_profiles>/\n")
 
         print("Commands:")
 
@@ -72,7 +72,7 @@ class Program:
         print("Parameters:")
 
         print("-GameType                Original or Extended AI")
-        print("-ProfilesPath            Where the profiles are stored")
+        print("-ProfilePath             Where the profiles are stored")
         print("-WhiteProfilePath        The white profile in a single battle")
         print("-BlackProfilePath        The black profile in a single battle")
         print("-CullKeepCount           How many to profiles to keep when culling")
@@ -102,59 +102,55 @@ class Program:
 
     @staticmethod
     def parse_args(arg, args, i, trainer_settings):
-        if arg in ["gt", "  gametype"]:
+        if arg in ["gt", "gametype"]:
             trainer_settings.GameType = args[i + 1]
-        if arg in ["pp", "profilespath"]:
-            trainer_settings.profiles_path = args[i + 1]
-        if arg in ["wpp", "whiteprofilepath"]:
-            trainer_settings.white_profiles_path = args[i + 1]
-        if arg in ["bpp", "blackprofilepath"]:
-            trainer_settings.black_profiles_path = args[i + 1]
-        if arg in ["ckc", "cullkeepcount"]:
+        elif arg in ["pp", "profilepath"]:
+            trainer_settings.profile_path = args[i + 1]
+        elif arg in ["ckc", "cullkeepcount"]:
             trainer_settings.cull_keep_count = int(args[i + 1])
-        if arg in ["gc", "generatecount"]:
+        elif arg in ["gc", "generatecount"]:
             trainer_settings.generate_count = int(args[i + 1])
-        if arg in ["gminw", "generateminweight"]:
+        elif arg in ["gminw", "generateminweight"]:
             trainer_settings.GenerateMinWeight = float(args[i + 1])
-        if arg in ["gmaxw", "generatemaxweight"]:
+        elif arg in ["gmaxw", "generatemaxweight"]:
             trainer_settings.GenerateMaxWeight = float(args[i + 1])
-        if arg in ["lg", "lifecyclegenerations"]:
+        elif arg in ["lg", "lifecyclegenerations"]:
             trainer_settings.lifecycle_generations = int(args[i + 1])
-        if arg in ["lb", "lifecyclebattles"]:
+        elif arg in ["lb", "lifecyclebattles"]:
             trainer_settings.LifecycleBattles = int(args[i + 1])
-        if arg in ["mb", "maxbattles"]:
+        elif arg in ["mb", "maxbattles"]:
             trainer_settings.max_battles = int(args[i + 1])
-        if arg in ["mcb", "maxconcurrentbattles"]:
+        elif arg in ["mcb", "maxconcurrentbattles"]:
             trainer_settings.max_concurrent_battles = int(args[i + 1])
-        if arg in ["bsp", "battleshuffleprofiles"]:
+        elif arg in ["bsp", "battleshuffleprofiles"]:
             trainer_settings.BattleShuffleProfiles = args[i + 1] == 'True'
-        if arg in ["mdraws", "maxdraws"]:
+        elif arg in ["mdraws", "maxdraws"]:
             trainer_settings.max_draws = int(args[i + 1])
-        if arg in ["bbtl", "bulkbattletimelimit"]:
+        elif arg in ["bbtl", "bulkbattletimelimit"]:
             trainer_settings.bulk_battle_time_limit = int(args[i + 1])
-        if arg in ["pr", "provisionalrules"]:
+        elif arg in ["pr", "provisionalrules"]:
             trainer_settings.ProvisionalRules = args[i + 1] == 'True'
-        if arg in ["pgc", "provisionalgamecount"]:
+        elif arg in ["pgc", "provisionalgamecount"]:
             trainer_settings.ProvisionalGameCount = int(args[i + 1])
-        if arg in ["mminm", "mateminmix"]:
+        elif arg in ["mminm", "mateminmix"]:
             trainer_settings.MateMinMix = float(args[i + 1])
-        if arg in ["mmaxm", "matemaxmix"]:
+        elif arg in ["mmaxm", "matemaxmix"]:
             trainer_settings.MateMaxMix = float(args[i + 1])
-        if arg in ["mpc", "mateparentcount"]:
+        elif arg in ["mpc", "mateparentcount"]:
             trainer_settings.mate_parent_count = int(args[i + 1])
-        if arg in ["msp", "mateshuffleparents"]:
+        elif arg in ["msp", "mateshuffleparents"]:
             trainer_settings.MateShuffleParents = args[i + 1] == 'True'
-        if arg in ["tts", "transtablesize"]:
+        elif arg in ["tts", "transtablesize"]:
             trainer_settings.TransTableSize = int(args[i + 1])
-        if arg in ["mdepth", "maxdepth"]:
+        elif arg in ["mdepth", "maxdepth"]:
             trainer_settings.MaxDepth = int(args[i + 1])
-        if arg in ["tmt", "turnmaxtime"]:
+        elif arg in ["tmt", "turnmaxtime"]:
             trainer_settings.TurnMaxTime = datetime.timedelta(seconds=int(args[i + 1]))
-        if arg in ["btl", "battletimelimit"]:
+        elif arg in ["btl", "battletimelimit"]:
             trainer_settings.battle_time_limit = int(args[i + 1])
-        if arg in ["tpp", "targetprofilepath"]:
+        elif arg in ["tpp", "targetprofilepath"]:
             trainer_settings.target_profile_path = args[i + 1]
-        if arg in ["mht", "maxhelperthreads"]:
+        elif arg in ["mht", "maxhelperthreads"]:
             trainer_settings.MaxHelperThreads = int(args[i + 1])
 
     def parse_arguments(self, args, trainer_settings):

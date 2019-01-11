@@ -96,9 +96,22 @@ class MetricWeights(MetricWeightsBase):
     def bug_type_weights(self):
         return self._bug_type_weights
 
-    def __init__(self, game_type):
+    def __init__(self, game_type, weights=None):
         super().__init__(game_type)
-        self._bug_type_weights = [0] * EnumUtils.NumBugTypes * self.weight_max
+
+        if weights:
+            self._bug_type_weights = weights
+        else:
+            self._bug_type_weights = [0] * EnumUtils.NumBugTypes * self.weight_max
+
+    def __len__(self):
+        return len(self._bug_type_weights)
+
+    def __getitem__(self, index):
+        return self._bug_type_weights[index]
+
+    def __setitem__(self, key, value):
+        self._bug_type_weights[key] = value
 
     def get(self, bug_type, bug_type_weight):
         btw_key = self.get_key(bug_type, bug_type_weight)

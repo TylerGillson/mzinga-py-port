@@ -1,5 +1,4 @@
 ﻿import datetime
-import random
 import uuid
 import xml.etree.ElementTree as ElementTree
 
@@ -8,12 +7,13 @@ from MzingaShared.Core.AI.BoardMetricWeights import BoardMetricWeights as BoardM
 from MzingaShared.Core.AI import MetricWeights
 from MzingaShared.Core.AI.MetricWeights import MetricWeights as MetricWeightsCls
 from MzingaTrainer import EloUtils
+from MzingaTrainer import GAHelpers as Ga
 
 
 class Profile:
     Id = None
+    GameType = None
     _name = None
-    _random = None
 
     Generation = 0
     ParentA = None
@@ -42,13 +42,7 @@ class Profile:
     def total_games(self):
         return self.Wins + self.Losses + self.Draws
 
-    @property
-    def random(self):
-        if self._random:
-            return self._random
-        self._random = random.random
-
-    def __init__(self, i_id, name, board_metric_weights, start_metric_weights, end_metric_weights, game_type, **kwargs):
+    def __init__(self, i_id, name, game_type, **kwargs):
         if "generation" in kwargs and kwargs.get("generation") < 0:
             raise ValueError("Invalid generation.")
 
@@ -81,10 +75,16 @@ class Profile:
 
         self.Id = i_id
         self.Name = name
+        self.GameType = game_type
 
-        self.BoardMetricWeights = board_metric_weights
-        self.StartMetricWeights = start_metric_weights
-        self.EndMetricWeights = end_metric_weights
+        if "board_metric_weights" in kwargs:
+            self.BoardMetricWeights = kwargs.pop("board_metric_weights")
+            self.board_metric_weights_cls = BoardMetricWeightsCls()
+        if "start_metric_weights" in kwargs:
+            self.StartMetricWeights = kwargs.pop("start_metric_weights")
+        if "end_metric_weights" in kwargs:
+            self.EndMetricWeights = kwargs.pop("end_metric_weights")
+
         self.CreationTimestamp = kwargs.pop("creation_timestamp") \
             if "creation_timestamp" in kwargs else datetime.datetime.now()
         self.LastUpdatedTimestamp = kwargs.pop("last_updated_timestamp") \
@@ -107,8 +107,6 @@ class Profile:
         if "draws" in kwargs:
             self.Draws = kwargs.pop("draws")
 
-        self.game_type = game_type
-        self.board_metric_weights_cls = BoardMetricWeightsCls()
         self.bug_metric_weights_cls = MetricWeightsCls(game_type)
 
     def __eq__(self, other):
@@ -135,17 +133,18 @@ class Profile:
 
         self.update()
 
-    def update_metric_weights(self, board_metric_weights, start_metric_weights, end_metric_weights):
-        if board_metric_weights is None:
-            raise ValueError("Invalid board_metric_weights.")
+    def update_metric_weights(self, start_metric_weights, end_metric_weights, board_metric_weights=None):
         if start_metric_weights is None:
             raise ValueError("Invalid start_metric_weights.")
         if end_metric_weights is None:
             raise ValueError("Invalid end_metric_weights.")
 
-        self.BoardMetricWeights = board_metric_weights
         self.StartMetricWeights = start_metric_weights
         self.EndMetricWeights = end_metric_weights
+
+        if board_metric_weights is not None:
+            self.BoardMetricWeights = board_metric_weights
+
         self.update()
 
     def update(self):
@@ -165,6 +164,7 @@ class Profile:
         if self.ParentB is not None:
             ElementTree.SubElement(root, "ParentB").text = str(self.ParentB)
 
+        ElementTree.SubElement(root, "GameType").text = str(self.GameType)
         ElementTree.SubElement(root, "EloRating").text = str(self.EloRating)
         ElementTree.SubElement(root, "Wins").text = str(self.Wins)
         ElementTree.SubElement(root, "Losses").text = str(self.Losses)
@@ -172,13 +172,8 @@ class Profile:
         ElementTree.SubElement(root, "Creation").text = str(self.CreationTimestamp)
         ElementTree.SubElement(root, "LastUpdated").text = str(self.LastUpdatedTimestamp)
 
-        board_metric_weights = ElementTree.SubElement(root, "BoardMetricWeights")
         start_metric_weights = ElementTree.SubElement(root, "StartMetricWeights")
         end_metric_weights = ElementTree.SubElement(root, "EndMetricWeights")
-
-        def write_board_weights(key):
-            w_value = self.BoardMetricWeights.get(key)
-            ElementTree.SubElement(parent_node, key).text = str(w_value)
 
         def write_start_weights(bug_type, bug_type_weight):
             key = self.bug_metric_weights_cls.get_key_name(bug_type, bug_type_weight)
@@ -190,24 +185,33 @@ class Profile:
             w_value = self.EndMetricWeights.get(bug_type, bug_type_weight)
             ElementTree.SubElement(parent_node, key).text = str(w_value)
 
-        parent_node = board_metric_weights
-        self.board_metric_weights_cls.iterate_over_weights(write_board_weights)
-
         parent_node = start_metric_weights
         self.bug_metric_weights_cls.iterate_over_weights(write_start_weights)
 
         parent_node = end_metric_weights
         self.bug_metric_weights_cls.iterate_over_weights(write_end_weights)
 
+        if self.GameType == "Extended":
+            board_metric_weights = ElementTree.SubElement(root, "BoardMetricWeights")
+
+            def write_board_weights(key):
+                w_value = self.BoardMetricWeights.get(key)
+                ElementTree.SubElement(parent_node, key).text = str(w_value)
+
+            parent_node = board_metric_weights
+            self.board_metric_weights_cls.iterate_over_weights(write_board_weights)
+
         tree = ElementTree.ElementTree(root)
         tree.write(output_stream)
 
-    def read_xml(self, input_stream):
+    @staticmethod
+    def read_xml(input_stream):
         if input_stream is None:
             raise ValueError("Invalid input_stream.")
 
         r_id = None
         r_name = None
+        game_type = None
         generation = 0
         parent_a = None
         parent_b = None
@@ -230,6 +234,8 @@ class Profile:
                 r_id = uuid.UUID(uuid.UUID(node.text).hex)
             elif node.tag == "Name":
                 r_name = node.text
+            elif node.tag == "GameType":
+                game_type = node.text
             elif node.tag == "Generation":
                 generation = int(node.text)
             elif node.tag == "ParentA":
@@ -252,13 +258,15 @@ class Profile:
                 board_metric_weights = BoardMetricWeights.read_metric_weights_xml([subelem for subelem in node])
             elif node.tag in ["MetricWeights", "StartMetricWeights"]:
                 start_metric_weights = \
-                    MetricWeights.read_metric_weights_xml([subelem for subelem in node], self.game_type)
+                    MetricWeights.read_metric_weights_xml([subelem for subelem in node], game_type)
             elif node.tag == "EndMetricWeights":
                 end_metric_weights = \
-                    MetricWeights.read_metric_weights_xml([subelem for subelem in node], self.game_type)
+                    MetricWeights.read_metric_weights_xml([subelem for subelem in node], game_type)
 
         if r_name is None:
             r_name = generate_name(r_id)
+        if game_type is None:
+            game_type = "Original"
         if end_metric_weights is None:
             end_metric_weights = start_metric_weights
 
@@ -267,7 +275,6 @@ class Profile:
             "wins": wins,
             "losses": losses,
             "draws": draws,
-            "board_metric_weights": board_metric_weights,
             "start_metric_weights": start_metric_weights,
             "end_metric_weights": end_metric_weights,
             "creation_timestamp": creation_timestamp,
@@ -276,18 +283,28 @@ class Profile:
         }
         if parent_a is not None:
             kwargs.update({"parent_a": parent_a, "parent_b": parent_b})
+        if board_metric_weights is not None:
+            kwargs.update({"board_metric_weights": board_metric_weights})
 
-        return Profile(r_id, r_name, **kwargs)
+        return Profile(r_id, r_name, game_type, **kwargs)
 
-    def generate(self, min_weight, max_weight):
-        board_metric_weights = generate_board_metric_weights(min_weight, max_weight)
-        start_metric_weights = generate_metric_weights(min_weight, max_weight, self.game_type)
-        end_metric_weights = generate_metric_weights(min_weight, max_weight, self.game_type)
-
+    @staticmethod
+    def generate(min_weight, max_weight, game_type):
         g_id = uuid.uuid4()
         g_name = generate_name(g_id)
 
-        return Profile(g_id, g_name, board_metric_weights, start_metric_weights, end_metric_weights, self.game_type)
+        start_metric_weights = Ga.generate_metric_weights(min_weight, max_weight, game_type)
+        end_metric_weights = Ga.generate_metric_weights(min_weight, max_weight, game_type)
+
+        kwargs = {
+            "start_metric_weights": start_metric_weights,
+            "end_metric_weights": end_metric_weights
+        }
+        if game_type == "Extended":
+            board_metric_weights = Ga.generate_board_metric_weights(min_weight, max_weight)
+            kwargs.update({"board_metric_weights": board_metric_weights})
+
+        return Profile(g_id, g_name, game_type, **kwargs)
 
     @staticmethod
     def mate(parent_a, parent_b, min_mix, max_mix):
@@ -295,6 +312,8 @@ class Profile:
             raise ValueError("Invalid parent_a.")
         if parent_b is None:
             raise ValueError("Invalid parent_b.")
+        if parent_a.GameType != parent_b.GameType:
+            raise ValueError("Cannot mate profiles with differing game types.")
         if min_mix > max_mix:
             raise ValueError("Invalid min/max_mixes.")
 
@@ -303,83 +322,43 @@ class Profile:
         elo_rating = EloUtils.DefaultRating
         generation = max(parent_a.Generation, parent_b.Generation) + 1
 
-        board_metric_weights = mix_board_metric_weights(
-            parent_a.BoardMetricWeights.get_normalized(),
-            parent_b.BoardMetricWeights.get_normalized(),
-            min_mix, max_mix)
+        # Normalize metric weights:
+        pa_start_norm = parent_a.StartMetricWeights.get_normalized()
+        pa_end_norm = parent_a.EndMetricWeights.get_normalized()
+        pb_start_norm = parent_b.StartMetricWeights.get_normalized()
+        pb_end_norm = parent_b.EndMetricWeights.get_normalized()
+        board_metric_weights = None
 
-        start_metric_weights = mix_metric_weights(
-            parent_a.StartMetricWeights.get_normalized(),
-            parent_b.StartMetricWeights.get_normalized(),
-            min_mix, max_mix, parent_a.game_type)
+        if parent_a.GameType == "Original":
+            start_metric_weights = Ga.mix_metric_weights(pa_start_norm, pb_start_norm,
+                                                         min_mix, max_mix, parent_a.GameType)
+            end_metric_weights = Ga.mix_metric_weights(pa_end_norm, pb_end_norm,
+                                                       min_mix, max_mix, parent_a.GameType)
+        else:
+            pa_board_norm = parent_a.BoardMetricWeights.get_normalized()
+            pb_board_norm = parent_b.BoardMetricWeights.get_normalized()
 
-        end_metric_weights = mix_metric_weights(
-            parent_a.EndMetricWeights.get_normalized(),
-            parent_b.EndMetricWeights.get_normalized(),
-            min_mix, max_mix, parent_a.game_type)
+            start_metric_weights = Ga.cross_over(pa_start_norm, pb_start_norm)
+            end_metric_weights = Ga.cross_over(pa_end_norm, pb_end_norm)
+            board_metric_weights = Ga.cross_over(pa_board_norm, pb_board_norm)
 
-        creation_timestamp = datetime.datetime.now()
+            start_metric_weights = Ga.mutate(start_metric_weights)
+            end_metric_weights = Ga.mutate(end_metric_weights)
+            board_metric_weights = Ga.mutate(board_metric_weights)
 
         kwargs = {
             "generation": generation,
             "parent_a": parent_a.Id,
             "parent_b": parent_b.Id,
             "elo_rating": elo_rating,
-            "creation_timestamp": creation_timestamp
+            "creation_timestamp": datetime.datetime.now(),
+            "start_metric_weights": start_metric_weights,
+            "end_metric_weights": end_metric_weights,
         }
-        return Profile(m_id, name,
-                       board_metric_weights, start_metric_weights, end_metric_weights,
-                       parent_a.game_type, **kwargs)
+        if parent_a.GameType == "Extended":
+            kwargs.update({"board_metric_weights": board_metric_weights})
 
-
-def generate_board_metric_weights(min_weight, max_weight):
-    bmw = BoardMetricWeightsCls()
-
-    def generate_weights(key):
-        value = min_weight + (random.random() * (max_weight - min_weight))
-        bmw.set(key, value)
-
-    bmw.iterate_over_weights(generate_weights)
-    return bmw
-
-
-def generate_metric_weights(min_weight, max_weight, game_type):
-    mw = MetricWeightsCls(game_type)
-
-    def generate_weights(bug_type, bug_type_weight):
-        value = min_weight + (random.random() * (max_weight - min_weight))
-        mw.set(bug_type, bug_type_weight, value)
-
-    mw.iterate_over_weights(generate_weights)
-    return mw
-
-
-def mix_board_metric_weights(bmw_a, bmw_b, min_mix, max_mix):
-    bmw = BoardMetricWeightsCls()
-
-    def mix_weights(key):
-        value = 0.5 * (bmw_a.get(key) + bmw_b.get(key))
-        if value == 0.0:
-            value = -0.01 + (random.random() * 0.02)
-        value = value * (min_mix + (random.random() * abs(max_mix - min_mix)))
-        bmw.set(key, value)
-
-    bmw.iterate_over_weights(mix_weights)
-    return bmw
-
-
-def mix_metric_weights(mw_a, mw_b, min_mix, max_mix, game_type):
-    mw = MetricWeightsCls(game_type)
-
-    def mix_weights(bug_type, bug_type_weight):
-        value = 0.5 * (mw_a.get(bug_type, bug_type_weight) + mw_b.get(bug_type, bug_type_weight))
-        if value == 0.0:
-            value = -0.01 + (random.random() * 0.02)
-        value = value * (min_mix + (random.random() * abs(max_mix - min_mix)))
-        mw.set(bug_type, bug_type_weight, value)
-
-    mw.iterate_over_weights(mix_weights)
-    return mw
+        return Profile(m_id, name, parent_a.GameType, **kwargs)
 
 
 def generate_name(n_id):

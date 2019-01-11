@@ -30,13 +30,27 @@ class BoardMetricWeights(BaseMetricWeights):
     def board_metric_weights(self):
         return self._board_metric_weights
 
-    def __init__(self):
-        self._board_metric_weights = [0] * NumBoardMetricWeights
+    def __init__(self, weights=None):
+        if weights:
+            self._board_metric_weights = weights
+        else:
+            self._board_metric_weights = [0] * NumBoardMetricWeights
+
+    def __len__(self):
+        return len(self.board_metric_weights)
+
+    def __getitem__(self, index):
+        return self._board_metric_weights[index]
+
+    def __setitem__(self, key, value):
+        self._board_metric_weights[key] = value
 
     def get(self, metric_name):
         return self._board_metric_weights[BoardMetricWeightsDict[metric_name]]
 
     def set(self, idx, val):
+        if not isinstance(idx, int):
+            idx = BoardMetricWeightsDict[idx]
         self._board_metric_weights[idx] = val
 
     def clone(self):

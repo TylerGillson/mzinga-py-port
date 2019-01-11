@@ -7,9 +7,9 @@ class TrainerSettings:
     LifecycleBattles = 1
     MaxMaxBattles = -1
     MaxMaxConcurrentBattles = -1
-    GameType = "Original"
+    GameType = "Extended"  # "Original"
 
-    _battleTimeLimit = datetime.timedelta(minutes=25)
+    _battleTimeLimit = datetime.timedelta(minutes=10)
     _bulkBattleTimeLimit = datetime.timedelta(minutes=300)
     _maxDraws = 1
     _maxBattles = MaxMaxBattles
@@ -19,9 +19,7 @@ class TrainerSettings:
     CullMinKeepCount = 2
     CullKeepMax = -1
 
-    _profiles_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/"
-    _white_profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/WhiteProfiles/"
-    _black_profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/MzingaTrainer/Profiles/BlackProfiles/"
+    _profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/"
     _target_profile_path = None
 
     ProvisionalRules = False
@@ -48,34 +46,14 @@ class TrainerSettings:
     _lifecycleGenerations = 1
 
     @property
-    def profiles_path(self):
-        return self._profiles_path
+    def profile_path(self):
+        return self._profile_path
 
-    @profiles_path.setter
-    def profiles_path(self, value):
+    @profile_path.setter
+    def profile_path(self, value):
         if not value or value.isspace():
-            raise ValueError("Invalid profiles_path")
-        self._profiles_path = value
-
-    @property
-    def white_profiles_path(self):
-        return self._white_profile_path
-
-    @white_profiles_path.setter
-    def white_profiles_path(self, value):
-        if not value or value.isspace():
-            raise ValueError("Invalid white_profile_path")
-        self._white_profile_path = value
-
-    @property
-    def black_profiles_path(self):
-        return self._black_profile_path
-
-    @black_profiles_path.setter
-    def black_profiles_path(self, value):
-        if not value or value.isspace():
-            raise ValueError("Invalid black_profile_path")
-        self._black_profile_path = value
+            raise ValueError("Invalid profile_path")
+        self._profile_path = value
 
     @property
     def cull_keep_count(self):

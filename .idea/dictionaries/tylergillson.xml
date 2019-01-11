@@ -8,9 +8,12 @@
       <w>bbtl</w>
       <w>blackprofilepath</w>
       <w>bulkbattletimelimit</w>
+      <w>cpsc</w>
       <w>cullkeepcount</w>
       <w>dest</w>
+      <w>dropbox</w>
       <w>elems</w>
+      <w>filepath</w>
       <w>gametype</w>
       <w>generatecount</w>
       <w>generatemaxweight</w>
@@ -35,6 +38,7 @@
       <w>mzinga</w>
       <w>parametername</w>
       <w>parametervalue</w>
+      <w>profilepath</w>
       <w>profilespath</w>
       <w>provisionalgamecount</w>
       <w>provisionalrules</w>
@@ -45,6 +49,7 @@
       <w>targetprofilepath</w>
       <w>transtablesize</w>
       <w>turnmaxtime</w>
+      <w>tylergillson</w>
       <w>unshuffled</w>
       <w>whiteprofilepath</w>
       <w>zobrist</w>

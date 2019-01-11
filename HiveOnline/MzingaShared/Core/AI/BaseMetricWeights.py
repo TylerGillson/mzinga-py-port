@@ -14,9 +14,8 @@ class BaseMetricWeights(object):
         if target_max_value <= 0.0:
             raise ValueError("Invalid target_max_value")
 
+        # Copy bug weights into local array:
         clone = obj.clone()
-
-        # Copy bug weights into local array
         dbl_weights: List[float] = getattr(clone, weights_list_name)
 
         max_weight = float("-inf")
