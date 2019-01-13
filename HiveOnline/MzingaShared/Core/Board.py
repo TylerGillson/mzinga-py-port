@@ -1,4 +1,5 @@
 import queue
+from collections import deque
 
 # import timeit
 # from MzingaShared.Core.ZobristHashC import ZobristHashC
@@ -187,6 +188,7 @@ class Board:
         if board_state_string not in BoardStates:
             raise ValueError("%s%s" % ("Couldn't parse board state. ", board_string))
 
+        self.BoardState = board_state_string
         current_turn_split = list(filter(None, split[1].replace('[', ']').split(']')))
         current_turn_colour_string = current_turn_split[0]
 
@@ -296,50 +298,34 @@ class Board:
         return target_piece.piece_below is None
 
     def is_one_hive(self):
-        # Whether or not a piece has been found to be part of the hive
-        part_of_hive = [0] * EnumUtils.NumPieceNames
-        pieces_visited = 0
+        pieces_in_play = [p for p in self._pieces_by_position.values() if p is not None]
+        pieces_visited, num_pieces = 1, len(pieces_in_play)  # pieces_visited == 1 to count 1st piece
+        pieces_to_look_at = deque([pieces_in_play[0]])
 
-        # Find a piece on the board to start checking
-        starting_piece = None
-        for piece_name in list(EnumUtils.PieceNames.keys())[1:]:
-            piece = self.get_piece(piece_name)
-            if piece is None or piece.in_hand:
-                part_of_hive[PieceNames[piece_name]] = True
+        analyzed_pieces = set()
+        get_piece = self.get_piece
+
+        while len(pieces_to_look_at) > 0:
+            current_piece = pieces_to_look_at.pop()
+            n_at = current_piece.position.neighbour_at
+
+            # Check all pieces at this stack level
+            for i in range(EnumUtils.NumDirections):
+                neighbor_piece = get_piece(n_at(i))
+
+                if neighbor_piece is not None and neighbor_piece not in analyzed_pieces:
+                    pieces_to_look_at.append(neighbor_piece)
+                    pieces_visited += 1
+
+            # Check for all pieces above this one
+            piece_above = current_piece.piece_above
+            while piece_above is not None:
                 pieces_visited += 1
-            else:
-                part_of_hive[PieceNames[piece_name]] = False
-                if starting_piece is None and piece.position.stack == 0:
-                    # Save off a starting piece on the bottom
-                    starting_piece = piece
-                    part_of_hive[PieceNames[piece_name]] = True
-                    pieces_visited += 1
+                piece_above = piece_above.piece_above
 
-        # There is at least one piece on the board
-        if starting_piece is not None and pieces_visited < EnumUtils.NumPieceNames:
-            pieces_to_look_at = queue.Queue()
-            pieces_to_look_at.put(starting_piece)
+            analyzed_pieces.add(current_piece)
 
-            while not pieces_to_look_at.empty():
-                current_piece = pieces_to_look_at.get()
-
-                # Check all pieces at this stack level
-                for i in range(EnumUtils.NumDirections):
-                    neighbor = current_piece.position.neighbour_at(i)
-                    neighbor_piece = self.get_piece(neighbor)
-                    if neighbor_piece is not None and not part_of_hive[PieceNames[neighbor_piece.piece_name]]:
-                        pieces_to_look_at.put(neighbor_piece)
-                        part_of_hive[PieceNames[neighbor_piece.piece_name]] = True
-                        pieces_visited += 1
-
-                # Check for all pieces above this one
-                piece_above = current_piece.piece_above
-                while piece_above is not None:
-                    part_of_hive[PieceNames[piece_above.piece_name]] = True
-                    pieces_visited += 1
-                    piece_above = piece_above.piece_above
-
-        return pieces_visited == EnumUtils.NumPieceNames
+        return pieces_visited == num_pieces
 
     # METRICS
     def get_board_metrics(self):
@@ -413,6 +399,30 @@ class Board:
                 # Set neighbor counts
                 total, p.FriendlyNeighborCount, p.EnemyNeighborCount = self.count_neighbors(piece=target_piece)
 
+    def check_pos_neighbours(self, pos, neighbour_bees):
+        n_white, n_black, n_count = 0, 0, 0
+        empty_n = None
+
+        # Check for neighbours in each direction:
+        for d in range(EnumUtils.NumDirections):
+            neighbour_i_pos = pos.neighbour_at(d)
+            piece_at_dir_i = self.get_piece(neighbour_i_pos)
+
+            if piece_at_dir_i is not None:
+                if piece_at_dir_i.colour == "White":
+                    n_white += 1
+                else:
+                    n_black += 1
+
+                if piece_at_dir_i.piece_name[-3::] == "Bee":
+                    neighbour_bees.add(piece_at_dir_i.colour)
+
+                n_count += 1
+            else:
+                empty_n = neighbour_i_pos
+
+        return n_white, n_black, n_count, empty_n
+
     def get_board_ring_metrics(self):
         bm = self._board_metrics
         bm.BlackNoisyRing = 0
@@ -435,29 +445,20 @@ class Board:
 
         # Filter candidates to find ring centres:
         for pos in empty_positions:
-            neighbour_count = 0
-            n_white = 0
-            n_black = 0
             neighbour_bees = set()
+            n_white, n_black, n_count, empty_n = self.check_pos_neighbours(pos, neighbour_bees)
 
-            # Check for neighbours in each direction:
-            for i in range(EnumUtils.NumDirections):
-                neighbour_i_pos = pos.neighbour_at(i)
-                piece_at_dir_i = self.get_piece(neighbour_i_pos)
+            # If exactly one neighbour is open, check for 8pc rings:
+            if n_count == 5:
+                n_white_2, n_black_2, n_count_2, _ = self.check_pos_neighbours(empty_n, neighbour_bees)
 
-                if piece_at_dir_i is not None:
-                    if piece_at_dir_i.colour == "White":
-                        n_white += 1
-                    else:
-                        n_black += 1
-
-                    if piece_at_dir_i.piece_name[-3::] == "Bee":
-                        neighbour_bees.add(piece_at_dir_i.colour)
-
-                    neighbour_count += 1
+                if n_count_2 == 5:
+                    n_white += n_white_2
+                    n_black += n_black_2
+                    n_count = 6
 
             # Pos is a ring centre:
-            if neighbour_count == 6:
+            if n_count == 6:
                 if n_black > n_white:
                     bm.BlackNoisyRing += 1
                 elif n_black < n_white:
@@ -582,8 +583,7 @@ class Board:
         piece_colour = move.piece_name[0:5]
         get_piece = self.get_piece
 
-        # Check for a ring in all six directions:
-        for ring in Rings:
+        def analyze_ring():
             ring_pieces = []
             referent = origin
 
@@ -596,7 +596,7 @@ class Board:
                     ring_pieces.append(n.piece_name)
 
             # If the move makes a ring, check for queen bee presence and/or piece ratio:
-            if len(ring_pieces) == 5:
+            if len(ring_pieces) >= 5:
                 white_pcs = 1 if piece_colour == "White" else 0
                 black_pcs = 1 - white_pcs
 
@@ -614,6 +614,20 @@ class Board:
                 noisy_for_black = self.current_turn_colour == "Black" and black_pcs > white_pcs
                 if noisy_for_white or noisy_for_black:
                     return True
+            return False
+
+        # Check for 6pc rings in all directions:
+        for ring in Rings:
+            makes_noisy_ring = analyze_ring()
+            if makes_noisy_ring:
+                return True
+
+        # Check for 8pc rings in all directions:
+        for ring in Rings:
+            ring = [ring[0], ring[0], ring[1], ring[2], ring[3], ring[3], ring[4]]
+            makes_noisy_ring = analyze_ring()
+            if makes_noisy_ring:
+                return True
 
         return False
 
@@ -704,7 +718,8 @@ class Board:
             self.move_piece(moving_piece, original_position, False)
 
             newly_trapped = list(post_move_trapped_neighbours - pre_move_trapped_neighbours)
-            newly_trapped_against_queen = [p for p in newly_trapped if p.position in self._cached_enemy_queen_neighbours]
+            newly_trapped_against_queen = \
+                [p for p in newly_trapped if p.position in self._cached_enemy_queen_neighbours]
             return len(newly_trapped_against_queen) > 0
 
     def get_trapped_neighbours(self, position, enemies_only=False):
@@ -1022,10 +1037,12 @@ class Board:
             edges = 0
             last_has_piece = None
 
-            for i in range(EnumUtils.NumDirections):
-                neighbor = target_piece.position.neighbour_at(i)
+            neighbour_at = target_piece.position.neighbour_at
+            has_piece_at = self.has_piece_at
 
-                has_piece = self.has_piece_at(neighbor)
+            for i in range(EnumUtils.NumDirections):
+                has_piece = has_piece_at(neighbour_at(i))
+
                 if last_has_piece is not None:
                     if last_has_piece != has_piece:
                         edges += 1

@@ -29,8 +29,8 @@ class Program:
         if path is None or path == '':
             raise ValueError("path is None or an empty string")
 
-        f = open(path, '+wb')
-        return GameEngineConfigCls(f)
+        with open(path, '+wb') as f:
+            return GameEngineConfigCls(f)
 
 
 if __name__ == '__main__':

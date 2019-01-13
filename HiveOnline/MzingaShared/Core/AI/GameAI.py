@@ -16,8 +16,6 @@ from MzingaShared.Core.AI.MetricWeights import MetricWeights
 from MzingaShared.Core.AI.TranspositionTable import TranspositionTable, TranspositionTableEntry, \
                                                     TranspositionTableEntryType
 
-depths = []
-
 
 class BestMoveFoundEventArgs:
     def __init__(self, move, depth, score):
@@ -120,11 +118,6 @@ class GameAI:
 
         # Make sure at least one move is reported
         self.BestMoveFound.on_change.fire(self, best_move_params, evaluated_moves.best_move, handler_key=0)
-
-        # _ = datetime.datetime.now() - kwargs.get('start_time')
-        # global depths
-        # depths.append(best_move_params.BestMove.depth)
-
         return best_move_params.BestMove.move
 
     async def evaluate_moves_async(self, game_board, best_move_params, **kwargs):
@@ -146,7 +139,13 @@ class GameAI:
             moves_to_evaluate.add(evaluated_move=best_move)
             return moves_to_evaluate
 
-        valid_moves = self.get_presorted_valid_moves(game_board, best_move)
+        if self.GameType == "Original":
+            valid_moves = self.get_presorted_valid_moves(game_board, best_move)
+        else:
+            # Pre-sorting moves is extremely expensive and unnecessary when searching to depth ...
+            valid_moves = MoveSet(moves_list=game_board.get_valid_moves())
+            if valid_moves.count > self._max_branching_factor:
+                valid_moves.remove_range(self._max_branching_factor)
 
         # If necessary, convert each entry to an EvaluatedMove:
         if isinstance(valid_moves[0], Move):
@@ -293,9 +292,12 @@ class GameAI:
 
         best_value = None
         best_move = t_entry.BestMove if t_entry else None
-
-        moves = self.get_presorted_valid_moves(game_board, best_move)
         first_move = True
+
+        if self.GameType == "Original":
+            moves = self.get_presorted_valid_moves(game_board, best_move)
+        else:
+            moves = MoveSet(moves_list=game_board.get_valid_moves())
 
         # Optimize loop:
         en_moves = ListExtensions.get_enumerable_by_order_type(moves, order_type) if order_type != "Default" else moves
@@ -371,6 +373,7 @@ class GameAI:
             for move in valid_moves:
                 evaluated_moves.append(best_move if move == bm else EvaluatedMove(move))
             return evaluated_moves
+
         elif isinstance(best_move, Move) or best_move is None:
             valid_moves = game_board.get_valid_moves()
             valid_moves = sorted(

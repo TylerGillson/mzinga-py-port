@@ -9,7 +9,7 @@ class TrainerSettings:
     MaxMaxConcurrentBattles = -1
     GameType = "Extended"  # "Original"
 
-    _battleTimeLimit = datetime.timedelta(minutes=10)
+    _battleTimeLimit = datetime.timedelta(minutes=90)
     _bulkBattleTimeLimit = datetime.timedelta(minutes=300)
     _maxDraws = 1
     _maxBattles = MaxMaxBattles
@@ -20,6 +20,8 @@ class TrainerSettings:
     CullKeepMax = -1
 
     _profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/"
+    _white_profile_path = None
+    _black_profile_path = None
     _target_profile_path = None
 
     ProvisionalRules = False
@@ -54,6 +56,26 @@ class TrainerSettings:
         if not value or value.isspace():
             raise ValueError("Invalid profile_path")
         self._profile_path = value
+
+    @property
+    def white_profile_path(self):
+        return self._white_profile_path
+
+    @white_profile_path.setter
+    def white_profile_path(self, value):
+        if not value or value.isspace():
+            raise ValueError("Invalid white_profile_path")
+        self._white_profile_path = value
+
+    @property
+    def black_profile_path(self):
+        return self._black_profile_path
+
+    @black_profile_path.setter
+    def black_profile_path(self, value):
+        if not value or value.isspace():
+            raise ValueError("Invalid black_profile_path")
+        self._black_profile_path = value
 
     @property
     def cull_keep_count(self):
@@ -138,7 +160,7 @@ class TrainerSettings:
     @property
     def battle_time_limit(self):
         if self._battleTimeLimit is None:
-            self._battleTimeLimit = datetime.timedelta(minutes=5)
+            self._battleTimeLimit = datetime.timedelta(minutes=25)
         return self._battleTimeLimit
 
     @battle_time_limit.setter

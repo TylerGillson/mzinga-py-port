@@ -106,6 +106,10 @@ class Program:
             trainer_settings.GameType = args[i + 1]
         elif arg in ["pp", "profilepath"]:
             trainer_settings.profile_path = args[i + 1]
+        elif arg in ["wpp", "whiteprofilepath"]:
+            trainer_settings.white_profile_path = args[i + 1]
+        elif arg in ["bpp", "blackprofilepath"]:
+            trainer_settings.black_profile_path = args[i + 1]
         elif arg in ["ckc", "cullkeepcount"]:
             trainer_settings.cull_keep_count = int(args[i + 1])
         elif arg in ["gc", "generatecount"]:

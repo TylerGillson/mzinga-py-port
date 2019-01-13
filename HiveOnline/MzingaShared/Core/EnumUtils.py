@@ -82,12 +82,12 @@ PieceShortNames = [
 ]
 
 Rings = [
-    ["Up", "UpRight", "DownRight", "Down", "DownLeft"],
-    ["UpRight", "DownRight", "Down", "DownLeft", "UpLeft"],
-    ["DownRight", "Down", "DownLeft", "UpLeft", "Up"],
-    ["Down", "DownLeft", "UpLeft", "Up", "UpRight"],
-    ["DownLeft", "UpLeft", "Up", "UpRight", "DownRight"],
-    ["UpLeft", "Up", "UpRight", "DownRight", "Down"],
+    ["Up", "UpRight", "DownRight", "Down", "DownLeft"],      # 6pc Up
+    ["UpRight", "DownRight", "Down", "DownLeft", "UpLeft"],  # 6pc UpRight
+    ["UpLeft", "Up", "UpRight", "DownRight", "Down"],        # 6pc UpLeft
+    ["DownRight", "Down", "DownLeft", "UpLeft", "Up"],       # 6pc DownRight
+    ["Down", "DownLeft", "UpLeft", "Up", "UpRight"],         # 6pc Down
+    ["DownLeft", "UpLeft", "Up", "UpRight", "DownRight"],    # 6pc DownLeft
 ]
 
 
