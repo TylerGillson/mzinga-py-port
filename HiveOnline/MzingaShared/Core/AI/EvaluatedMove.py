@@ -1,12 +1,10 @@
-﻿UnevaluatedMoveScore = float("-inf")
+﻿unevaluated_move_score = float("-inf")
 
 
-class EvaluatedMove:
-    move = None
-    score_after_move = None
-    depth = None
+class EvaluatedMove(object):
+    __slots__ = "move", "score_after_move", "depth"
 
-    def __init__(self, move, score_after_move=UnevaluatedMoveScore, depth=0):
+    def __init__(self, move, score_after_move=unevaluated_move_score, depth=0):
         self.move = move
         self.score_after_move = score_after_move
         self.depth = depth

@@ -62,7 +62,7 @@ class Trainer:
     def __init__(self):
         self.trainer_settings = TrainerSettings()
         self.board_metric_weights_cls = BoardMetricWeightsCls()
-        self.metric_weights_cls = MetricWeightsCls(self._settings.GameType)
+        self.metric_weights_cls = MetricWeightsCls(self._settings.game_type)
         self.start_time = None
 
     def battle(self, white_profile_path=None, black_profile_path=None):
@@ -89,14 +89,14 @@ class Trainer:
         if len(args) == 0:
             args = [self.trainer_settings.profile_path, self.trainer_settings.max_battles,
                     self.trainer_settings.max_draws, self.trainer_settings.bulk_battle_time_limit,
-                    self.trainer_settings.BattleShuffleProfiles, self.trainer_settings.max_concurrent_battles]
+                    self.trainer_settings.battle_shuffle_profiles, self.trainer_settings.max_concurrent_battles]
             return self.battle_royale(*args)
         else:
             path, max_battles, max_draws, time_limit, shuffle_profiles, max_concurrent_battles = args
 
             if path.isspace():
                 raise ValueError("Invalid path.")
-            if max_battles < 1 and max_battles != self.trainer_settings.MaxMaxBattles:
+            if max_battles < 1 and max_battles != self.trainer_settings.max_max_battles:
                 raise ValueError("Invalid max_battles.")
             if max_draws < 1:
                 raise ValueError("Invalid max_draws.")
@@ -109,7 +109,7 @@ class Trainer:
         profile_list = self.load_profiles(path)
         combinations = len(profile_list) * (len(profile_list) - 1)
 
-        if max_battles == self.trainer_settings.MaxMaxBattles:
+        if max_battles == self.trainer_settings.max_max_battles:
             max_battles = combinations
         max_battles = min(max_battles, combinations)
 
@@ -123,8 +123,8 @@ class Trainer:
         eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
         self.log("Battle Royale start, ETA: %s." % eta)
 
-        white_profiles = list(sorted(profile_list, key=lambda x: x.EloRating))
-        black_profiles = list(sorted(profile_list, key=lambda x: x.EloRating, reverse=True))
+        white_profiles = list(sorted(profile_list, key=lambda x: x.elo_rating))
+        black_profiles = list(sorted(profile_list, key=lambda x: x.elo_rating, reverse=True))
         matches = list(set((wp, bp) for wp in white_profiles for bp in black_profiles if wp != bp))
 
         if shuffle_profiles:
@@ -164,11 +164,11 @@ class Trainer:
 
             # Save Profiles
             with self._white_profile_lock:
-                w_profile_path = "".join([path, str(w_profile.Id), ".xml"])
+                w_profile_path = "".join([path, str(w_profile.id), ".xml"])
                 self.write_profile(w_profile_path, w_profile)
 
             with self._black_profile_lock:
-                b_profile_path = "".join([path, str(b_profile.Id), ".xml"])
+                b_profile_path = "".join([path, str(b_profile.id), ".xml"])
                 self.write_profile(b_profile_path, b_profile)
 
             with self._progress_lock:
@@ -186,7 +186,7 @@ class Trainer:
 
         self.log("Battle Royale end, elapsed time: %s." % ts(datetime.datetime.now() - br_start))
 
-        best = list(sorted(profile_list, key=lambda x: x.EloRating))[0]
+        best = list(sorted(profile_list, key=lambda x: x.elo_rating))[0]
 
         self.log("Battle Royale Highest Elo: %s" % ts(best))
 
@@ -195,26 +195,26 @@ class Trainer:
             raise ValueError("Invalid white_profile.")
         if black_profile is None:
             raise ValueError("Invalid black_profile.")
-        if white_profile.Id == black_profile.Id:
+        if white_profile.id == black_profile.id:
             raise ValueError("Profile cannot battle itself.")
 
         # Create Game
-        game_board = GameBoard(board_string="START", game_type=self.trainer_settings.GameType)
+        game_board = GameBoard(board_string="START", game_type=self.trainer_settings.game_type)
 
         # Create AIs
         white_ai = GameAI(GameAIConfig(
-            white_profile.StartMetricWeights,
-            white_profile.EndMetricWeights,
-            self.trainer_settings.TransTableSize,
-            self._settings.GameType,
-            board_weights=white_profile.BoardMetricWeights)
+            white_profile.start_metric_weights,
+            white_profile.end_metric_weights,
+            self.trainer_settings.trans_table_size,
+            self._settings.game_type,
+            board_weights=white_profile.board_metric_weights)
         )
         black_ai = GameAI(GameAIConfig(
-            black_profile.StartMetricWeights,
-            black_profile.EndMetricWeights,
-            self.trainer_settings.TransTableSize,
-            self._settings.GameType,
-            board_weights=black_profile.BoardMetricWeights)
+            black_profile.start_metric_weights,
+            black_profile.end_metric_weights,
+            self.trainer_settings.trans_table_size,
+            self._settings.game_type,
+            board_weights=black_profile.board_metric_weights)
         )
         time_limit = self.trainer_settings.battle_time_limit
 
@@ -258,7 +258,7 @@ class Trainer:
         except Exception as ex:
             self.log("Battle interrupted with exception: %s" % ex)
 
-        board_state = "Draw" if game_board.game_in_progress else game_board.BoardState
+        board_state = "Draw" if game_board.game_in_progress else game_board.board_state
 
         # Load Results
         white_score = 0.0
@@ -274,12 +274,12 @@ class Trainer:
             white_score, black_score, white_result, black_result = (0.5, 0.5, "Draw", "Draw")
 
         with self._white_profile_lock:
-            white_rating = white_profile.EloRating
-            white_k = EloUtils.ProvisionalK if self.is_provisional(white_profile) else EloUtils.DefaultK
+            white_rating = white_profile.elo_rating
+            white_k = EloUtils.provisional_k if self.is_provisional(white_profile) else EloUtils.default_k
 
         with self._black_profile_lock:
-            black_rating = black_profile.EloRating
-            black_k = EloUtils.ProvisionalK if self.is_provisional(black_profile) else EloUtils.DefaultK
+            black_rating = black_profile.elo_rating
+            black_k = EloUtils.provisional_k if self.is_provisional(black_profile) else EloUtils.default_k
 
         with self._elo_lock:
             white_end_rating, black_end_rating = EloUtilsCls.update_ratings(
@@ -298,20 +298,20 @@ class Trainer:
         return board_state
 
     def get_best_move(self, game_board, ai):
-        game_board.GameType = ai.GameType
+        game_board.game_type = ai.game_type
 
-        if self.trainer_settings.MaxDepth >= 0:
+        if self.trainer_settings.max_depth >= 0:
             future = asyncio.ensure_future(
                 ai.get_best_move(
                     game_board,
-                    max_depth=self.trainer_settings.MaxDepth,
-                    max_helper_threads=self.trainer_settings.MaxHelperThreads))
+                    max_depth=self.trainer_settings.max_depth,
+                    max_helper_threads=self.trainer_settings.max_helper_threads))
         else:
             future = asyncio.ensure_future(
                 ai.get_best_move(
                     game_board,
-                    max_time=self.trainer_settings.TurnMaxTime,
-                    max_helper_threads=self.trainer_settings.MaxHelperThreads))
+                    max_time=self.trainer_settings.turn_max_time,
+                    max_helper_threads=self.trainer_settings.max_helper_threads))
 
         loop = asyncio.get_event_loop()
         done, _ = loop.run_until_complete(asyncio.wait([future]))
@@ -322,11 +322,12 @@ class Trainer:
         if path is None:
             return self.cull(self.trainer_settings.profile_path,
                              self.trainer_settings.cull_keep_count,
-                             self.trainer_settings.ProvisionalRules)
+                             self.trainer_settings.provisional_rules)
         else:
             if path.isspace():
                 raise ValueError("Invalid path.")
-            if keep_count < self.trainer_settings.CullMinKeepCount and keep_count != self.trainer_settings.CullKeepMax:
+            if keep_count < self.trainer_settings.cull_min_keep_count \
+                    and keep_count != self.trainer_settings.cull_keep_max:
                 raise ValueError("Invalid keep_count.")
 
             self.start_time = datetime.datetime.now()
@@ -337,10 +338,10 @@ class Trainer:
             if provisional_rules:
                 profile_list = [p for p in profile_list if not self.is_provisional(p)]
 
-            profile_list = list(sorted(profile_list, key=lambda x: x.EloRating))
+            profile_list = list(sorted(profile_list, key=lambda x: x.elo_rating))
 
-            if keep_count == self.trainer_settings.CullKeepMax:
-                keep_count = max(self.trainer_settings.CullMinKeepCount, round(math.sqrt(len(profile_list))))
+            if keep_count == self.trainer_settings.cull_keep_max:
+                keep_count = max(self.trainer_settings.cull_min_keep_count, round(math.sqrt(len(profile_list))))
 
             if not os.path.exists(path + "Culled"):
                 os.mkdir(path + "Culled")
@@ -351,8 +352,8 @@ class Trainer:
                     self.log("Kept %s." % self.to_string(p))
                     count += 1
                 else:
-                    source_file = "".join([path, str(p.Id), ".xml"])
-                    dest_file = "".join([path, "Culled/", str(p.Id), ".xml"])
+                    source_file = "".join([path, str(p.id), ".xml"])
+                    dest_file = "".join([path, "Culled/", str(p.id), ".xml"])
 
                     os.rename(source_file, dest_file)
                     self.log("Culled %s." % self.to_string(p))
@@ -370,7 +371,7 @@ class Trainer:
             self.log("Enumerate start.")
 
             profile_list = self.load_profiles(path)
-            profile_list = list(sorted(profile_list, key=lambda x: x.EloRating))
+            profile_list = list(sorted(profile_list, key=lambda x: x.elo_rating))
 
             for p in profile_list:
                 self.log("%s" % self.to_string(p))
@@ -399,11 +400,11 @@ class Trainer:
             self.log("Analyze start.")
 
             profile_list: List[Profile] = self.load_profiles(path)
-            profile_list = list(sorted(profile_list, key=lambda x: x.EloRating))
+            profile_list = list(sorted(profile_list, key=lambda x: x.elo_rating))
 
             result_file = path + "analyze.csv"
             with open(result_file, "w") as f:
-                header = "Id,Name,GameType,EloRating,Generation,ParentA,ParentB,Wins,Losses,Draws"
+                header = "id,name,game_type,elo_rating,generation,parent_a,parent_b,wins,losses,draws"
 
                 def add_csv_weights(bug_type, bug_type_weight):
                     return "".join([",Start%s.%s" % (bug_type, bug_type_weight),
@@ -421,14 +422,14 @@ class Trainer:
                                     ",%6.2f" % float(end_normalized.get(bug_type, bug_type_weight))])
 
                 for p in profile_list:
-                    profile_str = "%s,%s,%s,%d,%d,%s,%s,%d,%d,%d" % (p.Id, p.Name, p.GameType,
-                                                                     p.EloRating, p.Generation,
-                                                                     p.ParentA if p.ParentA is not None else "",
-                                                                     p.ParentB if p.ParentB is not None else "",
-                                                                     p.Wins, p.Losses, p.Draws)
+                    profile_str = "%s,%s,%s,%d,%d,%s,%s,%d,%d,%d" % (p.id, p.name, p.game_type,
+                                                                     p.elo_rating, p.generation,
+                                                                     p.parent_a if p.parent_a is not None else "",
+                                                                     p.parent_b if p.parent_b is not None else "",
+                                                                     p.wins, p.losses, p.draws)
 
-                    sn = p.StartMetricWeights.get_normalized()
-                    en = p.EndMetricWeights.get_normalized()
+                    sn = p.start_metric_weights.get_normalized()
+                    en = p.end_metric_weights.get_normalized()
                     data_strs = self.metric_weights_cls.iterate_over_weights_result(
                         add_csv_norm_weights, [], start_normalized=sn, end_normalized=en)
 
@@ -442,9 +443,9 @@ class Trainer:
         if path is None:
             return self.generate(self.trainer_settings.profile_path,
                                  self.trainer_settings.generate_count,
-                                 self.trainer_settings.GameType,
-                                 self.trainer_settings.GenerateMinWeight,
-                                 self.trainer_settings.GenerateMaxWeight)
+                                 self.trainer_settings.game_type,
+                                 self.trainer_settings.generate_min_weight,
+                                 self.trainer_settings.generate_max_weight)
         else:
             if path.isspace():
                 raise ValueError("Invalid path.")
@@ -459,7 +460,7 @@ class Trainer:
 
             for i in range(count):
                 profile = Profile.generate(min_weight, max_weight, game_type)
-                file_path = "".join([path, str(profile.Id), ".xml"])
+                file_path = "".join([path, str(profile.id), ".xml"])
                 self.write_profile(file_path, profile)
                 self.log("Generated %s." % self.to_string(profile))
 
@@ -469,7 +470,7 @@ class Trainer:
         if path is None:
             return self.lifecycle(self.trainer_settings.profile_path,
                                   self.trainer_settings.lifecycle_generations,
-                                  self.trainer_settings.LifecycleBattles)
+                                  self.trainer_settings.lifecycle_battles)
         else:
             if path.isspace():
                 raise ValueError("Invalid path.")
@@ -481,7 +482,7 @@ class Trainer:
         self.log("Lifecycle start.")
 
         gen = 1
-        while generations == self.trainer_settings.InfiniteLifeCycleGenerations or gen <= generations:
+        while generations == self.trainer_settings.infinite_lifecycle_generations or gen <= generations:
             if generations != 1:
                 self.log("Lifecycle generation %d start." % gen)
 
@@ -491,17 +492,17 @@ class Trainer:
                     if battles < 0:
                         self.tournament(path, self.trainer_settings.max_draws,
                                         self.trainer_settings.bulk_battle_time_limit,
-                                        self.trainer_settings.BattleShuffleProfiles,
+                                        self.trainer_settings.battle_shuffle_profiles,
                                         self.trainer_settings.max_concurrent_battles)
                     elif battles > 0:
                         args = [path, self.trainer_settings.max_battles, self.trainer_settings.max_draws,
                                 self.trainer_settings.bulk_battle_time_limit,
-                                self.trainer_settings.BattleShuffleProfiles,
+                                self.trainer_settings.battle_shuffle_profiles,
                                 self.trainer_settings.max_concurrent_battles]
                         self.battle_royale(args)
 
             # Cull & Mate
-            self.cull(path, self.trainer_settings.cull_keep_count, self.trainer_settings.ProvisionalRules)
+            self.cull(path, self.trainer_settings.cull_keep_count, self.trainer_settings.provisional_rules)
             self.mate(path)
 
             if generations != 1:
@@ -521,9 +522,9 @@ class Trainer:
         if path is None:
             return self.mate(self.trainer_settings.profile_path)
         elif len(args) == 0:
-            args = [self.trainer_settings.MateMinMix, self.trainer_settings.MateMaxMix,
-                    self.trainer_settings.mate_parent_count, self.trainer_settings.MateShuffleParents,
-                    self.trainer_settings.ProvisionalRules]
+            args = [self.trainer_settings.mate_min_mix, self.trainer_settings.mate_max_mix,
+                    self.trainer_settings.mate_parent_count, self.trainer_settings.mate_shuffle_parents,
+                    self.trainer_settings.provisional_rules]
             return self.mate(path, *args)
         else:
             if path.isspace():
@@ -534,8 +535,8 @@ class Trainer:
             if min_mix > max_mix:
                 raise ValueError("Invalid min_mix.")
 
-            too_few = parent_count < self.trainer_settings.MateMinParentCount
-            if too_few and parent_count != self.trainer_settings.MateParentMax:
+            too_few = parent_count < self.trainer_settings.mate_min_parent_count
+            if too_few and parent_count != self.trainer_settings.mate_parent_max:
                 raise ValueError("Invalid parent_count.")
 
             self.start_time = datetime.datetime.now()
@@ -549,12 +550,12 @@ class Trainer:
             profiles_list = self.shuffle(profiles_list) if shuffle_parents else self.seed(profiles_list)
 
             max_parents = len(profiles_list) - (len(profiles_list) % 2)
-            if parent_count == self.trainer_settings.MateParentMax:
+            if parent_count == self.trainer_settings.mate_parent_max:
                 parent_count = max_parents
 
             parent_count = min(parent_count, max_parents)  # No more parents that exist
 
-            if parent_count >= self.trainer_settings.MateMinParentCount:
+            if parent_count >= self.trainer_settings.mate_min_parent_count:
                 parents = queue.Queue()
                 for i, p in enumerate(profiles_list):
                     if i == parent_count:
@@ -569,7 +570,7 @@ class Trainer:
                     pa, pb, ch = self.to_string(parent_a), self.to_string(parent_b), self.to_string(child)
                     self.log("Mated %s and %s to sire %s." % (pa, pb, ch))
 
-                    file_path = "".join([path, str(child.Id), ".xml"])
+                    file_path = "".join([path, str(child.id), ".xml"])
                     self.write_profile(file_path, child)
 
             self.log("Mate end.")
@@ -577,7 +578,7 @@ class Trainer:
     def tournament(self, *args):
         if len(args) == 0:
             args = [self.trainer_settings.profile_path, self.trainer_settings.max_draws,
-                    self.trainer_settings.bulk_battle_time_limit, self.trainer_settings.BattleShuffleProfiles,
+                    self.trainer_settings.bulk_battle_time_limit, self.trainer_settings.battle_shuffle_profiles,
                     self.trainer_settings.max_concurrent_battles]
             return self.tournament(*args)
         else:
@@ -587,7 +588,8 @@ class Trainer:
                 raise ValueError("Invalid path.")
             if max_draws < 1:
                 raise ValueError("Invalid max_draws.")
-            if max_concurrent_battles < 1 and max_concurrent_battles != self.trainer_settings.MaxMaxConcurrentBattles:
+            if max_concurrent_battles < 1 and \
+                    max_concurrent_battles != self.trainer_settings.max_max_concurrent_battles:
                 raise ValueError("Invalid max_concurrent_battles.")
 
             self.start_time = datetime.datetime.now()
@@ -626,7 +628,7 @@ class Trainer:
 
                         round_result = "Draw"
 
-                        white_higher_rank = white_profile.EloRating < black_profile.EloRating
+                        white_higher_rank = white_profile.elo_rating < black_profile.elo_rating
                         draw_winner_profile = white_profile if white_higher_rank else black_profile
 
                         w_s, b_s = ts(white_profile), ts(black_profile)
@@ -667,11 +669,11 @@ class Trainer:
 
                         # Save Profiles
                         with self._white_profile_lock:
-                            white_profile_path = "".join([path, str(white_profile.Id), ".xml"])
+                            white_profile_path = "".join([path, str(white_profile.id), ".xml"])
                             self.write_profile(white_profile_path, white_profile)
 
                         with self._black_profile_lock:
-                            black_profile_path = "".join([path, str(black_profile.Id), ".xml"])
+                            black_profile_path = "".join([path, str(black_profile.id), ".xml"])
                             self.write_profile(black_profile_path, black_profile)
 
                         with self._progress_lock:
@@ -699,7 +701,7 @@ class Trainer:
                 winner = current_tier[0]
                 self.log("Tournament Winner: %s" % ts(winner))
 
-            best = list(sorted(profiles, key=lambda x: x.EloRating))[0]
+            best = list(sorted(profiles, key=lambda x: x.elo_rating))[0]
             self.log("Tournament Highest Elo: %s" % ts(best))
 
     def to_string(self, val):
@@ -710,12 +712,12 @@ class Trainer:
                 raise ValueError("Invalid profile.")
 
             prov = "?" if self.is_provisional(val) else ""
-            return "%s(%d%s %d/%d/%d)" % (val.Name, val.EloRating, prov, val.Wins, val.Losses, val.Draws)
+            return "%s(%d%s %d/%d/%d)" % (val.name, val.elo_rating, prov, val.wins, val.losses, val.draws)
 
     def is_provisional(self, profile):
         if profile is None:
             raise ValueError("Invalid profile.")
-        return profile.total_games < self.trainer_settings.ProvisionalGameCount
+        return profile.total_games < self.trainer_settings.provisional_game_count
 
     def shuffle(self, items):
         if items is None:
@@ -743,7 +745,7 @@ class Trainer:
         if profile_list is None:
             raise ValueError("Invalid profiles_list")
 
-        sorted_profiles = list(sorted(profile_list, key=lambda x: x.EloRating))
+        sorted_profiles = list(sorted(profile_list, key=lambda x: x.elo_rating))
         seeded = []
         first = True
 

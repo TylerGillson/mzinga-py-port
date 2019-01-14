@@ -1,9 +1,9 @@
-NumBugTypes = 5
-NumColors = 2
-NumDirections = 6
-NumPieceNames = 22
+num_bug_types = 5
+num_colours = 2
+num_directions = 6
+num_piece_names = 22
 
-Directions = {
+directions = {
     "Up": 0,
     "UpRight": 1,
     "DownRight": 2,
@@ -11,25 +11,25 @@ Directions = {
     "DownLeft": 4,
     "UpLeft": 5,
 }
-DirectionsByInt = {v: k for k, v in Directions.items()}
+directions_by_int = {v: k for k, v in directions.items()}
 
 
-Colours = {
+colours = {
     "White": 0,
     "Black": 1,
 }
-ColoursByInt = {v: k for k, v in Colours.items()}
+colours_by_int = {v: k for k, v in colours.items()}
 
-BugTypes = {
+bug_types = {
     "QueenBee": 0,
     "Spider": 1,
     "Beetle": 2,
     "Grasshopper": 3,
     "SoldierAnt": 4,
 }
-BugTypesByInt = {v: k for k, v in BugTypes.items()}
+bug_types_by_int = {v: k for k, v in bug_types.items()}
 
-PieceNames = {
+piece_names = {
     "INVALID": -1,
     "WhiteQueenBee": 0,
     "WhiteSpider1": 1,
@@ -54,9 +54,9 @@ PieceNames = {
     "BlackSoldierAnt2": 20,
     "BlackSoldierAnt3": 21,
 }
-PieceNamesByInt = {v: k for k, v in PieceNames.items()}
+piece_names_by_int = {v: k for k, v in piece_names.items()}
 
-PieceShortNames = [
+piece_short_names = [
     "WQ",
     "WS1",
     "WS2",
@@ -81,7 +81,7 @@ PieceShortNames = [
     "BA3",
 ]
 
-Rings = [
+rings = [
     ["Up", "UpRight", "DownRight", "Down", "DownLeft"],      # 6pc Up
     ["UpRight", "DownRight", "Down", "DownLeft", "UpLeft"],  # 6pc UpRight
     ["UpLeft", "Up", "UpRight", "DownRight", "Down"],        # 6pc UpLeft
@@ -95,37 +95,37 @@ class EnumUtils:
     # DIRECTIONS
     @property
     def directions(self):
-        return Directions.items()
+        return directions.items()
 
     @staticmethod
     def left_of(direction):
-        dir_val = (Directions[direction] + NumDirections - 1) % NumDirections
-        return DirectionsByInt.get(dir_val)
+        dir_val = (directions[direction] + num_directions - 1) % num_directions
+        return directions_by_int.get(dir_val)
 
     @staticmethod
     def right_of(direction):
-        dir_val = (Directions[direction] + 1) % NumDirections
-        return DirectionsByInt.get(dir_val)
+        dir_val = (directions[direction] + 1) % num_directions
+        return directions_by_int.get(dir_val)
     # END DIRECTIONS
 
     # PIECE NAMES
     @staticmethod
     def piece_names():
-        return list(PieceNames.keys())
+        return list(piece_names.keys())
 
     @staticmethod
     def white_piece_names():
-        return list(PieceNames.keys())[1:((len(PieceNames) - 1) // 2) + 1:]
+        return list(piece_names.keys())[1:((len(piece_names) - 1) // 2) + 1:]
 
     @staticmethod
     def black_piece_names():
-        return list(PieceNames.keys())[((len(PieceNames) - 1) // 2) + 1::]
+        return list(piece_names.keys())[((len(piece_names) - 1) // 2) + 1::]
 
     @staticmethod
     def get_short_name(piece_name):
         if piece_name == "INVALID":
             return ""
-        return PieceShortNames[PieceNames[piece_name]]
+        return piece_short_names[piece_names[piece_name]]
 
     @staticmethod
     def parse_short_name(name_string):
@@ -133,19 +133,19 @@ class EnumUtils:
             raise ValueError("Invalid name_string.")
         name_string = name_string.strip()
 
-        for i in range(len(PieceShortNames)):
-            if PieceShortNames[i] == name_string.upper():
-                return PieceNamesByInt.get(i)
+        for i in range(len(piece_short_names)):
+            if piece_short_names[i] == name_string.upper():
+                return piece_names_by_int.get(i)
         raise ValueError("name_string not found.")
     # END PIECE NAMES
 
     # COLOURS
     @staticmethod
     def get_colour(piece_name):
-        if piece_name not in PieceNames.keys() or piece_name == "INVALID":
+        if piece_name not in piece_names.keys() or piece_name == "INVALID":
             raise ValueError("Invalid piece_name.")
 
-        for colour in Colours.keys():
+        for colour in colours.keys():
             if colour in piece_name:
                 return colour
     # END COLOURS
@@ -153,13 +153,14 @@ class EnumUtils:
     # BUG TYPES
     @property
     def bug_types(self):
-        return list(BugTypes.keys())
+        return list(bug_types.keys())
 
     @staticmethod
     def get_bug_type(piece_name):
-        if piece_name not in PieceNames.keys() or piece_name == "INVALID":
+        if piece_name not in piece_names.keys() or piece_name == "INVALID":
             raise ValueError("Invalid piece_name.")
 
-        for bug_type in BugTypes.keys():
+        for bug_type in bug_types.keys():
             if bug_type in piece_name:
                 return bug_type
+    # END BUG TYPES

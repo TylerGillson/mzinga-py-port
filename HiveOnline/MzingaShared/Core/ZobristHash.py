@@ -1,8 +1,8 @@
 from MzingaShared.Core import Position
-from MzingaShared.Core.EnumUtils import PieceNames, NumPieceNames
+from MzingaShared.Core.EnumUtils import piece_names, num_piece_names
 
-EmptyBoard = 0
-NumUniquePositions = Position.MaxStack * NumPieceNames * NumPieceNames
+empty_board = 0
+num_unique_positions = Position.max_stack_height * num_piece_names * num_piece_names
 
 hash_part_by_turn_colour = None
 hash_part_by_last_moved_piece = None
@@ -20,7 +20,7 @@ class ZobristHash(object):
         return self._next
 
     def __init__(self):
-        self.value = EmptyBoard
+        self.value = empty_board
         self._next = 1
 
         # Only compute hash tables once:
@@ -28,12 +28,12 @@ class ZobristHash(object):
 
         if hash_part_by_turn_colour is None:
             self._hash_part_by_turn_colour = self.rand_64()
-            self._hash_part_by_last_moved_piece = [self.rand_64() for _ in range(NumPieceNames)]
+            self._hash_part_by_last_moved_piece = [self.rand_64() for _ in range(num_piece_names)]
 
-            unique_positions = Position.get_unique_positions(NumUniquePositions)
+            unique_positions = Position.get_unique_positions(num_unique_positions)
             self._hash_part_by_position = {
                 i: {pos: self.rand_64() for pos in unique_positions}
-                for i in range(NumPieceNames)
+                for i in range(num_piece_names)
             }
 
             hash_part_by_turn_colour = self._hash_part_by_turn_colour
@@ -45,7 +45,7 @@ class ZobristHash(object):
             self._hash_part_by_position = hash_part_by_position
 
     def toggle_piece(self, piece_name, position):
-        self.value ^= self._hash_part_by_position[PieceNames[piece_name]][position]
+        self.value ^= self._hash_part_by_position[piece_names[piece_name]][position]
 
     def toggle_last_moved_piece(self, piece_name):
         if piece_name != "INVALID":

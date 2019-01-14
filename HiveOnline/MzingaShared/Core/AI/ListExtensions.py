@@ -15,11 +15,3 @@
             if count < length <= i:
                 i = 0 if order_type == "SkipOffset" else 1
         return out
-
-
-OrderType = {
-    "Default": 2,
-    "Skip": 0,  # Starts at 0
-    "SkipOffset": 1,  # Starts at 1
-}
-OrderTypeByInt = {v: k for k, v in OrderType.items()}

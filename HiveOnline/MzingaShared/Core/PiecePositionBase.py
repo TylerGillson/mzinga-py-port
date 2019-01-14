@@ -1,4 +1,4 @@
-from MzingaShared.Core.EnumUtils import PieceNames, EnumUtils
+from MzingaShared.Core.EnumUtils import piece_names, EnumUtils
 from MzingaShared.Core import Position
 
 

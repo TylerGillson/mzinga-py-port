@@ -1,8 +1,8 @@
 import queue
 
-from MzingaShared.Core.EnumUtils import Directions, NumDirections
+from MzingaShared.Core.EnumUtils import directions, num_directions
 
-MaxStack = 5
+max_stack_height = 5
 
 _neighbor_deltas = [
     [0, 1, -1],
@@ -55,7 +55,7 @@ class Position(object):
     def cache_lookup(self, index):
         if not self._local_cache:
             if self not in list(self._shared_cache.keys()):
-                self._shared_cache[self] = [0] * (NumDirections + 2)
+                self._shared_cache[self] = [0] * (num_directions + 2)
                 self._local_cache = self._shared_cache[self]
             else:
                 self._local_cache = self._shared_cache[self]
@@ -69,16 +69,16 @@ class Position(object):
             new = cached == self
 
         if (not is_pos) or new:
-            if index < NumDirections:
+            if index < num_directions:
                 cx = self.x + _neighbor_deltas[index][0]
                 cy = self.y + _neighbor_deltas[index][1]
                 cz = self.z + _neighbor_deltas[index][2]
                 self._local_cache[index] = Position(stack=0, x=cx, y=cy, z=cz)
                 # created_new = True
-            elif index == NumDirections:  # Above
+            elif index == num_directions:  # Above
                 self._local_cache[index] = Position(stack=self.stack + 1, x=self.x, y=self.y, z=self.z)
                 # created_new = True
-            elif index == NumDirections + 1 and self.stack > 0:  # Below
+            elif index == num_directions + 1 and self.stack > 0:  # Below
                 self._local_cache[index] = Position(stack=self.stack - 1, x=self.x, y=self.y, z=self.z)
                 # created_new = True
 
@@ -88,23 +88,23 @@ class Position(object):
         if not piece_position:
             raise ValueError("piece_position")
 
-        for i in range(NumDirections):
+        for i in range(num_directions):
             if self.neighbour_at(i) == piece_position:
                 return True
         return False
 
     def neighbour_at(self, direction):
         if isinstance(direction, int):
-            direction = direction % NumDirections
+            direction = direction % num_directions
             return self.cache_lookup(direction)
         else:
-            return self.neighbour_at(Directions[direction])
+            return self.neighbour_at(directions[direction])
 
     def get_above(self):
-        return self.cache_lookup(NumDirections)
+        return self.cache_lookup(num_directions)
 
     def get_below(self):
-        return self.cache_lookup(NumDirections + 1)
+        return self.cache_lookup(num_directions + 1)
 
     def get_hash_code(self):
         hash_code = 17 * 31 + self.q
@@ -113,7 +113,7 @@ class Position(object):
         return hash_code
 
 
-def get_unique_positions(count, max_stack=MaxStack):
+def get_unique_positions(count, max_stack=max_stack_height):
     if count < 1:
         raise ValueError("count must be >= 1")
 
@@ -132,7 +132,7 @@ def get_unique_positions(count, max_stack=MaxStack):
         pos = get()
         cache_lookup = pos.cache_lookup
 
-        for i in range(NumDirections + 2):
+        for i in range(num_directions + 2):
             if len(result) < count:
                 neighbor = cache_lookup(i)
                 old_len = len(result)

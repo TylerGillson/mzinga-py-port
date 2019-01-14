@@ -1,6 +1,5 @@
 import datetime
 # import asyncio
-# from copy import deepcopy
 
 from MzingaShared.Core.Board import InvalidMoveException
 from MzingaShared.Core.BoardHistory import BoardHistory
@@ -55,17 +54,17 @@ class GameEngine:
     def init_ai(self):
         self._game_ai = self.config.get_game_ai()
 
-        if self.config.ReportIntermediateBestMoves:
-            self._game_ai.BestMoveFound.on_change += self.on_best_move_found
+        if self.config.report_intermediate_best_moves:
+            self._game_ai.best_move_found.on_change += self.on_best_move_found
 
     @staticmethod
     def on_best_move_found(args):
         if args is None:
             raise ValueError("args is None")
-        if args.Move is None:
+        if args.move is None:
             raise ValueError("Null move reported!")
 
-        print("Current BMF (move/depth/score): %s;%d;%2f" % (args.Move, args.Depth, args.Score))
+        print("Current BMF (move/depth/score): %s;%d;%2f" % (args.move, args.depth, args.score))
 
     def parse_command(self, command):
         if command is None or command.isspace():
@@ -151,7 +150,7 @@ class GameEngine:
     def board(self, board_string=None):
         if debug:
             if not (board_string is None or board_string.isspace()):
-                self._game_board = GameBoard(board_string=board_string, game_type=self.config.GameType)
+                self._game_board = GameBoard(board_string=board_string, game_type=self.config.game_type)
                 self._game_ai.reset_caches()
         if self._game_board is None:
             raise NoBoardException
@@ -161,7 +160,7 @@ class GameEngine:
         if kwargs:
             self._game_board = GameBoard(board_string=kwargs.pop("board_string"), game_type=kwargs.pop("game_type"))
         else:
-            self._game_board = GameBoard(board_string="START", game_type=self.config.GameType)
+            self._game_board = GameBoard(board_string="START", game_type=self.config.game_type)
         self._game_ai.reset_caches()
         print(self._game_board)
         return str(self._game_board)
@@ -231,12 +230,12 @@ class GameEngine:
         print(history)
 
     def options_list(self):
-        self.options_get("MaxBranchingFactor")
-        self.options_get("MaxHelperThreads")
-        self.options_get("PonderDuringIdle")
-        self.options_get("TranspositionTableSizeMB")
-        self.options_get("ReportIntermediateBestMoves")
-        self.options_get("GameType")
+        self.options_get("max_branching_factor")
+        self.options_get("max_helper_threads")
+        self.options_get("ponder_during_idle")
+        self.options_get("transposition_table_size_mb")
+        self.options_get("report_intermediate_best_moves")
+        self.options_get("game_type")
 
     # noinspection PyMethodMayBeStatic
     def options_get(self, opt_key):
@@ -262,20 +261,20 @@ class GameEngine:
 
         refresh_ai = False
 
-        if opt_key == "MaxBranchingFactor":
+        if opt_key == "max_branching_factor":
             self.config.parse_max_branching_factor_value(value)
             refresh_ai = True
-        elif opt_key == "MaxHelperThreads":
+        elif opt_key == "max_helper_threads":
             self.config.parse_max_helper_threads_value(value)
-        elif opt_key == "PonderDuringIdle":
+        elif opt_key == "ponder_during_idle":
             self.config.parse_ponder_during_idle_value(value)
-        elif opt_key == "TranspositionTableSizeMB":
+        elif opt_key == "transposition_table_size_mb":
             self.config.parse_transposition_table_size_mb_value(value)
             refresh_ai = True
-        elif opt_key == "ReportIntermediateBestMoves":
+        elif opt_key == "report_intermediate_best_moves":
             self.config.parse_report_intermediate_best_moves_value(value)
             refresh_ai = True
-        elif opt_key == "GameType":
+        elif opt_key == "game_type":
             self.config.parse_game_type_value(value)
             refresh_ai = True
         else:
@@ -288,15 +287,15 @@ class GameEngine:
 
     """
     def start_ponder(self):
-        if self.config.PonderDuringIdle != "Disabled" and not self._is_pondering and \
+        if self.config.ponder_during_idle != "Disabled" and not self._is_pondering and \
                 self._game_board is not None and self._game_board.game_in_progress:
 
-            if self.config.ReportIntermediateBestMoves:
-                self._game_ai.BestMoveFound.on_change -= self.on_best_move_found
+            if self.config.report_intermediate_best_moves:
+                self._game_ai.best_move_found.on_change -= self.on_best_move_found
 
             self._ponder_queue = TaskQueue()
 
-            max_threads = self.config.MaxHelperThreads if self.config.PonderDuringIdle == "MultiThreaded" else 0
+            max_threads = self.config.max_helper_threads if self.config.ponder_during_idle == "MultiThreaded" else 0
             kwargs = {
                 'max_helper_threads': max_threads,
             }
@@ -314,8 +313,8 @@ class GameEngine:
 
             self._is_pondering = False
 
-            if self.config.ReportIntermediateBestMoves:
-                self._game_ai.BestMoveFound.on_change += self.on_best_move_found
+            if self.config.report_intermediate_best_moves:
+                self._game_ai.best_move_found.on_change += self.on_best_move_found
     """
 
     def on_start_async_command(self):
@@ -330,12 +329,12 @@ class GameEngine:
 
 
 opt_key_dict = {
-    "MaxBranchingFactor": "self.config.get_max_branching_factor_value()",
-    "MaxHelperThreads": "self.config.get_max_helper_threads_value()",
-    "PonderDuringIdle": "self.config.get_ponder_during_idle_value()",
-    "TranspositionTableSizeMB": "self.config.get_transposition_table_size_mb_value()",
-    "ReportIntermediateBestMoves": "self.config.get_report_intermediate_best_moves_value()",
-    "GameType": "self.config.get_game_type_value()",
+    "max_branching_factor": "self.config.get_max_branching_factor_value()",
+    "max_helper_threads": "self.config.get_max_helper_threads_value()",
+    "ponder_during_idle": "self.config.get_ponder_during_idle_value()",
+    "transposition_table_size_mb": "self.config.get_transposition_table_size_mb_value()",
+    "report_intermediate_best_moves": "self.config.get_report_intermediate_best_moves_value()",
+    "game_type": "self.config.get_game_type_value()",
 }
 
 

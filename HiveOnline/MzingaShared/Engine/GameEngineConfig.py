@@ -14,29 +14,30 @@ is_64 = platform.architecture() == "64bit"
 
 class GameEngineConfig:
 
-    TranspositionTableSizeMB = None
-    BoardMetricWeights = None
-    StartMetricWeights = None
-    EndMetricWeights = None
-    PonderDuringIdle = "Disabled"
+    transposition_table_size_mb = None
+    board_metric_weights = None
+    start_metric_weights = None
+    end_metric_weights = None
+    ponder_during_idle = "Disabled"
 
-    MinTranspositionTableSizeMB = 1
-    MaxTranspositionTableSizeMB32Bit = 1024
-    MaxTranspositionTableSizeMB64Bit = 2048
+    min_transposition_table_size_mb = 1
+    max_transposition_table_size_mb_32_bit = 1024
+    max_transposition_table_size_mb_64_bit = 2048
 
-    MinMaxHelperThreads = 0
-    MaxMaxHelperThreads = (multiprocessing.cpu_count() // 2) - 1
+    min_max_helper_threads = 0
+    max_max_helper_threads = (multiprocessing.cpu_count() // 2) - 1
 
-    MinMaxBranchingFactor = 1
+    min_max_branching_factor = 1
 
     _max_helper_threads: Union[int, None] = None
     # Hard min is 0, hard max is (Environment.ProcessorCount / 2) - 1
-    hard_max = min(_max_helper_threads, MaxMaxHelperThreads) if _max_helper_threads is not None else MaxMaxHelperThreads
-    MaxHelperThreads = max(MinMaxHelperThreads, hard_max)
+    hard_max = \
+        min(_max_helper_threads, max_max_helper_threads) if _max_helper_threads is not None else max_max_helper_threads
+    max_helper_threads = max(min_max_helper_threads, hard_max)
 
-    MaxBranchingFactor = None
-    ReportIntermediateBestMoves = False
-    GameType = "Extended"  # "Original"
+    max_branching_factor = None
+    report_intermediate_best_moves = False
+    game_type = "Extended"  # "Original"
 
     def __init__(self, input_stream):
         self.load_config(input_stream)
@@ -63,46 +64,46 @@ class GameEngineConfig:
         for node in xml_tree:
             sub_elems = [sub_elem for sub_elem in node]
             for elem in sub_elems:
-                if elem.tag == "TranspositionTableSizeMB":
+                if elem.tag == "transposition_table_size_mb":
                     self.parse_transposition_table_size_mb_value(elem.text)
-                if elem.tag == "BoardMetricWeights":
-                    self.BoardMetricWeights = BoardMetricWeights.read_metric_weights_xml(elem)
-                if elem.tag in ["MetricWeights", "StartMetricWeights"]:
-                    self.StartMetricWeights = MetricWeights.read_metric_weights_xml(elem, self.GameType)
-                if elem.tag == "EndMetricWeights":
-                    self.EndMetricWeights = MetricWeights.read_metric_weights_xml(elem, self.GameType)
-                if elem.tag == "MaxHelperThreads":
+                if elem.tag == "board_metric_weights":
+                    self.board_metric_weights = BoardMetricWeights.read_metric_weights_xml(elem)
+                if elem.tag in ["metric_weights", "start_metric_weights"]:
+                    self.start_metric_weights = MetricWeights.read_metric_weights_xml(elem, self.game_type)
+                if elem.tag == "end_metric_weights":
+                    self.end_metric_weights = MetricWeights.read_metric_weights_xml(elem, self.game_type)
+                if elem.tag == "max_helper_threads":
                     self.parse_max_helper_threads_value(elem.text)
-                if elem.tag == "PonderDuringIdle":
+                if elem.tag == "ponder_during_idle":
                     self.parse_ponder_during_idle_value(elem.text)
-                if elem.tag == "MaxBranchingFactor":
+                if elem.tag == "max_branching_factor":
                     self.parse_max_branching_factor_value(elem.text)
-                if elem.tag == "ReportIntermediateBestMoves":
+                if elem.tag == "report_intermediate_best_moves":
                     self.parse_report_intermediate_best_moves_value(elem.text)
-                if elem.tag == "GameType":
+                if elem.tag == "game_type":
                     self.parse_game_type_value(elem.text)
 
     def parse_transposition_table_size_mb_value(self, raw_value):
         int_value = int(raw_value)
-        size = self.MaxTranspositionTableSizeMB64Bit if is_64 else self.MaxTranspositionTableSizeMB32Bit
+        size = self.max_transposition_table_size_mb_64_bit if is_64 else self.max_transposition_table_size_mb_32_bit
         minimum = min(int_value, size)
 
-        self.TranspositionTableSizeMB = max(self.MinTranspositionTableSizeMB, minimum)
+        self.transposition_table_size_mb = max(self.min_transposition_table_size_mb, minimum)
 
     def get_transposition_table_size_mb_value(self):
         r_type = "int"
 
-        default = TranspositionTable.DefaultSizeInBytes / (1024 * 1024)
-        value = str(self.TranspositionTableSizeMB if self.TranspositionTableSizeMB is not None else default)
+        default = TranspositionTable.default_size_in_bytes / (1024 * 1024)
+        value = str(self.transposition_table_size_mb if self.transposition_table_size_mb is not None else default)
 
-        size = self.MaxTranspositionTableSizeMB64Bit if is_64 else self.MaxTranspositionTableSizeMB32Bit
-        values = "%d;%d" % (self.MinTranspositionTableSizeMB, size)
+        size = self.max_transposition_table_size_mb_64_bit if is_64 else self.max_transposition_table_size_mb_32_bit
+        values = "%d;%d" % (self.min_transposition_table_size_mb, size)
         return r_type, value, values
 
     def parse_max_helper_threads_value(self, raw_value):
         try:
             val = int(raw_value)
-            self._max_helper_threads = max(self.MinMaxHelperThreads, min(val, self.MaxMaxHelperThreads))
+            self._max_helper_threads = max(self.min_max_helper_threads, min(val, self.max_max_helper_threads))
         except ValueError:
             if raw_value is None:
                 self._max_helper_threads = 0
@@ -122,161 +123,162 @@ class GameEngineConfig:
         values = "Auto;None"
 
         i = 1
-        while i < self.MaxMaxHelperThreads:
+        while i < self.max_max_helper_threads:
             values += ";" + str(i)
 
         return r_type, value, values
 
     def parse_ponder_during_idle_value(self, raw_value):
-        if raw_value in PonderDuringIdleTypes:
-            self.PonderDuringIdle = raw_value
+        if raw_value in ponder_during_idleTypes:
+            self.ponder_during_idle = raw_value
 
     def get_ponder_during_idle_value(self):
         r_type = "string"
-        value = self.PonderDuringIdle
+        value = self.ponder_during_idle
         values = "Disabled;SingleThreaded;MultiThreaded"
         return r_type, value, values
 
     def parse_max_branching_factor_value(self, raw_value):
         try:
             val = int(raw_value)
-            self.MaxBranchingFactor = max(self.MinMaxBranchingFactor, min(val, GameAI.MaxMaxBranchingFactor))
+            self.max_branching_factor = max(self.min_max_branching_factor, min(val, GameAI.max_max_branching_factor))
         except ValueError:
             pass
 
     def get_max_branching_factor_value(self):
         r_type = "int"
-        value = str(self.MaxBranchingFactor if self.MaxBranchingFactor is not None else GameAI.MaxMaxBranchingFactor)
-        values = "%d;%d" % (self.MinMaxBranchingFactor, GameAI.MaxMaxBranchingFactor)
+        value = \
+            str(self.max_branching_factor if self.max_branching_factor is not None else GameAI.max_max_branching_factor)
+        values = "%d;%d" % (self.min_max_branching_factor, GameAI.max_max_branching_factor)
         return r_type, value, values
 
     def parse_report_intermediate_best_moves_value(self, raw_value):
         try:
-            self.ReportIntermediateBestMoves = raw_value == 'True'
+            self.report_intermediate_best_moves = raw_value == 'True'
         except ValueError:
             pass
 
     def get_report_intermediate_best_moves_value(self):
         r_type = "bool"
-        value = str(self.ReportIntermediateBestMoves)
+        value = str(self.report_intermediate_best_moves)
         values = ""
         return r_type, value, values
 
     def parse_game_type_value(self, raw_value):
-        if raw_value in GameTypes:
-            self.GameType = raw_value
+        if raw_value in game_types:
+            self.game_type = raw_value
 
     def get_game_type_value(self):
         r_type = "string"
-        value = self.GameType
-        values = "%s;" % GameTypes
+        value = self.game_type
+        values = "%s;" % game_types
         return r_type, value, values
 
     def get_game_ai(self):
         return GameAI(GameAIConfig(
-            self.StartMetricWeights,
-            self.EndMetricWeights if self.EndMetricWeights else self.StartMetricWeights,
-            self.TranspositionTableSizeMB,
-            self.GameType,
-            self.MaxBranchingFactor,
-            self.BoardMetricWeights,
+            self.start_metric_weights,
+            self.end_metric_weights if self.end_metric_weights else self.start_metric_weights,
+            self.transposition_table_size_mb,
+            self.game_type,
+            self.max_branching_factor,
+            self.board_metric_weights,
         ))
 
 
 def get_default_config():
-    if GameEngineConfig.GameType == "Original":
+    if GameEngineConfig.game_type == "Original":
         return GameEngineConfig(DefaultConfig)
-    elif GameEngineConfig.GameType == "Extended":
+    elif GameEngineConfig.game_type == "Extended":
         return GameEngineConfig(ExtendedConfig)
 
 
-MaxHelperThreadsTypes = ["Auto", "None"]
-PonderDuringIdleTypes = ["Disabled", "SingleThreaded", "MultiThreaded"]
-GameTypes = ["Original", "Extended"]
+max_helper_threadsTypes = ["Auto", "None"]
+ponder_during_idleTypes = ["Disabled", "SingleThreaded", "MultiThreaded"]
+game_types = ["Original", "Extended"]
 
 DefaultConfig = """
 <?xml version="1.0" encoding="utf-8" ?>
 <Mzinga.Engine>
 <GameAI>
-<TranspositionTableSizeMB>32</TranspositionTableSizeMB>
-<MaxHelperThreads>Auto</MaxHelperThreads>
-<PonderDuringIdle>SingleThreaded</PonderDuringIdle>
-<ReportIntermediateBestMoves>False</ReportIntermediateBestMoves>
-<GameType>Original</GameType>
-<StartMetricWeights>
-<QueenBee.InPlayWeight>50837.031620256952</QueenBee.InPlayWeight>
-<QueenBee.IsPinnedWeight>-35419.478140500571</QueenBee.IsPinnedWeight>
-<QueenBee.IsCoveredWeight>-243.45622986720107</QueenBee.IsCoveredWeight>
-<QueenBee.NoisyMoveWeight>-22355.989482597503</QueenBee.NoisyMoveWeight>
-<QueenBee.QuietMoveWeight>-84105.741673420329</QueenBee.QuietMoveWeight>
-<QueenBee.FriendlyNeighborWeight>-4947.40542859837</QueenBee.FriendlyNeighborWeight>
-<QueenBee.EnemyNeighborWeight>-9121.7862907225845</QueenBee.EnemyNeighborWeight>
-<Spider.InPlayWeight>-183922.24346427282</Spider.InPlayWeight>
-<Spider.IsPinnedWeight>-51088.715966831391</Spider.IsPinnedWeight>
-<Spider.IsCoveredWeight>206.990683117213</Spider.IsCoveredWeight>
-<Spider.NoisyMoveWeight>94212.195816425025</Spider.NoisyMoveWeight>
-<Spider.QuietMoveWeight>94605.450724741677</Spider.QuietMoveWeight>
-<Spider.FriendlyNeighborWeight>-169652.09402653066</Spider.FriendlyNeighborWeight>
-<Spider.EnemyNeighborWeight>-21579.439803066332</Spider.EnemyNeighborWeight>
-<Beetle.InPlayWeight>-319624.73751234385</Beetle.InPlayWeight>
-<Beetle.IsPinnedWeight>53938.865528570306</Beetle.IsPinnedWeight>
-<Beetle.IsCoveredWeight>-337.4041303961796</Beetle.IsCoveredWeight>
-<Beetle.NoisyMoveWeight>-485.60517579567255</Beetle.NoisyMoveWeight>
-<Beetle.QuietMoveWeight>-106382.99553773669</Beetle.QuietMoveWeight>
-<Beetle.FriendlyNeighborWeight>-356638.51686288341</Beetle.FriendlyNeighborWeight>
-<Beetle.EnemyNeighborWeight>-8573.7450425364077</Beetle.EnemyNeighborWeight>
-<Grasshopper.InPlayWeight>-27178.525364857123</Grasshopper.InPlayWeight>
-<Grasshopper.IsPinnedWeight>-33404.490951421416</Grasshopper.IsPinnedWeight>
-<Grasshopper.IsCoveredWeight>548.44065050905192</Grasshopper.IsCoveredWeight>
-<Grasshopper.NoisyMoveWeight>77276.245224015787</Grasshopper.NoisyMoveWeight>
-<Grasshopper.QuietMoveWeight>15766.311363153041</Grasshopper.QuietMoveWeight>
-<Grasshopper.FriendlyNeighborWeight>-67886.490066017082</Grasshopper.FriendlyNeighborWeight>
-<Grasshopper.EnemyNeighborWeight>14355.229523645041</Grasshopper.EnemyNeighborWeight>
-<SoldierAnt.InPlayWeight>200139.2683608809</SoldierAnt.InPlayWeight>
-<SoldierAnt.IsPinnedWeight>-62143.443626915083</SoldierAnt.IsPinnedWeight>
-<SoldierAnt.IsCoveredWeight>-506.30530226706622</SoldierAnt.IsCoveredWeight>
-<SoldierAnt.NoisyMoveWeight>9421.88332525417</SoldierAnt.NoisyMoveWeight>
-<SoldierAnt.QuietMoveWeight>-2784.606961465232</SoldierAnt.QuietMoveWeight>
-<SoldierAnt.FriendlyNeighborWeight>-13518.397319103129</SoldierAnt.FriendlyNeighborWeight>
-<SoldierAnt.EnemyNeighborWeight>-56076.88001448063</SoldierAnt.EnemyNeighborWeight>
-</StartMetricWeights>
-<EndMetricWeights>
-<QueenBee.InPlayWeight>17832.752038692164</QueenBee.InPlayWeight>
-<QueenBee.IsPinnedWeight>-153259.6446560958</QueenBee.IsPinnedWeight>
-<QueenBee.IsCoveredWeight>-12062.809088303911</QueenBee.IsCoveredWeight>
-<QueenBee.NoisyMoveWeight>80822.665556267631</QueenBee.NoisyMoveWeight>
-<QueenBee.QuietMoveWeight>134978.9720693233</QueenBee.QuietMoveWeight>
-<QueenBee.FriendlyNeighborWeight>-381617.8635138495</QueenBee.FriendlyNeighborWeight>
-<QueenBee.EnemyNeighborWeight>-521129.20243836124</QueenBee.EnemyNeighborWeight>
-<Spider.InPlayWeight>-12791.45541050752</Spider.InPlayWeight>
-<Spider.IsPinnedWeight>-61584.831349148</Spider.IsPinnedWeight>
-<Spider.IsCoveredWeight>-775.35572307100165</Spider.IsCoveredWeight>
-<Spider.NoisyMoveWeight>120090.56161788374</Spider.NoisyMoveWeight>
-<Spider.QuietMoveWeight>-25620.550067509335</Spider.QuietMoveWeight>
-<Spider.FriendlyNeighborWeight>50071.490767260431</Spider.FriendlyNeighborWeight>
-<Spider.EnemyNeighborWeight>115729.74517664181</Spider.EnemyNeighborWeight>
-<Beetle.InPlayWeight>-104764.43582698153</Beetle.InPlayWeight>
-<Beetle.IsPinnedWeight>8148.1334677123405</Beetle.IsPinnedWeight>
-<Beetle.IsCoveredWeight>-13504.915458214411</Beetle.IsCoveredWeight>
-<Beetle.NoisyMoveWeight>75441.89545110683</Beetle.NoisyMoveWeight>
-<Beetle.QuietMoveWeight>8154.507392742652</Beetle.QuietMoveWeight>
-<Beetle.FriendlyNeighborWeight>2083.30649676445</Beetle.FriendlyNeighborWeight>
-<Beetle.EnemyNeighborWeight>53817.23998276201</Beetle.EnemyNeighborWeight>
-<Grasshopper.InPlayWeight>26486.8616248504</Grasshopper.InPlayWeight>
-<Grasshopper.IsPinnedWeight>-81940.610176146263</Grasshopper.IsPinnedWeight>
-<Grasshopper.IsCoveredWeight>5987.60021560749</Grasshopper.IsCoveredWeight>
-<Grasshopper.NoisyMoveWeight>71575.748863625078</Grasshopper.NoisyMoveWeight>
-<Grasshopper.QuietMoveWeight>-7989.0958909230549</Grasshopper.QuietMoveWeight>
-<Grasshopper.FriendlyNeighborWeight>26619.553949671186</Grasshopper.FriendlyNeighborWeight>
-<Grasshopper.EnemyNeighborWeight>80307.851786135026</Grasshopper.EnemyNeighborWeight>
-<SoldierAnt.InPlayWeight>29983.953942488319</SoldierAnt.InPlayWeight>
-<SoldierAnt.IsPinnedWeight>-50928.471194140635</SoldierAnt.IsPinnedWeight>
-<SoldierAnt.IsCoveredWeight>-19457.846451490077</SoldierAnt.IsCoveredWeight>
-<SoldierAnt.NoisyMoveWeight>25338.286810615977</SoldierAnt.NoisyMoveWeight>
-<SoldierAnt.QuietMoveWeight>3628.0368716020935</SoldierAnt.QuietMoveWeight>
-<SoldierAnt.FriendlyNeighborWeight>7118.0742514099165</SoldierAnt.FriendlyNeighborWeight>
-<SoldierAnt.EnemyNeighborWeight>88105.512723272492</SoldierAnt.EnemyNeighborWeight>
-</EndMetricWeights>
+<transposition_table_size_mb>32</transposition_table_size_mb>
+<max_helper_threads>Auto</max_helper_threads>
+<ponder_during_idle>SingleThreaded</ponder_during_idle>
+<report_intermediate_best_moves>False</report_intermediate_best_moves>
+<game_type>Original</game_type>
+<start_metric_weights>
+<QueenBee.in_play_weight>50837.031620256952</QueenBee.in_play_weight>
+<QueenBee.is_pinned_weight>-35419.478140500571</QueenBee.is_pinned_weight>
+<QueenBee.is_covered_weight>-243.45622986720107</QueenBee.is_covered_weight>
+<QueenBee.noisy_move_weight>-22355.989482597503</QueenBee.noisy_move_weight>
+<QueenBee.quiet_move_weight>-84105.741673420329</QueenBee.quiet_move_weight>
+<QueenBee.friendly_neighbour_weight>-4947.40542859837</QueenBee.friendly_neighbour_weight>
+<QueenBee.enemy_neighbour_weight>-9121.7862907225845</QueenBee.enemy_neighbour_weight>
+<Spider.in_play_weight>-183922.24346427282</Spider.in_play_weight>
+<Spider.is_pinned_weight>-51088.715966831391</Spider.is_pinned_weight>
+<Spider.is_covered_weight>206.990683117213</Spider.is_covered_weight>
+<Spider.noisy_move_weight>94212.195816425025</Spider.noisy_move_weight>
+<Spider.quiet_move_weight>94605.450724741677</Spider.quiet_move_weight>
+<Spider.friendly_neighbour_weight>-169652.09402653066</Spider.friendly_neighbour_weight>
+<Spider.enemy_neighbour_weight>-21579.439803066332</Spider.enemy_neighbour_weight>
+<Beetle.in_play_weight>-319624.73751234385</Beetle.in_play_weight>
+<Beetle.is_pinned_weight>53938.865528570306</Beetle.is_pinned_weight>
+<Beetle.is_covered_weight>-337.4041303961796</Beetle.is_covered_weight>
+<Beetle.noisy_move_weight>-485.60517579567255</Beetle.noisy_move_weight>
+<Beetle.quiet_move_weight>-106382.99553773669</Beetle.quiet_move_weight>
+<Beetle.friendly_neighbour_weight>-356638.51686288341</Beetle.friendly_neighbour_weight>
+<Beetle.enemy_neighbour_weight>-8573.7450425364077</Beetle.enemy_neighbour_weight>
+<Grasshopper.in_play_weight>-27178.525364857123</Grasshopper.in_play_weight>
+<Grasshopper.is_pinned_weight>-33404.490951421416</Grasshopper.is_pinned_weight>
+<Grasshopper.is_covered_weight>548.44065050905192</Grasshopper.is_covered_weight>
+<Grasshopper.noisy_move_weight>77276.245224015787</Grasshopper.noisy_move_weight>
+<Grasshopper.quiet_move_weight>15766.311363153041</Grasshopper.quiet_move_weight>
+<Grasshopper.friendly_neighbour_weight>-67886.490066017082</Grasshopper.friendly_neighbour_weight>
+<Grasshopper.enemy_neighbour_weight>14355.229523645041</Grasshopper.enemy_neighbour_weight>
+<SoldierAnt.in_play_weight>200139.2683608809</SoldierAnt.in_play_weight>
+<SoldierAnt.is_pinned_weight>-62143.443626915083</SoldierAnt.is_pinned_weight>
+<SoldierAnt.is_covered_weight>-506.30530226706622</SoldierAnt.is_covered_weight>
+<SoldierAnt.noisy_move_weight>9421.88332525417</SoldierAnt.noisy_move_weight>
+<SoldierAnt.quiet_move_weight>-2784.606961465232</SoldierAnt.quiet_move_weight>
+<SoldierAnt.friendly_neighbour_weight>-13518.397319103129</SoldierAnt.friendly_neighbour_weight>
+<SoldierAnt.enemy_neighbour_weight>-56076.88001448063</SoldierAnt.enemy_neighbour_weight>
+</start_metric_weights>
+<end_metric_weights>
+<QueenBee.in_play_weight>17832.752038692164</QueenBee.in_play_weight>
+<QueenBee.is_pinned_weight>-153259.6446560958</QueenBee.is_pinned_weight>
+<QueenBee.is_covered_weight>-12062.809088303911</QueenBee.is_covered_weight>
+<QueenBee.noisy_move_weight>80822.665556267631</QueenBee.noisy_move_weight>
+<QueenBee.quiet_move_weight>134978.9720693233</QueenBee.quiet_move_weight>
+<QueenBee.friendly_neighbour_weight>-381617.8635138495</QueenBee.friendly_neighbour_weight>
+<QueenBee.enemy_neighbour_weight>-521129.20243836124</QueenBee.enemy_neighbour_weight>
+<Spider.in_play_weight>-12791.45541050752</Spider.in_play_weight>
+<Spider.is_pinned_weight>-61584.831349148</Spider.is_pinned_weight>
+<Spider.is_covered_weight>-775.35572307100165</Spider.is_covered_weight>
+<Spider.noisy_move_weight>120090.56161788374</Spider.noisy_move_weight>
+<Spider.quiet_move_weight>-25620.550067509335</Spider.quiet_move_weight>
+<Spider.friendly_neighbour_weight>50071.490767260431</Spider.friendly_neighbour_weight>
+<Spider.enemy_neighbour_weight>115729.74517664181</Spider.enemy_neighbour_weight>
+<Beetle.in_play_weight>-104764.43582698153</Beetle.in_play_weight>
+<Beetle.is_pinned_weight>8148.1334677123405</Beetle.is_pinned_weight>
+<Beetle.is_covered_weight>-13504.915458214411</Beetle.is_covered_weight>
+<Beetle.noisy_move_weight>75441.89545110683</Beetle.noisy_move_weight>
+<Beetle.quiet_move_weight>8154.507392742652</Beetle.quiet_move_weight>
+<Beetle.friendly_neighbour_weight>2083.30649676445</Beetle.friendly_neighbour_weight>
+<Beetle.enemy_neighbour_weight>53817.23998276201</Beetle.enemy_neighbour_weight>
+<Grasshopper.in_play_weight>26486.8616248504</Grasshopper.in_play_weight>
+<Grasshopper.is_pinned_weight>-81940.610176146263</Grasshopper.is_pinned_weight>
+<Grasshopper.is_covered_weight>5987.60021560749</Grasshopper.is_covered_weight>
+<Grasshopper.noisy_move_weight>71575.748863625078</Grasshopper.noisy_move_weight>
+<Grasshopper.quiet_move_weight>-7989.0958909230549</Grasshopper.quiet_move_weight>
+<Grasshopper.friendly_neighbour_weight>26619.553949671186</Grasshopper.friendly_neighbour_weight>
+<Grasshopper.enemy_neighbour_weight>80307.851786135026</Grasshopper.enemy_neighbour_weight>
+<SoldierAnt.in_play_weight>29983.953942488319</SoldierAnt.in_play_weight>
+<SoldierAnt.is_pinned_weight>-50928.471194140635</SoldierAnt.is_pinned_weight>
+<SoldierAnt.is_covered_weight>-19457.846451490077</SoldierAnt.is_covered_weight>
+<SoldierAnt.noisy_move_weight>25338.286810615977</SoldierAnt.noisy_move_weight>
+<SoldierAnt.quiet_move_weight>3628.0368716020935</SoldierAnt.quiet_move_weight>
+<SoldierAnt.friendly_neighbour_weight>7118.0742514099165</SoldierAnt.friendly_neighbour_weight>
+<SoldierAnt.enemy_neighbour_weight>88105.512723272492</SoldierAnt.enemy_neighbour_weight>
+</end_metric_weights>
 </GameAI>
 </Mzinga.Engine>
 """
@@ -285,110 +287,110 @@ ExtendedConfig = """
 <?xml version="1.0" encoding="utf-8" ?>
 <Mzinga.Engine>
 <GameAI>
-<TranspositionTableSizeMB>32</TranspositionTableSizeMB>
-<MaxHelperThreads>Auto</MaxHelperThreads>
-<PonderDuringIdle>SingleThreaded</PonderDuringIdle>
-<ReportIntermediateBestMoves>False</ReportIntermediateBestMoves>
-<GameType>Extended</GameType>
-<BoardMetricWeights>
-<QueenBeeLifeWeight>60837.03</QueenBeeLifeWeight>
-<NonSlidingQueenBeeSpacesWeight>22355.98</NonSlidingQueenBeeSpacesWeight>
-<NoisyRingWeight>22355.98</NoisyRingWeight>
-</BoardMetricWeights>
-<StartMetricWeights>
-<QueenBee.InPlayWeight>50837.031620256952</QueenBee.InPlayWeight>
-<QueenBee.IsPinnedWeight>-35419.478140500571</QueenBee.IsPinnedWeight>
-<QueenBee.IsCoveredWeight>-243.45622986720107</QueenBee.IsCoveredWeight>
-<QueenBee.NoisyMoveWeight>-22355.989482597503</QueenBee.NoisyMoveWeight>
-<QueenBee.QuietMoveWeight>-84105.741673420329</QueenBee.QuietMoveWeight>
-<QueenBee.FriendlyNeighborWeight>-4947.40542859837</QueenBee.FriendlyNeighborWeight>
-<QueenBee.EnemyNeighborWeight>-9121.7862907225845</QueenBee.EnemyNeighborWeight>
-<QueenBee.CanMakeNoisyRingWeight>0</QueenBee.CanMakeNoisyRingWeight>
-<QueenBee.CanMakeDefenseRingWeight>0</QueenBee.CanMakeDefenseRingWeight>
-<Spider.InPlayWeight>-183922.24346427282</Spider.InPlayWeight>
-<Spider.IsPinnedWeight>-51088.715966831391</Spider.IsPinnedWeight>
-<Spider.IsCoveredWeight>206.990683117213</Spider.IsCoveredWeight>
-<Spider.NoisyMoveWeight>94212.195816425025</Spider.NoisyMoveWeight>
-<Spider.QuietMoveWeight>94605.450724741677</Spider.QuietMoveWeight>
-<Spider.FriendlyNeighborWeight>-169652.09402653066</Spider.FriendlyNeighborWeight>
-<Spider.EnemyNeighborWeight>-21579.439803066332</Spider.EnemyNeighborWeight>
-<Spider.CanMakeNoisyRingWeight>94212.1958</Spider.CanMakeNoisyRingWeight>
-<Spider.CanMakeDefenseRingWeight>94212.1958</Spider.CanMakeDefenseRingWeight>
-<Beetle.InPlayWeight>-319624.73751234385</Beetle.InPlayWeight>
-<Beetle.IsPinnedWeight>53938.865528570306</Beetle.IsPinnedWeight>
-<Beetle.IsCoveredWeight>-337.4041303961796</Beetle.IsCoveredWeight>
-<Beetle.NoisyMoveWeight>-485.60517579567255</Beetle.NoisyMoveWeight>
-<Beetle.QuietMoveWeight>-106382.99553773669</Beetle.QuietMoveWeight>
-<Beetle.FriendlyNeighborWeight>-356638.51686288341</Beetle.FriendlyNeighborWeight>
-<Beetle.EnemyNeighborWeight>-8573.7450425364077</Beetle.EnemyNeighborWeight>
-<Beetle.CanMakeNoisyRingWeight>94212.1958</Beetle.CanMakeNoisyRingWeight>
-<Beetle.CanMakeDefenseRingWeight>94212.1958</Beetle.CanMakeDefenseRingWeight>
-<Grasshopper.InPlayWeight>-27178.525364857123</Grasshopper.InPlayWeight>
-<Grasshopper.IsPinnedWeight>-33404.490951421416</Grasshopper.IsPinnedWeight>
-<Grasshopper.IsCoveredWeight>548.44065050905192</Grasshopper.IsCoveredWeight>
-<Grasshopper.NoisyMoveWeight>77276.245224015787</Grasshopper.NoisyMoveWeight>
-<Grasshopper.QuietMoveWeight>15766.311363153041</Grasshopper.QuietMoveWeight>
-<Grasshopper.FriendlyNeighborWeight>-67886.490066017082</Grasshopper.FriendlyNeighborWeight>
-<Grasshopper.EnemyNeighborWeight>14355.229523645041</Grasshopper.EnemyNeighborWeight>
-<Grasshopper.CanMakeNoisyRingWeight>94212.1958</Grasshopper.CanMakeNoisyRingWeight>
-<Grasshopper.CanMakeDefenseRingWeight>94212.1958</Grasshopper.CanMakeDefenseRingWeight>
-<SoldierAnt.InPlayWeight>200139.2683608809</SoldierAnt.InPlayWeight>
-<SoldierAnt.IsPinnedWeight>-62143.443626915083</SoldierAnt.IsPinnedWeight>
-<SoldierAnt.IsCoveredWeight>-506.30530226706622</SoldierAnt.IsCoveredWeight>
-<SoldierAnt.NoisyMoveWeight>9421.88332525417</SoldierAnt.NoisyMoveWeight>
-<SoldierAnt.QuietMoveWeight>-2784.606961465232</SoldierAnt.QuietMoveWeight>
-<SoldierAnt.FriendlyNeighborWeight>-13518.397319103129</SoldierAnt.FriendlyNeighborWeight>
-<SoldierAnt.EnemyNeighborWeight>-56076.88001448063</SoldierAnt.EnemyNeighborWeight>
-<SoldierAnt.CanMakeNoisyRingWeight>9421.88</SoldierAnt.CanMakeNoisyRingWeight>
-<SoldierAnt.CanMakeDefenseRingWeight>9421.88</SoldierAnt.CanMakeDefenseRingWeight>
-</StartMetricWeights>
-<EndMetricWeights>
-<QueenBee.InPlayWeight>17832.752038692164</QueenBee.InPlayWeight>
-<QueenBee.IsPinnedWeight>-153259.6446560958</QueenBee.IsPinnedWeight>
-<QueenBee.IsCoveredWeight>-12062.809088303911</QueenBee.IsCoveredWeight>
-<QueenBee.NoisyMoveWeight>80822.665556267631</QueenBee.NoisyMoveWeight>
-<QueenBee.QuietMoveWeight>134978.9720693233</QueenBee.QuietMoveWeight>
-<QueenBee.FriendlyNeighborWeight>-381617.8635138495</QueenBee.FriendlyNeighborWeight>
-<QueenBee.EnemyNeighborWeight>-521129.20243836124</QueenBee.EnemyNeighborWeight>
-<QueenBee.CanMakeNoisyRingWeight>0</QueenBee.CanMakeNoisyRingWeight>
-<QueenBee.CanMakeDefenseRingWeight>0</QueenBee.CanMakeDefenseRingWeight>
-<Spider.InPlayWeight>-12791.45541050752</Spider.InPlayWeight>
-<Spider.IsPinnedWeight>-61584.831349148</Spider.IsPinnedWeight>
-<Spider.IsCoveredWeight>-775.35572307100165</Spider.IsCoveredWeight>
-<Spider.NoisyMoveWeight>120090.56161788374</Spider.NoisyMoveWeight>
-<Spider.QuietMoveWeight>-25620.550067509335</Spider.QuietMoveWeight>
-<Spider.FriendlyNeighborWeight>50071.490767260431</Spider.FriendlyNeighborWeight>
-<Spider.EnemyNeighborWeight>115729.74517664181</Spider.EnemyNeighborWeight>
-<Spider.CanMakeNoisyRingWeight>94212.1958</Spider.CanMakeNoisyRingWeight>
-<Spider.CanMakeDefenseRingWeight>94212.1958</Spider.CanMakeDefenseRingWeight>
-<Beetle.InPlayWeight>-104764.43582698153</Beetle.InPlayWeight>
-<Beetle.IsPinnedWeight>8148.1334677123405</Beetle.IsPinnedWeight>
-<Beetle.IsCoveredWeight>-13504.915458214411</Beetle.IsCoveredWeight>
-<Beetle.NoisyMoveWeight>75441.89545110683</Beetle.NoisyMoveWeight>
-<Beetle.QuietMoveWeight>8154.507392742652</Beetle.QuietMoveWeight>
-<Beetle.FriendlyNeighborWeight>2083.30649676445</Beetle.FriendlyNeighborWeight>
-<Beetle.EnemyNeighborWeight>53817.23998276201</Beetle.EnemyNeighborWeight>
-<Beetle.CanMakeNoisyRingWeight>94212.1958</Beetle.CanMakeNoisyRingWeight>
-<Beetle.CanMakeDefenseRingWeight>94212.1958</Beetle.CanMakeDefenseRingWeight>
-<Grasshopper.InPlayWeight>26486.8616248504</Grasshopper.InPlayWeight>
-<Grasshopper.IsPinnedWeight>-81940.610176146263</Grasshopper.IsPinnedWeight>
-<Grasshopper.IsCoveredWeight>5987.60021560749</Grasshopper.IsCoveredWeight>
-<Grasshopper.NoisyMoveWeight>71575.748863625078</Grasshopper.NoisyMoveWeight>
-<Grasshopper.QuietMoveWeight>-7989.0958909230549</Grasshopper.QuietMoveWeight>
-<Grasshopper.FriendlyNeighborWeight>26619.553949671186</Grasshopper.FriendlyNeighborWeight>
-<Grasshopper.EnemyNeighborWeight>80307.851786135026</Grasshopper.EnemyNeighborWeight>
-<Grasshopper.CanMakeNoisyRingWeight>94212.1958</Grasshopper.CanMakeNoisyRingWeight>
-<Grasshopper.CanMakeDefenseRingWeight>94212.1958</Grasshopper.CanMakeDefenseRingWeight>
-<SoldierAnt.InPlayWeight>29983.953942488319</SoldierAnt.InPlayWeight>
-<SoldierAnt.IsPinnedWeight>-50928.471194140635</SoldierAnt.IsPinnedWeight>
-<SoldierAnt.IsCoveredWeight>-19457.846451490077</SoldierAnt.IsCoveredWeight>
-<SoldierAnt.NoisyMoveWeight>25338.286810615977</SoldierAnt.NoisyMoveWeight>
-<SoldierAnt.QuietMoveWeight>3628.0368716020935</SoldierAnt.QuietMoveWeight>
-<SoldierAnt.FriendlyNeighborWeight>7118.0742514099165</SoldierAnt.FriendlyNeighborWeight>
-<SoldierAnt.EnemyNeighborWeight>88105.512723272492</SoldierAnt.EnemyNeighborWeight>
-<SoldierAnt.CanMakeNoisyRingWeight>9421.88</SoldierAnt.CanMakeNoisyRingWeight>
-<SoldierAnt.CanMakeDefenseRingWeight>9421.88</SoldierAnt.CanMakeDefenseRingWeight>
-</EndMetricWeights>
+<transposition_table_size_mb>32</transposition_table_size_mb>
+<max_helper_threads>Auto</max_helper_threads>
+<ponder_during_idle>SingleThreaded</ponder_during_idle>
+<report_intermediate_best_moves>False</report_intermediate_best_moves>
+<game_type>Extended</game_type>
+<board_metric_weights>
+<queen_bee_life_weight>60837.03</queen_bee_life_weight>
+<queen_bee_tight_spaces_weight>22355.98</queen_bee_tight_spaces_weight>
+<noisy_ring_weight>22355.98</noisy_ring_weight>
+</board_metric_weights>
+<start_metric_weights>
+<QueenBee.in_play_weight>50837.031620256952</QueenBee.in_play_weight>
+<QueenBee.is_pinned_weight>-35419.478140500571</QueenBee.is_pinned_weight>
+<QueenBee.is_covered_weight>-243.45622986720107</QueenBee.is_covered_weight>
+<QueenBee.noisy_move_weight>-22355.989482597503</QueenBee.noisy_move_weight>
+<QueenBee.quiet_move_weight>-84105.741673420329</QueenBee.quiet_move_weight>
+<QueenBee.friendly_neighbour_weight>-4947.40542859837</QueenBee.friendly_neighbour_weight>
+<QueenBee.enemy_neighbour_weight>-9121.7862907225845</QueenBee.enemy_neighbour_weight>
+<QueenBee.can_make_noisy_ring_weight>0</QueenBee.can_make_noisy_ring_weight>
+<QueenBee.can_make_defense_ring_weight>0</QueenBee.can_make_defense_ring_weight>
+<Spider.in_play_weight>-183922.24346427282</Spider.in_play_weight>
+<Spider.is_pinned_weight>-51088.715966831391</Spider.is_pinned_weight>
+<Spider.is_covered_weight>206.990683117213</Spider.is_covered_weight>
+<Spider.noisy_move_weight>94212.195816425025</Spider.noisy_move_weight>
+<Spider.quiet_move_weight>94605.450724741677</Spider.quiet_move_weight>
+<Spider.friendly_neighbour_weight>-169652.09402653066</Spider.friendly_neighbour_weight>
+<Spider.enemy_neighbour_weight>-21579.439803066332</Spider.enemy_neighbour_weight>
+<Spider.can_make_noisy_ring_weight>94212.1958</Spider.can_make_noisy_ring_weight>
+<Spider.can_make_defense_ring_weight>94212.1958</Spider.can_make_defense_ring_weight>
+<Beetle.in_play_weight>-319624.73751234385</Beetle.in_play_weight>
+<Beetle.is_pinned_weight>53938.865528570306</Beetle.is_pinned_weight>
+<Beetle.is_covered_weight>-337.4041303961796</Beetle.is_covered_weight>
+<Beetle.noisy_move_weight>-485.60517579567255</Beetle.noisy_move_weight>
+<Beetle.quiet_move_weight>-106382.99553773669</Beetle.quiet_move_weight>
+<Beetle.friendly_neighbour_weight>-356638.51686288341</Beetle.friendly_neighbour_weight>
+<Beetle.enemy_neighbour_weight>-8573.7450425364077</Beetle.enemy_neighbour_weight>
+<Beetle.can_make_noisy_ring_weight>94212.1958</Beetle.can_make_noisy_ring_weight>
+<Beetle.can_make_defense_ring_weight>94212.1958</Beetle.can_make_defense_ring_weight>
+<Grasshopper.in_play_weight>-27178.525364857123</Grasshopper.in_play_weight>
+<Grasshopper.is_pinned_weight>-33404.490951421416</Grasshopper.is_pinned_weight>
+<Grasshopper.is_covered_weight>548.44065050905192</Grasshopper.is_covered_weight>
+<Grasshopper.noisy_move_weight>77276.245224015787</Grasshopper.noisy_move_weight>
+<Grasshopper.quiet_move_weight>15766.311363153041</Grasshopper.quiet_move_weight>
+<Grasshopper.friendly_neighbour_weight>-67886.490066017082</Grasshopper.friendly_neighbour_weight>
+<Grasshopper.enemy_neighbour_weight>14355.229523645041</Grasshopper.enemy_neighbour_weight>
+<Grasshopper.can_make_noisy_ring_weight>94212.1958</Grasshopper.can_make_noisy_ring_weight>
+<Grasshopper.can_make_defense_ring_weight>94212.1958</Grasshopper.can_make_defense_ring_weight>
+<SoldierAnt.in_play_weight>200139.2683608809</SoldierAnt.in_play_weight>
+<SoldierAnt.is_pinned_weight>-62143.443626915083</SoldierAnt.is_pinned_weight>
+<SoldierAnt.is_covered_weight>-506.30530226706622</SoldierAnt.is_covered_weight>
+<SoldierAnt.noisy_move_weight>9421.88332525417</SoldierAnt.noisy_move_weight>
+<SoldierAnt.quiet_move_weight>-2784.606961465232</SoldierAnt.quiet_move_weight>
+<SoldierAnt.friendly_neighbour_weight>-13518.397319103129</SoldierAnt.friendly_neighbour_weight>
+<SoldierAnt.enemy_neighbour_weight>-56076.88001448063</SoldierAnt.enemy_neighbour_weight>
+<SoldierAnt.can_make_noisy_ring_weight>9421.88</SoldierAnt.can_make_noisy_ring_weight>
+<SoldierAnt.can_make_defense_ring_weight>9421.88</SoldierAnt.can_make_defense_ring_weight>
+</start_metric_weights>
+<end_metric_weights>
+<QueenBee.in_play_weight>17832.752038692164</QueenBee.in_play_weight>
+<QueenBee.is_pinned_weight>-153259.6446560958</QueenBee.is_pinned_weight>
+<QueenBee.is_covered_weight>-12062.809088303911</QueenBee.is_covered_weight>
+<QueenBee.noisy_move_weight>80822.665556267631</QueenBee.noisy_move_weight>
+<QueenBee.quiet_move_weight>134978.9720693233</QueenBee.quiet_move_weight>
+<QueenBee.friendly_neighbour_weight>-381617.8635138495</QueenBee.friendly_neighbour_weight>
+<QueenBee.enemy_neighbour_weight>-521129.20243836124</QueenBee.enemy_neighbour_weight>
+<QueenBee.can_make_noisy_ring_weight>0</QueenBee.can_make_noisy_ring_weight>
+<QueenBee.can_make_defense_ring_weight>0</QueenBee.can_make_defense_ring_weight>
+<Spider.in_play_weight>-12791.45541050752</Spider.in_play_weight>
+<Spider.is_pinned_weight>-61584.831349148</Spider.is_pinned_weight>
+<Spider.is_covered_weight>-775.35572307100165</Spider.is_covered_weight>
+<Spider.noisy_move_weight>120090.56161788374</Spider.noisy_move_weight>
+<Spider.quiet_move_weight>-25620.550067509335</Spider.quiet_move_weight>
+<Spider.friendly_neighbour_weight>50071.490767260431</Spider.friendly_neighbour_weight>
+<Spider.enemy_neighbour_weight>115729.74517664181</Spider.enemy_neighbour_weight>
+<Spider.can_make_noisy_ring_weight>94212.1958</Spider.can_make_noisy_ring_weight>
+<Spider.can_make_defense_ring_weight>94212.1958</Spider.can_make_defense_ring_weight>
+<Beetle.in_play_weight>-104764.43582698153</Beetle.in_play_weight>
+<Beetle.is_pinned_weight>8148.1334677123405</Beetle.is_pinned_weight>
+<Beetle.is_covered_weight>-13504.915458214411</Beetle.is_covered_weight>
+<Beetle.noisy_move_weight>75441.89545110683</Beetle.noisy_move_weight>
+<Beetle.quiet_move_weight>8154.507392742652</Beetle.quiet_move_weight>
+<Beetle.friendly_neighbour_weight>2083.30649676445</Beetle.friendly_neighbour_weight>
+<Beetle.enemy_neighbour_weight>53817.23998276201</Beetle.enemy_neighbour_weight>
+<Beetle.can_make_noisy_ring_weight>94212.1958</Beetle.can_make_noisy_ring_weight>
+<Beetle.can_make_defense_ring_weight>94212.1958</Beetle.can_make_defense_ring_weight>
+<Grasshopper.in_play_weight>26486.8616248504</Grasshopper.in_play_weight>
+<Grasshopper.is_pinned_weight>-81940.610176146263</Grasshopper.is_pinned_weight>
+<Grasshopper.is_covered_weight>5987.60021560749</Grasshopper.is_covered_weight>
+<Grasshopper.noisy_move_weight>71575.748863625078</Grasshopper.noisy_move_weight>
+<Grasshopper.quiet_move_weight>-7989.0958909230549</Grasshopper.quiet_move_weight>
+<Grasshopper.friendly_neighbour_weight>26619.553949671186</Grasshopper.friendly_neighbour_weight>
+<Grasshopper.enemy_neighbour_weight>80307.851786135026</Grasshopper.enemy_neighbour_weight>
+<Grasshopper.can_make_noisy_ring_weight>94212.1958</Grasshopper.can_make_noisy_ring_weight>
+<Grasshopper.can_make_defense_ring_weight>94212.1958</Grasshopper.can_make_defense_ring_weight>
+<SoldierAnt.in_play_weight>29983.953942488319</SoldierAnt.in_play_weight>
+<SoldierAnt.is_pinned_weight>-50928.471194140635</SoldierAnt.is_pinned_weight>
+<SoldierAnt.is_covered_weight>-19457.846451490077</SoldierAnt.is_covered_weight>
+<SoldierAnt.noisy_move_weight>25338.286810615977</SoldierAnt.noisy_move_weight>
+<SoldierAnt.quiet_move_weight>3628.0368716020935</SoldierAnt.quiet_move_weight>
+<SoldierAnt.friendly_neighbour_weight>7118.0742514099165</SoldierAnt.friendly_neighbour_weight>
+<SoldierAnt.enemy_neighbour_weight>88105.512723272492</SoldierAnt.enemy_neighbour_weight>
+<SoldierAnt.can_make_noisy_ring_weight>9421.88</SoldierAnt.can_make_noisy_ring_weight>
+<SoldierAnt.can_make_defense_ring_weight>9421.88</SoldierAnt.can_make_defense_ring_weight>
+</end_metric_weights>
 </GameAI>
 </Mzinga.Engine>
 """

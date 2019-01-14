@@ -10,32 +10,31 @@ from MzingaShared.Core.Piece import Piece
 from MzingaShared.Core import Position as PositionCls
 from MzingaShared.Core.Position import Position
 from MzingaShared.Core.ZobristHash import ZobristHash
-from MzingaShared.Core.EnumUtils import Colours, ColoursByInt, PieceNamesByInt, PieceNames, \
-                                        EnumUtils as EnumUtilsCls, Rings, Directions
+from MzingaShared.Core.EnumUtils import colours, colours_by_int, piece_names_by_int, piece_names, \
+                                        EnumUtils as EnumUtilsCls, rings, directions
 
-BoardStates = ["NotStarted", "InProgress", "Draw", "WhiteWins", "BlackWins"]
+board_states = ["NotStarted", "InProgress", "Draw", "WhiteWins", "BlackWins"]
 
 
 class Board:
-    BoardState = None
-    GameType = None
+    board_state = None
+    game_type = None
 
     _board_metrics = None
     _current_turn = 0
     _zobrist_hash = None
     _pieces = []
     _pieces_by_position = {}
-    _last_piece_moved = list(PieceNames.keys())[0]  # "INVALID"
+    _last_piece_moved = list(piece_names.keys())[0]  # "INVALID"
 
     # CACHES
-    ValidMoveCacheMetricsSet = None
-    ValidMoveCacheResets = 0
+    valid_move_cache_metrics_set = None
+    valid_move_cache_resets = 0
     _cached_valid_moves_by_piece = None
     _cached_valid_placement_positions = None
     _visited_placements = set()
     _cached_enemy_queen_neighbours = None
     _cached_friendly_queen_neighbours = None
-
     # END CACHES
 
     # STATE PROPERTIES
@@ -58,7 +57,7 @@ class Board:
 
     @property
     def current_turn_colour(self):
-        return ColoursByInt.get(self.current_turn % 2)
+        return colours_by_int.get(self.current_turn % 2)
 
     @property
     def current_player_turn(self):
@@ -66,18 +65,18 @@ class Board:
 
     @property
     def game_in_progress(self):
-        return self.BoardState in ["NotStarted", "InProgress"]
+        return self.board_state in ["NotStarted", "InProgress"]
 
     @property
     def game_is_over(self):
-        return self.BoardState in ["WhiteWins", "BlackWins", "Draw"]
+        return self.board_state in ["WhiteWins", "BlackWins", "Draw"]
 
     @property
     def board_string(self):
-        s = "%s%c" % (self.BoardState, ';')
+        s = "%s%c" % (self.board_state, ';')
         s += "%s[%s]%c" % (self.current_turn_colour, self.current_player_turn, ';')
 
-        for i in range(EnumUtils.NumPieceNames):
+        for i in range(EnumUtils.num_piece_names):
             if self._pieces[i] is not None and self._pieces[i].in_play:
                 s += "%s%c" % (self._pieces[i], ';')
         return s[:-1:]
@@ -85,9 +84,6 @@ class Board:
     @property
     def zobrist_key(self):
         return self._zobrist_hash.value
-
-    def __repr__(self):
-        return self.board_string
     # END STATE PROPERTIES
 
     # PIECE ENUMERATION PROPERTIES
@@ -98,17 +94,17 @@ class Board:
 
     @property
     def pieces_in_play(self):
-        return [PieceNamesByInt.get(i) for i in range(EnumUtils.NumPieceNames)
+        return [piece_names_by_int.get(i) for i in range(EnumUtils.num_piece_names)
                 if self._pieces[i] is not None and self._pieces[i].in_play]
 
     @property
     def white_hand(self):
-        return [PieceNamesByInt.get(i) for i in range(EnumUtils.NumPieceNames // 2)
+        return [piece_names_by_int.get(i) for i in range(EnumUtils.num_piece_names // 2)
                 if self._pieces[i] is not None and self._pieces[i].in_play]
 
     @property
     def black_hand(self):
-        return [PieceNamesByInt.get(i) for i in range(EnumUtils.NumPieceNames // 2, EnumUtils.NumPieceNames)
+        return [piece_names_by_int.get(i) for i in range(EnumUtils.num_piece_names // 2, EnumUtils.num_piece_names)
                 if self._pieces[i] is not None and self._pieces[i].in_play]
     # END PIECE ENUMERATION PROPERTIES
 
@@ -143,8 +139,8 @@ class Board:
     # END PIECE STATE PROPERTIES
 
     def init_state_vars(self, game_type):
-        self.BoardState = "NotStarted"
-        self.GameType = game_type
+        self.board_state = "NotStarted"
+        self.game_type = game_type
 
         self._board_metrics = BoardMetrics(game_type)
         self._current_turn = 0
@@ -152,11 +148,11 @@ class Board:
         self._zobrist_hash = ZobristHash()
         self._pieces = []
         self._pieces_by_position = {}
-        self._last_piece_moved = list(PieceNames.keys())[0]  # "INVALID"
+        self._last_piece_moved = "INVALID"
 
         # CACHES
-        self.ValidMoveCacheMetricsSet = CacheMetricsSet()
-        self.ValidMoveCacheResets = 0
+        self.valid_move_cache_metrics_set = CacheMetricsSet()
+        self.valid_move_cache_resets = 0
         self._cached_valid_moves_by_piece = None
         self._cached_valid_placement_positions = None
         self._visited_placements = set()
@@ -179,20 +175,20 @@ class Board:
         split = board_string.split(';')
         board_state_string = split[0]
 
-        if board_state_string not in BoardStates:
+        if board_state_string not in board_states:
             raise ValueError("%s%s" % ("Couldn't parse board state. ", board_string))
 
-        self.BoardState = board_state_string
+        self.board_state = board_state_string
         current_turn_split = list(filter(None, split[1].replace('[', ']').split(']')))
         current_turn_colour_string = current_turn_split[0]
 
-        if current_turn_colour_string not in ColoursByInt.values():
+        if current_turn_colour_string not in colours_by_int.values():
             raise ValueError("%s%s" % ("Couldn't parse current turn colour. ", board_string))
 
         current_player_turn_string = current_turn_split[1]
-        self.current_turn = 2 * (int(current_player_turn_string) - 1) + Colours[current_turn_colour_string]
+        self.current_turn = 2 * (int(current_player_turn_string) - 1) + colours[current_turn_colour_string]
 
-        parsed_pieces = queue.Queue(EnumUtils.NumPieceNames)
+        parsed_pieces = queue.Queue(EnumUtils.num_piece_names)
         i = 2
         while i < len(split):
             parsed_pieces.put(Piece(None, piece_string=split[i]))
@@ -211,9 +207,12 @@ class Board:
             raise ValueError("The board_string violates the one-hive rule: %s" % board_string)
         return
 
+    def __repr__(self):
+        return self.board_string
+
     def init_pieces(self):
-        for i in range(EnumUtils.NumPieceNames):
-            self._pieces.append(Piece(EnumUtils.PieceNamesByInt[i]))
+        for i in range(EnumUtils.num_piece_names):
+            self._pieces.append(Piece(EnumUtils.piece_names_by_int[i]))
 
     def has_piece_at(self, position):
         return self.get_piece(position) is not None
@@ -231,7 +230,7 @@ class Board:
                 # noinspection PyTypeChecker
                 return None
         else:
-            return self._pieces[PieceNames[value]]
+            return self._pieces[piece_names[value]]
 
     def get_piece_on_top(self, value):
         if isinstance(value, Piece):
@@ -242,7 +241,7 @@ class Board:
             if value is None:
                 raise ValueError("Invalid position.")
             value = self.get_piece_on_top_internal(value)
-            return value.piece_name if value else list(PieceNames.keys())[0]  # "INVALID"
+            return value.piece_name if value else list(piece_names.keys())[0]  # "INVALID"
 
     def get_piece_on_top_internal(self, position):
         while position.stack > 0:
@@ -307,7 +306,7 @@ class Board:
             n_at = current_piece.position.neighbour_at
 
             # Check all pieces at this stack level
-            for i in range(EnumUtils.NumDirections):
+            for i in range(EnumUtils.num_directions):
                 neighbor_piece = get_piece(n_at(i))
                 new = neighbor_piece not in analyzed_pieces and neighbor_piece not in pieces_to_look_at
 
@@ -328,7 +327,7 @@ class Board:
     # METRICS
     def get_board_metrics(self):
         self._board_metrics.reset()
-        self._board_metrics.BoardState = self.BoardState
+        self._board_metrics.board_state = self.board_state
 
         # Get the metrics for the current turn
         self._set_current_player_metrics()
@@ -347,7 +346,7 @@ class Board:
         self._cached_friendly_queen_neighbours = None
 
         last_piece_moved = self._last_piece_moved
-        self._last_piece_moved = list(PieceNames.keys())[0]  # "INVALID"
+        self._last_piece_moved = list(piece_names.keys())[0]  # "INVALID"
 
         # Spoof going to the next turn to get the opponent's metrics
         self._current_turn += 1
@@ -367,7 +366,7 @@ class Board:
 
     def _set_current_player_metrics(self):
         # Optionally calculate extended board metrics:
-        if self.GameType == "Extended":
+        if self.game_type == "Extended":
             self.get_queen_metrics()
             self.get_board_ring_metrics()
 
@@ -378,31 +377,31 @@ class Board:
 
             if target_piece is not None:
                 if target_piece.in_play:
-                    self._board_metrics.PiecesInPlay += 1
-                    p.InPlay = 1
+                    self._board_metrics.pieces_in_play += 1
+                    p.in_play = 1
                 else:
-                    self._board_metrics.PiecesInHand += 1
-                    p.InPlay = 0
+                    self._board_metrics.pieces_in_hand += 1
+                    p.in_play = 0
 
                 # Set noisy/quiet move, and ring metric counts:
                 metric_counts = self.is_pinned(piece_name)
-                is_pinned, p.NoisyMoveCount, p.QuietMoveCount = metric_counts[0:3]
-                if self.GameType == "Extended":
-                    p.CanMakeNoisyRing, p.CanMakeDefenseRing = metric_counts[3:]
+                is_pinned, p.noisy_move_count, p.quiet_move_count = metric_counts[0:3]
+                if self.game_type == "Extended":
+                    p.can_make_noisy_ring, p.can_make_defense_ring = metric_counts[3:]
 
                 is_below = target_piece.in_play and target_piece.piece_above is not None
-                p.IsPinned = 1 if is_pinned else 0
-                p.IsCovered = 1 if is_below else 0
+                p.is_pinned = 1 if is_pinned else 0
+                p.is_covered = 1 if is_below else 0
 
                 # Set neighbor counts
-                total, p.FriendlyNeighbourCount, p.EnemyNeighbourCount = self.count_neighbors(piece=target_piece)
+                total, p.friendly_neighbour_count, p.enemy_neighbour_count = self.count_neighbors(piece=target_piece)
 
     def check_pos_neighbours(self, pos, neighbour_bees):
         n_white, n_black, n_count = 0, 0, 0
         empty_n = None
 
         # Check for neighbours in each direction:
-        for d in range(EnumUtils.NumDirections):
+        for d in range(EnumUtils.num_directions):
             neighbour_i_pos = pos.neighbour_at(d)
             piece_at_dir_i = self.get_piece(neighbour_i_pos)
 
@@ -423,8 +422,8 @@ class Board:
 
     def get_board_ring_metrics(self):
         bm = self._board_metrics
-        bm.BlackNoisyRing = 0
-        bm.WhiteNoisyRing = 0
+        bm.black_noisy_ring = 0
+        bm.white_noisy_ring = 0
         empty_positions = set()
 
         # Find all empty positions:
@@ -433,10 +432,10 @@ class Board:
                 continue
 
             neighbour_at = piece.position.neighbour_at
-            if bm[piece.piece_name].IsPinned == 1:
+            if bm[piece.piece_name].is_pinned == 1:
                 continue
 
-            for i in range(EnumUtils.NumDirections):
+            for i in range(EnumUtils.num_directions):
                 pos = neighbour_at(i)
                 if self.get_piece(pos) is None:
                     empty_positions.add(pos)
@@ -458,29 +457,29 @@ class Board:
             # Pos is a ring centre:
             if n_count == 6:
                 if n_black > n_white:
-                    bm.BlackNoisyRing += 1
+                    bm.black_noisy_ring += 1
                 elif n_black < n_white:
-                    bm.WhiteNoisyRing += 1
+                    bm.white_noisy_ring += 1
                 else:
-                    bm.BlackNoisyRing += 1
-                    bm.WhiteNoisyRing += 1
+                    bm.black_noisy_ring += 1
+                    bm.white_noisy_ring += 1
 
                 # Additionally increment counter if bees are included in the ring:
                 for bee_colour in neighbour_bees:
                     if bee_colour == "White":
-                        bm.WhiteNoisyRing += 1
+                        bm.white_noisy_ring += 1
                     else:
-                        bm.BlackNoisyRing += 1
+                        bm.black_noisy_ring += 1
 
     def get_queen_metrics(self):
         white_queen_position = self.get_piece_position("WhiteQueenBee")
         black_queen_position = self.get_piece_position("BlackQueenBee")
 
         wq_metrics = self.count_queen_neighbours(white_queen_position, "White")
-        self._board_metrics.WhiteQueenLife, self._board_metrics.WhiteNonSlidingQueenSpaces = wq_metrics
+        self._board_metrics.white_queen_life, self._board_metrics.white_queen_tight_spaces = wq_metrics
 
         bq_metrics = self.count_queen_neighbours(black_queen_position, "Black")
-        self._board_metrics.BlackQueenLife, self._board_metrics.BlackNonSlidingQueenSpaces = bq_metrics
+        self._board_metrics.black_queen_life, self._board_metrics.black_queen_tight_spaces = bq_metrics
 
     def count_queen_neighbours(self, queen_position, colour):
         neighbour_count = 0
@@ -494,7 +493,7 @@ class Board:
             neighbour_at = queen_position.neighbour_at
             fqn_add = self._cached_friendly_queen_neighbours.add
 
-            for i in range(EnumUtils.NumDirections):
+            for i in range(EnumUtils.num_directions):
                 pos = neighbour_at(i)
 
                 # Build friendly_queen_neighbours cache:
@@ -526,7 +525,7 @@ class Board:
             enemy_count = 0
 
             if piece.in_play:
-                for i in range(EnumUtils.NumDirections):
+                for i in range(EnumUtils.num_directions):
                     neighbor = self.get_piece(piece.position.neighbour_at(i))
                     if neighbor is not None:
                         if neighbor.colour == piece.colour:
@@ -552,14 +551,14 @@ class Board:
             if is_noisy_move(move):
                 noisy_count += 1
             else:
-                if self.GameType == "Original":
+                if self.game_type == "Original":
                     quiet_count += 1
                 else:
                     if is_quiet_move(piece_name, move):
                         quiet_count += 1
 
             # Optionally compute extended piece metrics:
-            if self.GameType == "Extended":
+            if self.game_type == "Extended":
                 if can_make_noisy_ring != 1:
                     if makes_noisy_ring(move):
                         can_make_noisy_ring = 1
@@ -572,7 +571,7 @@ class Board:
 
     def makes_noisy_ring(self, move):
         # Verify move position has at least two neighbours before checking for rings:
-        move_occupied_neighbours = [move.position.neighbour_at(i) for i in EnumUtils.Directions.values()
+        move_occupied_neighbours = [move.position.neighbour_at(i) for i in EnumUtils.directions.values()
                                     if self.get_piece(move.position.neighbour_at(i)) is not None]
         if len(move_occupied_neighbours) < 2:
             return False
@@ -586,7 +585,7 @@ class Board:
             referent = origin
 
             for angle in ring:
-                referent = referent.neighbour_at(Directions[angle])
+                referent = referent.neighbour_at(directions[angle])
                 n = get_piece(referent)
                 if n is None:
                     break
@@ -615,13 +614,13 @@ class Board:
             return False
 
         # Check for 6pc rings in all directions:
-        for ring in Rings:
+        for ring in rings:
             makes_noisy_ring = analyze_ring()
             if makes_noisy_ring:
                 return True
 
         # Check for 8pc rings in all directions:
-        for ring in Rings:
+        for ring in rings:
             ring = [ring[0], ring[0], ring[1], ring[2], ring[3], ring[3], ring[4]]
             makes_noisy_ring = analyze_ring()
             if makes_noisy_ring:
@@ -649,7 +648,7 @@ class Board:
         self.move_piece(piece, move.position, update_zobrist=False)
 
         if piece_name[-3:] == "Bee":
-            queen_neighbour_set = [move.position.neighbour_at(i) for i in EnumUtils.Directions.values()]
+            queen_neighbour_set = [move.position.neighbour_at(i) for i in EnumUtils.directions.values()]
 
         tight_positions_2 = [p for p in queen_neighbour_set
                              if self.get_piece(p) is None and self.get_valid_slides_from_pos(p).count == 0]
@@ -688,14 +687,14 @@ class Board:
                 add = self._cached_enemy_queen_neighbours.add
                 neighbour_at = enemy_queen_position.neighbour_at
 
-                for i in range(EnumUtils.NumDirections):
+                for i in range(EnumUtils.num_directions):
                     add(neighbour_at(i))
 
         move_to_adjacent = move.position in self._cached_enemy_queen_neighbours
         piece_already_adjacent = self.get_piece_position(move.piece_name) in self._cached_enemy_queen_neighbours
         classically_noisy = move_to_adjacent and not piece_already_adjacent
 
-        if self.GameType == "Original":
+        if self.game_type == "Original":
             return classically_noisy
         # Extended AI checks for moves which trap pieces into a space adjacent to the enemy queen:
         else:
@@ -722,7 +721,7 @@ class Board:
 
     def get_trapped_neighbours(self, position, enemies_only=False):
         trapped_neighbours = []
-        for i in range(EnumUtils.NumDirections):
+        for i in range(EnumUtils.num_directions):
             n = self.get_piece(position.neighbour_at(i))
             if n is None:
                 continue
@@ -738,9 +737,9 @@ class Board:
     def get_valid_moves(self, piece_name=None) -> MoveSet:
         if piece_name:
             if self._cached_valid_moves_by_piece is None:
-                self._cached_valid_moves_by_piece = MoveSet(size=EnumUtils.NumPieceNames)
+                self._cached_valid_moves_by_piece = MoveSet(size=EnumUtils.num_piece_names)
 
-            piece_name_index = PieceNames[piece_name]
+            piece_name_index = piece_names[piece_name]
             cached = self._cached_valid_moves_by_piece[piece_name_index]
             null_entry = False
 
@@ -751,10 +750,10 @@ class Board:
 
             if cached is not None and not null_entry:
                 # MoveSet is cached in L1 cache
-                self.ValidMoveCacheMetricsSet["ValidMoves." + EnumUtilsCls.get_short_name(piece_name)].hit()
+                self.valid_move_cache_metrics_set["ValidMoves." + EnumUtilsCls.get_short_name(piece_name)].hit()
             else:
                 # MoveSet is not cached in L1 cache
-                self.ValidMoveCacheMetricsSet["ValidMoves." + EnumUtilsCls.get_short_name(piece_name)].miss()
+                self.valid_move_cache_metrics_set["ValidMoves." + EnumUtilsCls.get_short_name(piece_name)].miss()
 
                 # Calculate MoveSet
                 target_piece = self.get_piece(piece_name)
@@ -808,7 +807,7 @@ class Board:
                 # Second move must be around the origin and not the Black Queen Bee
                 elif self.current_turn == 1 and colour == "Black" and not_black_queen:
 
-                    for i in range(EnumUtils.NumDirections):
+                    for i in range(EnumUtils.num_directions):
                         neighbor = neighbour_at(i)
                         add(Move(piece_name=piece_name, position=neighbor))
                     return valid_moves
@@ -848,7 +847,7 @@ class Board:
             self._cached_valid_placement_positions = set()
             self._visited_placements.clear()
 
-            for i in range(EnumUtils.NumPieceNames):
+            for i in range(EnumUtils.num_piece_names):
                 piece = self._pieces[i]
 
                 valid_piece = piece is not None and piece.in_play
@@ -858,7 +857,7 @@ class Board:
                     bottom_position = self.get_piece_on_bottom(piece).position
                     self._visited_placements.add(bottom_position)
 
-                    for j in range(EnumUtils.NumDirections):
+                    for j in range(EnumUtils.num_directions):
                         neighbor = bottom_position.neighbour_at(j)
 
                         # Neighboring position is a potential, verify its neighbors are empty or same color
@@ -867,7 +866,7 @@ class Board:
 
                         if len(self._visited_placements) > old_len and not self.has_piece_at(neighbor):
                             valid_placement = True
-                            for k in range(EnumUtils.NumDirections):
+                            for k in range(EnumUtils.num_directions):
                                 surrounding_position = neighbor.neighbour_at(k)
                                 surrounding_piece = self.get_piece_on_top_internal(surrounding_position)
 
@@ -878,9 +877,9 @@ class Board:
                             if valid_placement:
                                 self._cached_valid_placement_positions.add(neighbor)
 
-            self.ValidMoveCacheMetricsSet["ValidPlacements"].miss()
+            self.valid_move_cache_metrics_set["ValidPlacements"].miss()
         else:
-            self.ValidMoveCacheMetricsSet["ValidPlacements"].hit()
+            self.valid_move_cache_metrics_set["ValidPlacements"].hit()
 
         for valid_placement in self._cached_valid_placement_positions:
             valid_moves.add(Move(piece_name=target_piece.piece_name, position=valid_placement))
@@ -913,7 +912,7 @@ class Board:
         valid_moves = MoveSet()
 
         # Look in all directions
-        for direction in EnumUtils.Directions.keys():
+        for direction in EnumUtils.directions.keys():
             new_position = target_piece.position.neighbour_at(direction)
             top_neighbor = self.get_piece_on_top_internal(new_position)
 
@@ -954,7 +953,7 @@ class Board:
         valid_moves = MoveSet()
         starting_position = target_piece.position
 
-        for direction in EnumUtils.Directions:
+        for direction in EnumUtils.directions:
             landing_position = starting_position.neighbour_at(direction)
             distance = 0
 
@@ -1006,7 +1005,7 @@ class Board:
             vp_add = visited_positions.add
             get_valid_slides_rec = self.get_valid_slides_rec
 
-            for slide_direction in EnumUtils.Directions:
+            for slide_direction in EnumUtils.directions:
                 slide_position = neighbour_at(slide_direction)
 
                 if slide_position not in visited_positions and not has_piece_at(slide_position):
@@ -1039,7 +1038,7 @@ class Board:
             neighbour_at = target_piece.position.neighbour_at
             has_piece_at = self.has_piece_at
 
-            for i in range(EnumUtils.NumDirections):
+            for i in range(EnumUtils.num_directions):
                 has_piece = has_piece_at(neighbour_at(i))
 
                 if last_has_piece is not None:
@@ -1081,7 +1080,7 @@ class Board:
         self._cached_valid_placement_positions = None
         self._cached_enemy_queen_neighbours = None
         self._cached_friendly_queen_neighbours = None
-        self.ValidMoveCacheResets += 1
+        self.valid_move_cache_resets += 1
 
 
 piece_order_dict = {

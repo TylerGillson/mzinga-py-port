@@ -2,42 +2,39 @@ import threading
 
 from MzingaShared.Core.CacheMetrics import CacheMetrics
 
-DefaultCapacity = 1024
+default_capacity = 1024
 
 
 class FixedCacheEntry(object):
+    __slots__ = "list_node", "entry"
+
     def __init__(self, list_node, new_entry):
         self.list_node = list_node
         self.entry = new_entry
 
 
-class FixedCache:
-    capacity = None
-    replace_entry_predicate = None  # comp. func to be implemented by inheriting classes, i.e., Transposition Table
-    metrics = CacheMetrics()
-
-    _dict = {}
-    _list = []
-    _store_lock = threading.Lock()
+class FixedCache(object):
+    __slots__ = "capacity", "replace_entry_predicate", "metrics", "_dict", "_list", "_store_lock"
 
     @property
     def count(self):
-        """count"""
         return len(self._dict)
 
     @property
     def usage(self):
-        """usage"""
         return self.count / self.capacity
 
-    def __init__(self, capacity=DefaultCapacity, replace_entry_predicate=None):
+    def __init__(self, capacity=default_capacity, replace_entry_predicate=None):
         if capacity <= 0:
             raise ValueError("Invalid capacity.")
 
         self.capacity = capacity
-        self.replace_entry_predicate = replace_entry_predicate
+        self.replace_entry_predicate = replace_entry_predicate  # comp. func to be implemented by inheriting classes
+        self.metrics = CacheMetrics()
+
         self._dict = {}
         self._list = []
+        self._store_lock = threading.Lock()
 
     def __repr__(self):
         return "U: %d/%d (%2f) %s" % (self.count, self.capacity, self.usage, self.metrics)

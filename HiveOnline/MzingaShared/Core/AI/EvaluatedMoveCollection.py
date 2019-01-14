@@ -1,15 +1,12 @@
 ﻿from Utils.BinarySearch import binary_search_ext
 
 
-class EvaluatedMoveCollection:
-    _evaluated_moves = []
+class EvaluatedMoveCollection(object):
+    __slots__ = "_evaluated_moves"
 
     @property
     def count(self):
         return len(self._evaluated_moves)
-
-    def __getitem__(self, index):
-        return self._evaluated_moves[index]
 
     @property
     def best_move(self):
@@ -22,6 +19,14 @@ class EvaluatedMoveCollection:
             self.add(evaluated_moves, re_sort)
         else:
             self._evaluated_moves = []
+
+    def __getitem__(self, index):
+        return self._evaluated_moves[index]
+
+    def __repr__(self):
+        ems = [em for em in self._evaluated_moves]
+        ems_strs = list(map(lambda x: "%s%c" % (x.move, ';'), ems))
+        return "".join(ems_strs)[0:-1:]
 
     def add(self, evaluated_moves=None, re_sort=None, evaluated_move=None):
         if evaluated_move:
@@ -53,9 +58,3 @@ class EvaluatedMoveCollection:
 
     def search_for(self, evaluated_move):
         return binary_search_ext(self._evaluated_moves, 0, len(self._evaluated_moves)-1, evaluated_move)
-
-    def __repr__(self):
-        ems = [em for em in self._evaluated_moves]
-        ems_strs = list(map(lambda x: "%s%c" % (x.move, ';'), ems))
-        s = "".join(ems_strs)
-        return s[0:-1:]

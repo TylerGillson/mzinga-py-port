@@ -2,7 +2,6 @@
 import uuid
 import xml.etree.ElementTree as ElementTree
 
-from MzingaShared.Core.AI import BoardMetricWeights
 from MzingaShared.Core.AI.BoardMetricWeights import BoardMetricWeights as BoardMetricWeightsCls
 from MzingaShared.Core.AI import MetricWeights
 from MzingaShared.Core.AI.MetricWeights import MetricWeights as MetricWeightsCls
@@ -11,28 +10,28 @@ from MzingaTrainer import GAHelpers as Ga
 
 
 class Profile:
-    Id = None
-    GameType = None
+    id = None
+    game_type = None
     _name = None
 
-    Generation = 0
-    ParentA = None
-    ParentB = None
+    generation = 0
+    parent_a = None
+    parent_b = None
 
-    BoardMetricWeights = None
-    StartMetricWeights = None
-    EndMetricWeights = None
-    CreationTimestamp = None
-    LastUpdatedTimestamp = None
+    board_metric_weights = None
+    start_metric_weights = None
+    end_metric_weights = None
+    creation_timestamp = None
+    last_updated_timestamp = None
 
-    Wins = 0
-    Losses = 0
-    Draws = 0
-    EloRating = EloUtils.DefaultRating
+    wins = 0
+    losses = 0
+    draws = 0
+    elo_rating = EloUtils.default_rating
 
     @property
     def name(self):
-        return self._name if not (self._name is None or self._name.isspace()) else str(self.Id)[0:8:]
+        return self._name if not (self._name is None or self._name.isspace()) else str(self.id)[0:8:]
 
     @name.setter
     def name(self, value):
@@ -40,7 +39,7 @@ class Profile:
 
     @property
     def total_games(self):
-        return self.Wins + self.Losses + self.Draws
+        return self.wins + self.losses + self.draws
 
     def __init__(self, i_id, name, game_type, **kwargs):
         if "generation" in kwargs and kwargs.get("generation") < 0:
@@ -52,7 +51,7 @@ class Profile:
         if "parent_b" in kwargs and kwargs.get("parent_b") is None:
             raise ValueError("Invalid parent_b.")
 
-        if "elo_rating" in kwargs and kwargs.get("elo_rating") < EloUtils.MinRating:
+        if "elo_rating" in kwargs and kwargs.get("elo_rating") < EloUtils.min_rating:
             raise ValueError("Invalid elo_rating.")
 
         if "board_metric_weights" in kwargs and kwargs.get("board_metric_weights") is None:
@@ -73,63 +72,63 @@ class Profile:
         if "draws" in kwargs and kwargs.get("draws") < 0:
             raise ValueError("Invalid draws.")
 
-        self.Id = i_id
-        self.Name = name
-        self.GameType = game_type
+        self.id = i_id
+        self.name = name
+        self.game_type = game_type
 
         if "board_metric_weights" in kwargs:
-            self.BoardMetricWeights = kwargs.pop("board_metric_weights")
+            self.board_metric_weights = kwargs.pop("board_metric_weights")
             self.board_metric_weights_cls = BoardMetricWeightsCls()
         if "start_metric_weights" in kwargs:
-            self.StartMetricWeights = kwargs.pop("start_metric_weights")
+            self.start_metric_weights = kwargs.pop("start_metric_weights")
         if "end_metric_weights" in kwargs:
-            self.EndMetricWeights = kwargs.pop("end_metric_weights")
+            self.end_metric_weights = kwargs.pop("end_metric_weights")
 
-        self.CreationTimestamp = kwargs.pop("creation_timestamp") \
+        self.creation_timestamp = kwargs.pop("creation_timestamp") \
             if "creation_timestamp" in kwargs else datetime.datetime.now()
-        self.LastUpdatedTimestamp = kwargs.pop("last_updated_timestamp") \
+        self.last_updated_timestamp = kwargs.pop("last_updated_timestamp") \
             if "last_updated_timestamp" in kwargs else datetime.datetime.now()
 
         if "parent_a" in kwargs:
-            self.ParentA = kwargs.pop("parent_a")
+            self.parent_a = kwargs.pop("parent_a")
         if "parent_b" in kwargs:
-            self.ParentB = kwargs.pop("parent_b")
+            self.parent_b = kwargs.pop("parent_b")
 
-        null_parents = (self.ParentA is None) or (self.ParentB is None)
-        self.Generation = 0 if null_parents else kwargs.pop("generation")
+        null_parents = (self.parent_a is None) or (self.parent_b is None)
+        self.generation = 0 if null_parents else kwargs.pop("generation")
 
         if "elo_rating" in kwargs:
-            self.EloRating = kwargs.pop("elo_rating")
+            self.elo_rating = kwargs.pop("elo_rating")
         if "wins" in kwargs:
-            self.Wins = kwargs.pop("wins")
+            self.wins = kwargs.pop("wins")
         if "losses" in kwargs:
-            self.Losses = kwargs.pop("losses")
+            self.losses = kwargs.pop("losses")
         if "draws" in kwargs:
-            self.Draws = kwargs.pop("draws")
+            self.draws = kwargs.pop("draws")
 
         self.bug_metric_weights_cls = MetricWeightsCls(game_type)
 
     def __eq__(self, other):
-        return self.Id == other.Id
+        return self.id == other.id
 
     def __repr__(self):
-        return self.Name
+        return self.name
 
     def __hash__(self):
-        return hash(self.Id)
+        return hash(self.id)
 
     def update_record(self, rating, result):
-        if rating < EloUtils.MinRating:
+        if rating < EloUtils.min_rating:
             raise ValueError("Invalid rating.")
 
-        self.EloRating = rating
+        self.elo_rating = rating
 
         if result == "Loss":
-            self.Losses += 1
+            self.losses += 1
         elif result == "Draw":
-            self.Draws += 1
-        else:  # Win
-            self.Wins += 1
+            self.draws += 1
+        else:
+            self.wins += 1
 
         self.update()
 
@@ -139,50 +138,50 @@ class Profile:
         if end_metric_weights is None:
             raise ValueError("Invalid end_metric_weights.")
 
-        self.StartMetricWeights = start_metric_weights
-        self.EndMetricWeights = end_metric_weights
+        self.start_metric_weights = start_metric_weights
+        self.end_metric_weights = end_metric_weights
 
         if board_metric_weights is not None:
-            self.BoardMetricWeights = board_metric_weights
+            self.board_metric_weights = board_metric_weights
 
         self.update()
 
     def update(self):
-        self.LastUpdatedTimestamp = datetime.datetime.now()
+        self.last_updated_timestamp = datetime.datetime.now()
 
     def write_xml(self, output_stream):
         if output_stream is None:
             raise ValueError("Invalid output_stream.")
 
-        root = ElementTree.Element("Profile")
-        ElementTree.SubElement(root, "Id").text = str(self.Id)
+        root = ElementTree.Element("profile")
+        ElementTree.SubElement(root, "id").text = str(self.id)
 
         if not (self._name is None or self._name.isspace()):
-            ElementTree.SubElement(root, "Name").text = self._name.strip()
-        if self.ParentA is not None:
-            ElementTree.SubElement(root, "ParentA").text = str(self.ParentA)
-        if self.ParentB is not None:
-            ElementTree.SubElement(root, "ParentB").text = str(self.ParentB)
+            ElementTree.SubElement(root, "name").text = self._name.strip()
+        if self.parent_a is not None:
+            ElementTree.SubElement(root, "parent_a").text = str(self.parent_a)
+        if self.parent_b is not None:
+            ElementTree.SubElement(root, "parent_b").text = str(self.parent_b)
 
-        ElementTree.SubElement(root, "GameType").text = str(self.GameType)
-        ElementTree.SubElement(root, "EloRating").text = str(self.EloRating)
-        ElementTree.SubElement(root, "Wins").text = str(self.Wins)
-        ElementTree.SubElement(root, "Losses").text = str(self.Losses)
-        ElementTree.SubElement(root, "Draws").text = str(self.Draws)
-        ElementTree.SubElement(root, "Creation").text = str(self.CreationTimestamp)
-        ElementTree.SubElement(root, "LastUpdated").text = str(self.LastUpdatedTimestamp)
+        ElementTree.SubElement(root, "game_type").text = str(self.game_type)
+        ElementTree.SubElement(root, "elo_rating").text = str(self.elo_rating)
+        ElementTree.SubElement(root, "wins").text = str(self.wins)
+        ElementTree.SubElement(root, "losses").text = str(self.losses)
+        ElementTree.SubElement(root, "draws").text = str(self.draws)
+        ElementTree.SubElement(root, "creation").text = str(self.creation_timestamp)
+        ElementTree.SubElement(root, "last_updated").text = str(self.last_updated_timestamp)
 
-        start_metric_weights = ElementTree.SubElement(root, "StartMetricWeights")
-        end_metric_weights = ElementTree.SubElement(root, "EndMetricWeights")
+        start_metric_weights = ElementTree.SubElement(root, "start_metric_weights")
+        end_metric_weights = ElementTree.SubElement(root, "end_metric_weights")
 
         def write_start_weights(bug_type, bug_type_weight):
             key = self.bug_metric_weights_cls.get_key_name(bug_type, bug_type_weight)
-            w_value = self.StartMetricWeights.get(bug_type, bug_type_weight)
+            w_value = self.start_metric_weights.get(bug_type, bug_type_weight)
             ElementTree.SubElement(parent_node, key).text = str(w_value)
 
         def write_end_weights(bug_type, bug_type_weight):
             key = self.bug_metric_weights_cls.get_key_name(bug_type, bug_type_weight)
-            w_value = self.EndMetricWeights.get(bug_type, bug_type_weight)
+            w_value = self.end_metric_weights.get(bug_type, bug_type_weight)
             ElementTree.SubElement(parent_node, key).text = str(w_value)
 
         parent_node = start_metric_weights
@@ -191,11 +190,11 @@ class Profile:
         parent_node = end_metric_weights
         self.bug_metric_weights_cls.iterate_over_weights(write_end_weights)
 
-        if self.GameType == "Extended":
-            board_metric_weights = ElementTree.SubElement(root, "BoardMetricWeights")
+        if self.game_type == "Extended":
+            board_metric_weights = ElementTree.SubElement(root, "board_metric_weights")
 
             def write_board_weights(key):
-                w_value = self.BoardMetricWeights.get(key)
+                w_value = self.board_metric_weights.get(key)
                 ElementTree.SubElement(parent_node, key).text = str(w_value)
 
             parent_node = board_metric_weights
@@ -215,7 +214,7 @@ class Profile:
         generation = 0
         parent_a = None
         parent_b = None
-        elo_rating = EloUtils.DefaultRating
+        elo_rating = EloUtils.default_rating
         wins = 0
         losses = 0
         draws = 0
@@ -230,36 +229,36 @@ class Profile:
         root = tree.getroot()
 
         for node in root:
-            if node.tag == "Id":
+            if node.tag == "id":
                 r_id = uuid.UUID(uuid.UUID(node.text).hex)
-            elif node.tag == "Name":
+            elif node.tag == "name":
                 r_name = node.text
-            elif node.tag == "GameType":
+            elif node.tag == "game_type":
                 game_type = node.text
-            elif node.tag == "Generation":
+            elif node.tag == "generation":
                 generation = int(node.text)
-            elif node.tag == "ParentA":
+            elif node.tag == "parent_a":
                 parent_a = uuid.UUID(uuid.UUID(node.text).hex)
-            elif node.tag == "ParentB":
+            elif node.tag == "parent_b":
                 parent_b = uuid.UUID(uuid.UUID(node.text).hex)
-            elif node.tag == "EloRating":
+            elif node.tag == "elo_rating":
                 elo_rating = int(node.text)
-            elif node.tag == "Wins":
+            elif node.tag == "wins":
                 wins = int(node.text)
-            elif node.tag == "Losses":
+            elif node.tag == "losses":
                 losses = int(node.text)
-            elif node.tag == "Draws":
+            elif node.tag == "draws":
                 draws = int(node.text)
-            elif node.tag == "Creation":
+            elif node.tag == "creation":
                 creation_timestamp = datetime.datetime.strptime(node.text, '%Y-%m-%d %H:%M:%S.%f')
-            elif node.tag == "LastUpdated":
+            elif node.tag == "last_updated":
                 last_updated_timestamp = datetime.datetime.strptime(node.text, '%Y-%m-%d %H:%M:%S.%f')
-            elif node.tag == "BoardMetricWeights":
-                board_metric_weights = BoardMetricWeights.read_metric_weights_xml([subelem for subelem in node])
-            elif node.tag in ["MetricWeights", "StartMetricWeights"]:
+            elif node.tag == "board_metric_weights":
+                board_metric_weights = board_metric_weights.read_metric_weights_xml([subelem for subelem in node])
+            elif node.tag in ["metric_weights", "start_metric_weights"]:
                 start_metric_weights = \
                     MetricWeights.read_metric_weights_xml([subelem for subelem in node], game_type)
-            elif node.tag == "EndMetricWeights":
+            elif node.tag == "end_metric_weights":
                 end_metric_weights = \
                     MetricWeights.read_metric_weights_xml([subelem for subelem in node], game_type)
 
@@ -312,31 +311,31 @@ class Profile:
             raise ValueError("Invalid parent_a.")
         if parent_b is None:
             raise ValueError("Invalid parent_b.")
-        if parent_a.GameType != parent_b.GameType:
+        if parent_a.game_type != parent_b.game_type:
             raise ValueError("Cannot mate profiles with differing game types.")
         if min_mix > max_mix:
             raise ValueError("Invalid min/max_mixes.")
 
         m_id = uuid.uuid4()
         name = generate_name(m_id)
-        elo_rating = EloUtils.DefaultRating
-        generation = max(parent_a.Generation, parent_b.Generation) + 1
+        elo_rating = EloUtils.default_rating
+        generation = max(parent_a.generation, parent_b.generation) + 1
 
         # Normalize metric weights:
-        pa_start_norm = parent_a.StartMetricWeights.get_normalized()
-        pa_end_norm = parent_a.EndMetricWeights.get_normalized()
-        pb_start_norm = parent_b.StartMetricWeights.get_normalized()
-        pb_end_norm = parent_b.EndMetricWeights.get_normalized()
+        pa_start_norm = parent_a.start_metric_weights.get_normalized()
+        pa_end_norm = parent_a.end_metric_weights.get_normalized()
+        pb_start_norm = parent_b.start_metric_weights.get_normalized()
+        pb_end_norm = parent_b.end_metric_weights.get_normalized()
         board_metric_weights = None
 
-        if parent_a.GameType == "Original":
+        if parent_a.game_type == "Original":
             start_metric_weights = Ga.mix_metric_weights(pa_start_norm, pb_start_norm,
-                                                         min_mix, max_mix, parent_a.GameType)
+                                                         min_mix, max_mix, parent_a.game_type)
             end_metric_weights = Ga.mix_metric_weights(pa_end_norm, pb_end_norm,
-                                                       min_mix, max_mix, parent_a.GameType)
+                                                       min_mix, max_mix, parent_a.game_type)
         else:
-            pa_board_norm = parent_a.BoardMetricWeights.get_normalized()
-            pb_board_norm = parent_b.BoardMetricWeights.get_normalized()
+            pa_board_norm = parent_a.board_metric_weights.get_normalized()
+            pb_board_norm = parent_b.board_metric_weights.get_normalized()
 
             start_metric_weights = Ga.cross_over(pa_start_norm, pb_start_norm)
             end_metric_weights = Ga.cross_over(pa_end_norm, pb_end_norm)
@@ -348,17 +347,17 @@ class Profile:
 
         kwargs = {
             "generation": generation,
-            "parent_a": parent_a.Id,
-            "parent_b": parent_b.Id,
+            "parent_a": parent_a.id,
+            "parent_b": parent_b.id,
             "elo_rating": elo_rating,
             "creation_timestamp": datetime.datetime.now(),
             "start_metric_weights": start_metric_weights,
             "end_metric_weights": end_metric_weights,
         }
-        if parent_a.GameType == "Extended":
+        if parent_a.game_type == "Extended":
             kwargs.update({"board_metric_weights": board_metric_weights})
 
-        return Profile(m_id, name, parent_a.GameType, **kwargs)
+        return Profile(m_id, name, parent_a.game_type, **kwargs)
 
 
 def generate_name(n_id):

@@ -3,49 +3,49 @@
 
 class TrainerSettings:
 
-    BattleShuffleProfiles = False
-    LifecycleBattles = 1
-    MaxMaxBattles = -1
-    MaxMaxConcurrentBattles = -1
-    GameType = "Original"  # "Original"
+    battle_shuffle_profiles = False
+    lifecycle_battles = 1
+    max_max_battles = -1
+    max_max_concurrent_battles = -1
+    game_type = "Original"  # "Original"
 
-    _battleTimeLimit = datetime.timedelta(minutes=40)
-    _bulkBattleTimeLimit = datetime.timedelta(minutes=300)
-    _maxDraws = 1
-    _maxBattles = MaxMaxBattles
-    _maxConcurrentBattles = MaxMaxConcurrentBattles
+    _battle_time_limit = datetime.timedelta(minutes=10)
+    _bulk_battle_time_limit = datetime.timedelta(minutes=300)
+    _max_draws = 1
+    _max_battles = max_max_battles
+    _max_concurrent_battles = max_max_concurrent_battles
 
-    MaxHelperThreads = 0
-    CullMinKeepCount = 2
-    CullKeepMax = -1
+    max_helper_threads = 0
+    cull_min_keep_count = 2
+    cull_keep_max = -1
 
     _profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/"
     _white_profile_path = None
     _black_profile_path = None
     _target_profile_path = None
 
-    ProvisionalRules = False
-    ProvisionalGameCount = 10
+    provisional_rules = False
+    provisional_game_count = 10
 
-    MateMinMix = 0.95
-    MateMaxMix = 1.05
-    MateMinParentCount = 2
-    MateParentMax = -1
-    MateShuffleParents = False
-    _mateParentCount = MateParentMax
+    mate_min_mix = 0.95
+    mate_max_mix = 1.05
+    mate_min_parent_count = 2
+    mate_parent_max = -1
+    mate_shuffle_parents = False
+    _mate_parent_count = mate_parent_max
 
-    TransTableSize = 32
-    MaxDepth = -1
+    trans_table_size = 32
+    max_depth = -1
 
-    TurnMaxTime = 5
+    turn_max_time = 5
 
-    GenerateMinWeight = -100.0
-    GenerateMaxWeight = 100.0
+    generate_min_weight = -100.0
+    generate_max_weight = 100.0
     _generate_count = 1
-    _cull_keep_count = CullKeepMax
+    _cull_keep_count = cull_keep_max
 
-    InfiniteLifeCycleGenerations = -1
-    _lifecycleGenerations = 1
+    infinite_lifecycle_generations = -1
+    _lifecycle_generations = 1
 
     @property
     def profile_path(self):
@@ -83,7 +83,7 @@ class TrainerSettings:
 
     @cull_keep_count.setter
     def cull_keep_count(self, value):
-        if value < self.CullMinKeepCount and value != self.CullKeepMax:
+        if value < self.cull_min_keep_count and value != self.cull_keep_max:
             raise ValueError("Invalid cull_keep_count.")
         self._cull_keep_count = value
 
@@ -99,73 +99,73 @@ class TrainerSettings:
 
     @property
     def lifecycle_generations(self):
-        return self._lifecycleGenerations
+        return self._lifecycle_generations
 
     @lifecycle_generations.setter
     def lifecycle_generations(self, value):
         if value < 0:
-            value = self.InfiniteLifeCycleGenerations
-        self._lifecycleGenerations = value
+            value = self.infinite_lifecycle_generations
+        self._lifecycle_generations = value
 
     @property
     def max_draws(self):
-        return self._maxDraws
+        return self._max_draws
 
     @max_draws.setter
     def max_draws(self, value):
         if value < 1:
             raise ValueError("Invalid max_draws.")
-        self._maxDraws = value
+        self._max_draws = value
 
     @property
     def max_battles(self):
-        return self._maxBattles
+        return self._max_battles
 
     @max_battles.setter
     def max_battles(self, value):
-        if value < 1 and value != self.MaxMaxBattles:
+        if value < 1 and value != self.max_max_battles:
             raise ValueError("Invalid max_battles")
-        self._maxBattles = value
+        self._max_battles = value
 
     @property
     def max_concurrent_battles(self):
-        return self._maxConcurrentBattles
+        return self._max_concurrent_battles
 
     @max_concurrent_battles.setter
     def max_concurrent_battles(self, value):
-        if value < 1 and value != self.MaxMaxConcurrentBattles:
+        if value < 1 and value != self.max_max_concurrent_battles:
             raise ValueError("Invalid max_concurrent_battles")
-        self._maxConcurrentBattles = value
+        self._max_concurrent_battles = value
 
     @property
     def bulk_battle_time_limit(self):
-        if self._bulkBattleTimeLimit is None:
-            self._bulkBattleTimeLimit = datetime.timedelta.max
-        return self._bulkBattleTimeLimit
+        if self._bulk_battle_time_limit is None:
+            self._bulk_battle_time_limit = datetime.timedelta.max
+        return self._bulk_battle_time_limit
 
     @bulk_battle_time_limit.setter
     def bulk_battle_time_limit(self, value):
-        self._bulkBattleTimeLimit = datetime.timedelta(minutes=value)
+        self._bulk_battle_time_limit = datetime.timedelta(minutes=value)
 
     @property
     def mate_parent_count(self):
-        return self._mateParentCount
+        return self._mate_parent_count
 
     @mate_parent_count.setter
     def mate_parent_count(self, value):
-        if value < self.MateMinParentCount and value != self.MateParentMax:
+        if value < self.mate_min_parent_count and value != self.mate_parent_max:
             raise ValueError("Invalid mate_parent_count")
-        self._mateParentCount = value
+        self._mate_parent_count = value
 
     @property
     def battle_time_limit(self):
-        if self._battleTimeLimit is None:
-            self._battleTimeLimit = datetime.timedelta(minutes=25)
-        return self._battleTimeLimit
+        if self._battle_time_limit is None:
+            self._battle_time_limit = datetime.timedelta(minutes=25)
+        return self._battle_time_limit
 
     @battle_time_limit.setter
     def battle_time_limit(self, value):
-        self._battleTimeLimit = datetime.timedelta(minutes=value)
+        self._battle_time_limit = datetime.timedelta(minutes=value)
 
     @property
     def target_profile_path(self):

@@ -3,8 +3,8 @@ from MzingaShared.Core.Move import Move as MoveCls
 from MzingaShared.Core.Piece import Piece
 
 
-class BoardHistory:
-    _items = []
+class BoardHistory(object):
+    __slots__ = "_items"
 
     @property
     def count(self):
@@ -31,12 +31,8 @@ class BoardHistory:
             self._items = []
 
     def __repr__(self):
-        items = [str(i) for i in self._items]
-        if items:
-            s = ""
-            for i in items:
-                s += i + ';'
-            return s[:-1]
+        if self._items:
+            return "".join(["".join([str(i), ';']) for i in self._items])[:-1]
         return "No History"
 
     def add(self, move, original_position):
@@ -54,9 +50,8 @@ class BoardHistory:
         return self._items
 
 
-class BoardHistoryItem:
-    Move = None
-    OriginalPosition = None
+class BoardHistoryItem(object):
+    __slots__ = "move", "original_position"
 
     def __init__(self, move=None, original_position=None, board_history_item_string=None):
         if board_history_item_string:
@@ -64,24 +59,24 @@ class BoardHistoryItem:
                 raise ValueError("Invalid board_history_item_string")
 
             if board_history_item_string.upper().equals(Move.PassString):
-                self.Move = Move.pass_turn()
-                self.OriginalPosition = None
+                self.move = Move.pass_turn()
+                self.original_position = None
             else:
                 split = list(filter(None, board_history_item_string.replace(' ', '>').split('>')))
                 starting_piece = Piece(split[0])
                 move = MoveCls(split[1])
-                self.Move = move
-                self.OriginalPosition = starting_piece.position
+                self.move = move
+                self.original_position = starting_piece.position
         else:
             if move is None:
                 raise ValueError("Invalid move.")
 
-            self.Move = move
-            self.OriginalPosition = original_position
+            self.move = move
+            self.original_position = original_position
 
     def __repr__(self):
-        if self.Move.is_pass:
-            return self.Move
+        if self.move.is_pass:
+            return self.move
 
-        starting_piece = Piece(self.Move.piece_name, self.OriginalPosition)
-        return "%s > %s" % (starting_piece, self.Move)
+        starting_piece = Piece(self.move.piece_name, self.original_position)
+        return "%s > %s" % (starting_piece, self.move)

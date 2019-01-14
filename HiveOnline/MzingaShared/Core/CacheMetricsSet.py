@@ -1,11 +1,11 @@
 from MzingaShared.Core.CacheMetrics import CacheMetrics
 
 
-class CacheMetricsSet:
-    _cache_metrics = {}
+class CacheMetricsSet(object):
+    __slots__ = "_cache_metrics"
 
     def __init__(self):
-        self.reset()
+        self._cache_metrics = {}
 
     def __getitem__(self, name):
         return self._get_cache_metrics(name)

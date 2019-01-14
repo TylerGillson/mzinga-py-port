@@ -1,27 +1,25 @@
-﻿from typing import List
-
-from MzingaShared.Core import EnumUtils
+﻿from MzingaShared.Core import EnumUtils
 from MzingaShared.Core.AI.BaseMetricWeights import BaseMetricWeights
 
-BugTypeWeights = {
-    "InPlayWeight": 0,
-    "IsPinnedWeight": 1,
-    "IsCoveredWeight": 2,
-    "NoisyMoveWeight": 3,
-    "QuietMoveWeight": 4,
-    "FriendlyNeighborWeight": 5,
-    "EnemyNeighborWeight": 6,
+bug_type_weights = {
+    "in_play_weight": 0,
+    "is_pinned_weight": 1,
+    "is_covered_weight": 2,
+    "noisy_move_weight": 3,
+    "quiet_move_weight": 4,
+    "friendly_neighbour_weight": 5,
+    "enemy_neighbour_weight": 6,
 }
-BugTypeWeightsByInt = {v: k for k, v in BugTypeWeights.items()}
-NumBugTypeWeights = 7
+bug_type_weights_by_int = {v: k for k, v in bug_type_weights.items()}
+num_bug_type_weights = 7
 
 # Define constructs for extended version:
-ExtendedBugTypeWeights = {
-    "CanMakeNoisyRingWeight": 7,
-    "CanMakeDefenseRingWeight": 8,
+extended_bug_type_weights = {
+    "can_make_noisy_ring_weight": 7,
+    "can_make_defense_ring_weight": 8,
 }
-ExtendedBugTypeWeightsByInt = {v: k for k, v in dict(BugTypeWeights, **ExtendedBugTypeWeights).items()}
-ExtendedNumBugTypeWeights = 9
+extended_bug_type_weights_by_int = {v: k for k, v in dict(bug_type_weights, **extended_bug_type_weights).items()}
+extended_num_bug_type_weights = 9
 
 
 def read_metric_weights_xml(xml_elem, game_type):
@@ -38,17 +36,20 @@ def read_metric_weights_xml(xml_elem, game_type):
 
 
 class MetricWeightsBase(object):
+    __slots__ = "weight_max", "weight_dict", "weight_by_int_dict"
 
     def __init__(self, game_type):
-        self.weight_max = NumBugTypeWeights if game_type == "Original" else ExtendedNumBugTypeWeights
-        self.weight_dict = BugTypeWeights if game_type == "Original" else dict(BugTypeWeights, **ExtendedBugTypeWeights)
-        self.weight_by_int_dict = BugTypeWeightsByInt if game_type == "Original" else ExtendedBugTypeWeightsByInt
+        self.weight_max = num_bug_type_weights if game_type == "Original" else extended_num_bug_type_weights
+        self.weight_dict = \
+            bug_type_weights if game_type == "Original" else dict(bug_type_weights, **extended_bug_type_weights)
+        self.weight_by_int_dict = \
+            bug_type_weights_by_int if game_type == "Original" else extended_bug_type_weights_by_int
 
     def iterate_over_weights(self, action):
         if action is None:
             raise ValueError("Invalid action.")
 
-        for bug_type in EnumUtils.BugTypes.keys():
+        for bug_type in EnumUtils.bug_types.keys():
             bug_type_weight_int = 0
             while bug_type_weight_int < self.weight_max:
                 bug_type_weight = self.weight_by_int_dict[bug_type_weight_int]
@@ -59,7 +60,7 @@ class MetricWeightsBase(object):
         if action is None:
             raise ValueError("Invalid action.")
 
-        for bug_type in EnumUtils.BugTypes.keys():
+        for bug_type in EnumUtils.bug_types.keys():
             bug_type_weight_int = 0
             while bug_type_weight_int < self.weight_max:
                 bug_type_weight = self.weight_by_int_dict[bug_type_weight_int]
@@ -68,7 +69,7 @@ class MetricWeightsBase(object):
         return results
 
     def get_key(self, bug_type, bug_type_weight):
-        return EnumUtils.BugTypes[bug_type] * self.weight_max + self.weight_dict[bug_type_weight]
+        return EnumUtils.bug_types[bug_type] * self.weight_max + self.weight_dict[bug_type_weight]
 
     def try_parse_key_name(self, key):
         if not key.isspace():
@@ -80,7 +81,7 @@ class MetricWeightsBase(object):
             except KeyError:
                 pass
 
-        bug_type = EnumUtils.BugTypes.values()[0]
+        bug_type = EnumUtils.bug_types.values()[0]
         bug_type_weight = list(self.weight_dict.values())[0]
         return False, bug_type, bug_type_weight
 
@@ -90,7 +91,7 @@ class MetricWeightsBase(object):
 
 
 class MetricWeights(MetricWeightsBase):
-    _bug_type_weights: List[float] = []
+    __slots__ = "_bug_type_weights"
 
     @property
     def bug_type_weights(self):
@@ -102,7 +103,7 @@ class MetricWeights(MetricWeightsBase):
         if weights:
             self._bug_type_weights = weights
         else:
-            self._bug_type_weights = [0] * EnumUtils.NumBugTypes * self.weight_max
+            self._bug_type_weights = [0] * EnumUtils.num_bug_types * self.weight_max
 
     def __len__(self):
         return len(self._bug_type_weights)

@@ -1,36 +1,36 @@
-class PieceMetrics:
-    __slots__ = "InPlay", "IsPinned", "IsCovered", \
-                "NoisyMoveCount", "QuietMoveCount", \
-                "FriendlyNeighbourCount", "EnemyNeighbourCount"
+class PieceMetrics(object):
+    __slots__ = "in_play", "is_pinned", "is_covered", \
+                "noisy_move_count", "quiet_move_count", \
+                "friendly_neighbour_count", "enemy_neighbour_count"
 
     def __init__(self):
-        self.InPlay = 0
-        self.IsPinned = 0
-        self.IsCovered = 0
-        self.NoisyMoveCount = 0
-        self.QuietMoveCount = 0
-        self.FriendlyNeighbourCount = 0
-        self.EnemyNeighbourCount = 0
+        self.in_play = 0
+        self.is_pinned = 0
+        self.is_covered = 0
+        self.noisy_move_count = 0
+        self.quiet_move_count = 0
+        self.friendly_neighbour_count = 0
+        self.enemy_neighbour_count = 0
 
     def reset(self):
-        self.InPlay = 0
-        self.IsPinned = 0
-        self.IsCovered = 0
-        self.NoisyMoveCount = 0
-        self.QuietMoveCount = 0
-        self.FriendlyNeighbourCount = 0
-        self.EnemyNeighbourCount = 0
+        self.in_play = 0
+        self.is_pinned = 0
+        self.is_covered = 0
+        self.noisy_move_count = 0
+        self.quiet_move_count = 0
+        self.friendly_neighbour_count = 0
+        self.enemy_neighbour_count = 0
 
 
 class ExtendedPieceMetrics(PieceMetrics):
-    __slots__ = "CanMakeNoisyRing", "CanMakeDefenseRing"
+    __slots__ = "can_make_noisy_ring", "can_make_defense_ring"
 
     def __init__(self):
         super().__init__()
-        self.CanMakeNoisyRing = 0
-        self.CanMakeDefenseRing = 0
+        self.can_make_noisy_ring = 0
+        self.can_make_defense_ring = 0
 
     def reset(self):
         super().reset()
-        self.CanMakeNoisyRing = 0
-        self.CanMakeDefenseRing = 0
+        self.can_make_noisy_ring = 0
+        self.can_make_defense_ring = 0

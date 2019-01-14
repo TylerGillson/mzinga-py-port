@@ -1,8 +1,5 @@
-class CacheMetrics:
-    _hits = 0
-    _misses = 0
-    _stores = 0
-    _updates = 0
+class CacheMetrics(object):
+    __slots__ = "_hits", "_misses", "_stores", "_updates"
 
     @property
     def hits(self):
@@ -25,7 +22,10 @@ class CacheMetrics:
         return self.hits / max(self.hits + self.misses, 1)
 
     def __init__(self):
-        pass
+        self._hits = 0
+        self._misses = 0
+        self._stores = 0
+        self._updates = 0
 
     def __repr__(self):
         return "H: %d M: %d HR: %02f" % (self.hits, self.misses, self.hit_ratio)

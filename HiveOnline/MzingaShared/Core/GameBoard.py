@@ -5,22 +5,22 @@ from Utils.Events import Broadcaster
 
 
 class GameBoard(Board):
-    BoardChanged = Broadcaster()
+    board_changed = Broadcaster()
 
     def on_board_changed(self):
         white_queen_surrounded = self.count_neighbors(piece_name="WhiteQueenBee")[0] == 6
         black_queen_surrounded = self.count_neighbors(piece_name="BlackQueenBee")[0] == 6
 
         if white_queen_surrounded and black_queen_surrounded:
-            self.BoardState = "Draw"
+            self.board_state = "Draw"
         elif white_queen_surrounded:
-            self.BoardState = "BlackWins"
+            self.board_state = "BlackWins"
         elif black_queen_surrounded:
-            self.BoardState = "WhiteWins"
+            self.board_state = "WhiteWins"
         else:
-            self.BoardState = "NotStarted" if self.current_turn == 0 else "InProgress"
+            self.board_state = "NotStarted" if self.current_turn == 0 else "InProgress"
 
-    BoardChanged.on_change += on_board_changed  # add a listener to the event
+    board_changed.on_change += on_board_changed  # add a listener to the event
 
     @property
     def board_history_count(self):
@@ -33,7 +33,7 @@ class GameBoard(Board):
     def __init__(self, board_string=None, game_type=None):
         self._board_history = BoardHistory()
         self.last_piece_moved = None
-        self.BoardState = None
+        self.board_state = None
 
         super().__init__(board_string=board_string, game_type=game_type)
 
@@ -109,23 +109,23 @@ class GameBoard(Board):
         self._board_history.add(move, original_position)
         self.current_turn += 1
         self.last_piece_moved = move.piece_name
-        self.BoardChanged.on_change.fire(self)  # fire event
+        self.board_changed.on_change.fire(self)  # fire event
 
     def undo_last_move(self):
         if self._board_history.count == 0:
             raise InvalidMoveException("You can't undo any more moves.")
 
         item = self._board_history.undo_last_move()
-        if not item.Move.is_pass:
-            target_piece = self.get_piece(item.Move.piece_name)
-            self.move_piece(target_piece, item.OriginalPosition)
+        if not item.move.is_pass:
+            target_piece = self.get_piece(item.move.piece_name)
+            self.move_piece(target_piece, item.original_position)
 
         previous_move = self._board_history.last_move
         if previous_move:
-            previous_move = previous_move.Move
+            previous_move = previous_move.move
             self.last_piece_moved = previous_move.piece_name
         else:
             self.last_piece_moved = "INVALID"
 
         self.current_turn -= 1
-        self.BoardChanged.on_change.fire(self)
+        self.board_changed.on_change.fire(self)

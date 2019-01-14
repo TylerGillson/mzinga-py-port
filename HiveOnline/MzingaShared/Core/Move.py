@@ -1,5 +1,5 @@
 from MzingaShared.Core.EnumUtils import EnumUtils
-from MzingaShared.Core.EnumUtils import PieceNames
+from MzingaShared.Core.EnumUtils import piece_names
 from MzingaShared.Core.PiecePositionBase import PiecePositionBase
 
 PassString = "PASS"

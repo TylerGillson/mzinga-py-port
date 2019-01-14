@@ -1,5 +1,5 @@
 from MzingaShared.Core.Move import Move
-from MzingaShared.Core.EnumUtils import PieceNames
+from MzingaShared.Core.EnumUtils import piece_names
 
 
 class MoveSet(object):
@@ -70,7 +70,7 @@ class MoveSet(object):
 
         if isinstance(value, Move):
             return value in self._moves
-        elif value in PieceNames.keys():  # value is a PieceName
+        elif value in piece_names.keys():  # value is a PieceName
             if value in [m.piece_name for m in self._moves]:
                 return True
         return False
