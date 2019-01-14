@@ -119,7 +119,7 @@ class EnumUtils:
 
     @staticmethod
     def black_piece_names():
-        return list(PieceNames.keys())[(len(PieceNames) - 1) // 2::]
+        return list(PieceNames.keys())[((len(PieceNames) - 1) // 2) + 1::]
 
     @staticmethod
     def get_short_name(piece_name):

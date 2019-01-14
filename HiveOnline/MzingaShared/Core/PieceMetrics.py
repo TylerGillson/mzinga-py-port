@@ -1,11 +1,16 @@
 class PieceMetrics:
-    InPlay = 0
-    IsPinned = 0
-    IsCovered = 0
-    NoisyMoveCount = 0
-    QuietMoveCount = 0
-    FriendlyNeighborCount = 0
-    EnemyNeighborCount = 0
+    __slots__ = "InPlay", "IsPinned", "IsCovered", \
+                "NoisyMoveCount", "QuietMoveCount", \
+                "FriendlyNeighbourCount", "EnemyNeighbourCount"
+
+    def __init__(self):
+        self.InPlay = 0
+        self.IsPinned = 0
+        self.IsCovered = 0
+        self.NoisyMoveCount = 0
+        self.QuietMoveCount = 0
+        self.FriendlyNeighbourCount = 0
+        self.EnemyNeighbourCount = 0
 
     def reset(self):
         self.InPlay = 0
@@ -13,13 +18,17 @@ class PieceMetrics:
         self.IsCovered = 0
         self.NoisyMoveCount = 0
         self.QuietMoveCount = 0
-        self.FriendlyNeighborCount = 0
-        self.EnemyNeighborCount = 0
+        self.FriendlyNeighbourCount = 0
+        self.EnemyNeighbourCount = 0
 
 
 class ExtendedPieceMetrics(PieceMetrics):
-    CanMakeNoisyRing = 0
-    CanMakeDefenseRing = 0
+    __slots__ = "CanMakeNoisyRing", "CanMakeDefenseRing"
+
+    def __init__(self):
+        super().__init__()
+        self.CanMakeNoisyRing = 0
+        self.CanMakeDefenseRing = 0
 
     def reset(self):
         super().reset()

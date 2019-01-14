@@ -509,9 +509,9 @@ class GameAI:
                 score += colour_value * get(bug_type, "NoisyMoveWeight") * board_metrics[piece_name].NoisyMoveCount
                 score += colour_value * get(bug_type, "QuietMoveWeight") * board_metrics[piece_name].QuietMoveCount
                 score += colour_value * get(bug_type, "FriendlyNeighborWeight") \
-                                      * board_metrics[piece_name].FriendlyNeighborCount
+                                      * board_metrics[piece_name].FriendlyNeighbourCount
                 score += colour_value * get(bug_type, "EnemyNeighborWeight") \
-                                      * board_metrics[piece_name].EnemyNeighborCount
+                                      * board_metrics[piece_name].EnemyNeighbourCount
 
                 # Optionally compute extended piece metrics:
                 if self.GameType == "Extended":

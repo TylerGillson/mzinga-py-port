@@ -2,11 +2,14 @@ from MzingaShared.Core.EnumUtils import PieceNames, EnumUtils
 from MzingaShared.Core import Position
 
 
-class PiecePositionBase:
-    position = None
-    colour = None
-    bug_type = None
-    _piece_name = list(PieceNames.keys())[0]  # "INVALID"
+class PiecePositionBase(object):
+    __slots__ = "position", "colour", "bug_type", "_piece_name"
+
+    def __init__(self):
+        self.position = None
+        self.colour = None
+        self.bug_type = None
+        self.piece_name = "INVALID"
 
     @property
     def piece_name(self):
@@ -16,7 +19,7 @@ class PiecePositionBase:
     def piece_name(self, value):
         self._piece_name = value
 
-        if value != list(PieceNames.keys())[0]:
+        if value != "INVALID":
             self.colour = EnumUtils.get_colour(value)
             self.bug_type = EnumUtils.get_bug_type(value)
 
@@ -34,11 +37,11 @@ class PiecePositionBase:
             sep = piece_string.find('[')
             name_string = piece_string[0:sep:]
             position_string = (piece_string[sep::]).replace('[', '').replace(']', '')
-            self._piece_name = EnumUtils.parse_short_name(name_string)
+            self.piece_name = EnumUtils.parse_short_name(name_string)
             self.position = Position.parse(position_string)
             return True
         except ValueError:
-            self._piece_name = list(PieceNames.keys())[0]
+            self.piece_name = "INVALID"
             self.position = None
             return False
 

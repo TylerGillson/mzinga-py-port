@@ -1,4 +1,3 @@
-from MzingaShared.Core import Move, EnumUtils
 from MzingaShared.Core.Board import Board, InvalidMoveException
 from MzingaShared.Core.BoardHistory import BoardHistory
 from Utils.Events import Broadcaster
@@ -32,8 +31,10 @@ class GameBoard(Board):
         return self._board_history
 
     def __init__(self, board_string=None, game_type=None):
-        self._board_history = BoardHistory()
         super().__init__(board_string=board_string, game_type=game_type)
+        self.last_piece_moved = None
+        self._board_history = BoardHistory()
+        self.BoardState = None
 
     def __repr__(self):
         return super().__repr__()
@@ -41,10 +42,6 @@ class GameBoard(Board):
     def play(self, move):
         if move is None:
             raise ValueError("Invalid move.")
-
-        if move.is_pass:
-            self.pass_turn()
-            return
 
         if self.game_is_over:
             raise ValueError("You can't play, the game is over.")
@@ -87,26 +84,12 @@ class GameBoard(Board):
 
         self.trusted_play(move)
 
-    def pass_turn(self):
-        pass_turn = Move.pass_turn()
-
-        if self.game_is_over:
-            raise InvalidMoveException(pass_turn, "You can't pass, the game is over.")
-        if pass_turn not in self.get_valid_moves():
-            raise InvalidMoveException(pass_turn, "You can't pass when you have valid moves.")
-
-        self.trusted_play(pass_turn)
-
     def trusted_play(self, move):
-        original_position = None
-
-        if not move.is_pass:
-            target_piece = self.get_piece(move.piece_name)
-            original_position = target_piece.position
-            self.move_piece(target_piece, move.position)
+        target_piece = self.get_piece(move.piece_name)
+        original_position = target_piece.position
+        self.move_piece(target_piece, move.position)
 
         self._board_history.add(move, original_position)
-
         self.current_turn += 1
         self.last_piece_moved = move.piece_name
         self.BoardChanged.on_change.fire(self)  # fire event
@@ -116,16 +99,15 @@ class GameBoard(Board):
             raise InvalidMoveException("You can't undo any more moves.")
 
         item = self._board_history.undo_last_move()
-        if not item.Move.is_pass:
-            target_piece = self.get_piece(item.Move.piece_name)
-            self.move_piece(target_piece, item.OriginalPosition)
+        target_piece = self.get_piece(item.Move.piece_name)
+        self.move_piece(target_piece, item.OriginalPosition)
 
         previous_move = self._board_history.last_move
         if previous_move:
             previous_move = previous_move.Move
             self.last_piece_moved = previous_move.piece_name
         else:
-            self.last_piece_moved = list(EnumUtils.PieceNames.keys())[0]  # "INVALID"
+            self.last_piece_moved = "INVALID"
 
         self.current_turn -= 1
         self.BoardChanged.on_change.fire(self)

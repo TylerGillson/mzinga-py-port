@@ -1,6 +1,6 @@
 import queue
 
-from MzingaShared.Core import EnumUtils
+from MzingaShared.Core.EnumUtils import Directions, NumDirections
 
 MaxStack = 5
 
@@ -14,11 +14,13 @@ _neighbor_deltas = [
 ]
 
 
-class Position:
-    _local_cache = None
-    _shared_cache = {}
+class Position(object):
+    __slots__ = "_local_cache", "_shared_cache", "x", "y", "z", "q", "r", "stack"
 
     def __init__(self, stack, x=None, y=None, z=None, q=None, r=None):
+        self._local_cache = None
+        self._shared_cache = {}
+
         if stack < 0:
             raise ValueError("Stack must be >= 0.")
         self.stack = stack
@@ -35,9 +37,7 @@ class Position:
             self.y = 0 - q - r
 
     def __eq__(self, other):
-        if self is None:
-            return other is None
-        return self.equals(other)
+        return other is None if self is None else self.equals(other)
 
     def __ne__(self, other):
         return not self == other
@@ -47,20 +47,15 @@ class Position:
 
     def __repr__(self):
         rep_strs = [str(self.x), ',', str(self.y), ',', str(self.z), ',', str(self.stack)]
-
-        if self.stack > 0:
-            return "".join(rep_strs)
-        return "".join(rep_strs[0:-2:])
+        return "".join(rep_strs) if self.stack > 0 else "".join(rep_strs[0:-2:])
 
     def equals(self, pos):
-        if pos is None:
-            return False
-        return self.q == pos.q and self.r == pos.r and self.stack == pos.stack
+        return False if pos is None else self.q == pos.q and self.r == pos.r and self.stack == pos.stack
 
     def cache_lookup(self, index):
         if not self._local_cache:
             if self not in list(self._shared_cache.keys()):
-                self._shared_cache[self] = [0] * (EnumUtils.NumDirections + 2)
+                self._shared_cache[self] = [0] * (NumDirections + 2)
                 self._local_cache = self._shared_cache[self]
             else:
                 self._local_cache = self._shared_cache[self]
@@ -69,20 +64,21 @@ class Position:
         new = False
         cached = self._local_cache[index]
         is_pos = isinstance(cached, Position)
+
         if is_pos:
             new = cached == self
 
         if (not is_pos) or new:
-            if index < EnumUtils.NumDirections:
+            if index < NumDirections:
                 cx = self.x + _neighbor_deltas[index][0]
                 cy = self.y + _neighbor_deltas[index][1]
                 cz = self.z + _neighbor_deltas[index][2]
                 self._local_cache[index] = Position(stack=0, x=cx, y=cy, z=cz)
                 # created_new = True
-            elif index == EnumUtils.NumDirections:  # Above
+            elif index == NumDirections:  # Above
                 self._local_cache[index] = Position(stack=self.stack + 1, x=self.x, y=self.y, z=self.z)
                 # created_new = True
-            elif index == EnumUtils.NumDirections + 1 and self.stack > 0:  # Below
+            elif index == NumDirections + 1 and self.stack > 0:  # Below
                 self._local_cache[index] = Position(stack=self.stack - 1, x=self.x, y=self.y, z=self.z)
                 # created_new = True
 
@@ -92,23 +88,23 @@ class Position:
         if not piece_position:
             raise ValueError("piece_position")
 
-        for i in range(EnumUtils.NumDirections):
+        for i in range(NumDirections):
             if self.neighbour_at(i) == piece_position:
                 return True
         return False
 
     def neighbour_at(self, direction):
         if isinstance(direction, int):
-            direction = direction % EnumUtils.NumDirections
+            direction = direction % NumDirections
             return self.cache_lookup(direction)
         else:
-            return self.neighbour_at(EnumUtils.Directions[direction])
+            return self.neighbour_at(Directions[direction])
 
     def get_above(self):
-        return self.cache_lookup(EnumUtils.NumDirections)
+        return self.cache_lookup(NumDirections)
 
     def get_below(self):
-        return self.cache_lookup(EnumUtils.NumDirections + 1)
+        return self.cache_lookup(NumDirections + 1)
 
     def get_hash_code(self):
         hash_code = 17 * 31 + self.q
@@ -122,21 +118,29 @@ def get_unique_positions(count, max_stack=MaxStack):
         raise ValueError("count must be >= 1")
 
     positions = queue.Queue()
-    positions.put(Position(stack=0, x=0, y=0, z=0))
+
+    # Optimize away accessors:
     result = set()
+    empty = positions.empty
+    get = positions.get
+    put = positions.put
+    add = result.add
 
-    while not positions.empty():
-        pos = positions.get()
-        for i in range(EnumUtils.NumDirections + 2):
+    put(Position(stack=0, x=0, y=0, z=0))
+
+    while not empty():
+        pos = get()
+        cache_lookup = pos.cache_lookup
+
+        for i in range(NumDirections + 2):
             if len(result) < count:
-                neighbor = pos.cache_lookup(i)
-
+                neighbor = cache_lookup(i)
                 old_len = len(result)
-                if neighbor:
-                    result.add(neighbor)
 
+                if neighbor:
+                    add(neighbor)
                 if len(result) > old_len and neighbor and neighbor.stack < max_stack:
-                    positions.put(neighbor)
+                    put(neighbor)
     return result
 
 
@@ -145,6 +149,7 @@ origin = Position(stack=0, x=0, y=0, z=0)
 
 def parse(position_string):
     status, board_position = try_parse(position_string)
+
     if status:
         return board_position
     raise ValueError("Invalid position string.")
@@ -161,9 +166,11 @@ def try_parse(position_string):
         if len(split) == 2:
             position = Position(stack=0, q=split[0], r=split[1])
             return True, position
+
         elif len(split) >= 3:
             stack = int(split[3]) if len(split) > 3 else 0
             position = Position(stack=stack, x=int(split[0]), y=int(split[1]), z=int(split[2]))
             return True, position
+
     except ValueError:
         return False, None

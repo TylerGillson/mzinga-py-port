@@ -2,24 +2,24 @@ from MzingaShared.Core.Move import Move
 from MzingaShared.Core.EnumUtils import PieceNames
 
 
-class MoveSet:
-    IsLocked = None
-    _moves = []
+class MoveSet(object):
+    __slots__ = "_moves", "is_locked"
 
     @property
     def count(self):
         return len(self._moves)
 
     def __init__(self, size=None, move_set_string=None, moves_list=None):
+        self.is_locked = None
+        self._moves = []
+
         if moves_list:
-            self._moves = []
-            for m in moves_list:
-                self._moves.append(m)
+            self._moves = [m for m in moves_list]
             return
 
         if not move_set_string:
             self._moves = [Move()] * size if size else []
-            self.IsLocked = False
+            self.is_locked = False
             return
 
         if move_set_string.isspace():
@@ -37,36 +37,31 @@ class MoveSet:
         self._moves[key] = value
 
     def __repr__(self):
-        s = ""
-        for move in self._moves:
-            s += "%s%c" % (str(move), ';')
+        s = "".join(["%s%c" % (str(m), ';') for m in self._moves])
         return s[0:-1:]
 
     def add(self, value):
         if value is None:
             raise ValueError("Invalid move(s) provided.")
-        if self.IsLocked:
+        if self.is_locked:
             raise MoveSetIsLockedException
 
         if isinstance(value, Move):
             return self._moves.append(value)
         else:  # value is MoveSet or list of moves
             if value.count > 0:
-                for move in value:
-                    self._moves.append(move)
+                self._moves += value
 
     def remove(self, value):
         if value is None:
             raise ValueError("Invalid move(s) provided.")
-        if self.IsLocked:
+        if self.is_locked:
             raise MoveSetIsLockedException
 
         if isinstance(value, Move) and value in self._moves:
             return self._moves.remove(value)
         else:  # value is MoveSet or list of moves
-            for move in value:
-                if move in self._moves:
-                    self._moves.remove(move)
+            self._moves = list(set(self._moves) - set(value))
 
     def contains(self, value):
         if value is None:
@@ -75,9 +70,8 @@ class MoveSet:
         if isinstance(value, Move):
             return value in self._moves
         elif value in PieceNames.keys():  # value is a PieceName
-            for move in self._moves:
-                if move.piece_name == value:
-                    return True
+            if value in [m.piece_name for m in self._moves]:
+                return True
         return False
 
     def sort(self, sort_func, reverse):
@@ -87,7 +81,7 @@ class MoveSet:
         self._moves = self._moves[start_idx::]
 
     def lock(self):
-        self.IsLocked = True
+        self.is_locked = True
 
 
 class MoveSetIsLockedException(Exception):

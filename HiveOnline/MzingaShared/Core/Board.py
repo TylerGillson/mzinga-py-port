@@ -1,9 +1,6 @@
 import queue
 from collections import deque
 
-# import timeit
-# from MzingaShared.Core.ZobristHashC import ZobristHashC
-
 from MzingaShared.Core import Move as MoveCls, EnumUtils
 from MzingaShared.Core.BoardMetrics import BoardMetrics
 from MzingaShared.Core.CacheMetricsSet import CacheMetricsSet
@@ -87,7 +84,7 @@ class Board:
 
     @property
     def zobrist_key(self):
-        return self._zobrist_hash.Value
+        return self._zobrist_hash.value
 
     def __repr__(self):
         return self.board_string
@@ -151,9 +148,6 @@ class Board:
 
         self._board_metrics = BoardMetrics(game_type)
         self._current_turn = 0
-
-        # print("Cythonized:\t", min(timeit.Timer(ZobristHashC).repeat(number=3)))
-        # print("Original:\t", min(timeit.Timer(ZobristHash).repeat(number=3)))
 
         self._zobrist_hash = ZobristHash()
         self._pieces = []
@@ -265,21 +259,28 @@ class Board:
         return piece
 
     def move_piece(self, piece, new_position, update_zobrist=False):
+        pos = piece.position
+        piece_name = piece.piece_name
+
         if not update_zobrist:
             self.move_piece(piece, new_position, True)
         else:
             if piece.in_play:
-                self._pieces_by_position[piece.position] = None
+                self._pieces_by_position.pop(pos)
+
                 if piece.piece_below is not None:
                     piece.piece_below.piece_above = None
                     piece.piece_below = None
 
                 # Remove from old position
-                self._zobrist_hash.toggle_piece(piece.piece_name, piece.position)
+                self._zobrist_hash.toggle_piece(piece_name, pos)
 
             piece.move(new_position)
+            pos = piece.position
+
             if piece.in_play:
-                self._pieces_by_position[piece.position] = piece
+                self._pieces_by_position[pos] = piece
+
                 if new_position.stack > 0:
                     pos_below = new_position.get_below()
                     piece_below = self.get_piece(pos_below)
@@ -287,7 +288,7 @@ class Board:
                     piece.piece_below = piece_below
 
                 # Add to new position
-                self._zobrist_hash.toggle_piece(piece.piece_name, piece.position)
+                self._zobrist_hash.toggle_piece(piece_name, pos)
 
     @staticmethod
     def piece_is_on_top(target_piece):
@@ -397,7 +398,7 @@ class Board:
                 p.IsCovered = 1 if is_below else 0
 
                 # Set neighbor counts
-                total, p.FriendlyNeighborCount, p.EnemyNeighborCount = self.count_neighbors(piece=target_piece)
+                total, p.FriendlyNeighbourCount, p.EnemyNeighbourCount = self.count_neighbors(piece=target_piece)
 
     def check_pos_neighbours(self, pos, neighbour_bees):
         n_white, n_black, n_count = 0, 0, 0
@@ -507,13 +508,13 @@ class Board:
                 if self.get_piece(pos) is not None:
                     neighbour_count += 1
                 else:
-                    valid_moves = self.get_moves_from_pos(pos)
+                    valid_moves = self.get_valid_slides_from_pos(pos)
                     if valid_moves.count == 0:
                         non_sliding_neighbour_positions += 1
 
         return 6 - neighbour_count, non_sliding_neighbour_positions
 
-    def get_moves_from_pos(self, pos):
+    def get_valid_slides_from_pos(self, pos):
         # Use dummy queen to check a position for 'tightness':
         self.dummy_queen.move(pos)
         valid_moves = self.get_valid_slides(self.dummy_queen, 1, dummy=True)
@@ -546,7 +547,7 @@ class Board:
         makes_noisy_ring, makes_defense_ring = self.makes_noisy_ring, self.makes_defense_ring
 
         for move in self.get_valid_moves(piece_name):
-            if move is None or move.is_pass:
+            if move is None:
                 continue
             if move.piece_name == piece_name:
                 is_pinned = False
@@ -643,18 +644,18 @@ class Board:
 
         # Determine current number of non_sliding_neighbour_positions:
         tight_positions_1 = [p for p in queen_neighbour_set
-                             if self.get_piece(p) is None and self.get_moves_from_pos(p).count == 0]
+                             if self.get_piece(p) is None and self.get_valid_slides_from_pos(p).count == 0]
 
         # Mock move, check again, then undo:
         piece = self.get_piece(piece_name)
         original_pos = piece.position
-
         self.move_piece(piece, move.position, update_zobrist=False)
+
         if piece_name[-3:] == "Bee":
             queen_neighbour_set = [move.position.neighbour_at(i) for i in EnumUtils.Directions.values()]
 
         tight_positions_2 = [p for p in queen_neighbour_set
-                             if self.get_piece(p) is None and self.get_moves_from_pos(p).count == 0]
+                             if self.get_piece(p) is None and self.get_valid_slides_from_pos(p).count == 0]
         self.move_piece(piece, original_pos, update_zobrist=False)
 
         # If a non-sliding-neighbour position was added to the friendly queen's neighbours, a defense ring was formed:
@@ -744,12 +745,14 @@ class Board:
 
             piece_name_index = PieceNames[piece_name]
             cached = self._cached_valid_moves_by_piece[piece_name_index]
-            is_pass = False
+            null_entry = False
 
             if isinstance(cached, Move):
-                is_pass = cached.is_pass
+                null_entry = cached == Move()
+            elif isinstance(cached, MoveSet):
+                null_entry = cached.count == 0
 
-            if cached is not None and not is_pass:
+            if cached is not None and not null_entry:
                 # MoveSet is cached in L1 cache
                 self.ValidMoveCacheMetricsSet["ValidMoves." + EnumUtilsCls.get_short_name(piece_name)].hit()
             else:
@@ -768,13 +771,9 @@ class Board:
         else:
             moves = MoveSet()
             add = moves.add
-            pass_turn = MoveCls.pass_turn
 
             if self.game_in_progress:
                 list(map(add, list(map(self.get_valid_moves, self.current_turn_pieces))))
-
-                if moves.count == 0:
-                    add(pass_turn())
 
             moves.lock()
             return moves

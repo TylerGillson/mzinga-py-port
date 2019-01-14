@@ -1,10 +1,8 @@
-from MzingaShared.Core.EnumUtils import PieceNames
 from MzingaShared.Core.PiecePositionBase import PiecePositionBase
 
 
 class Piece(PiecePositionBase):
-    piece_above = None
-    piece_below = None
+    __slots__ = "piece_above", "piece_below"
 
     @property
     def in_play(self):
@@ -15,8 +13,11 @@ class Piece(PiecePositionBase):
         return self.position is None
 
     def __init__(self, piece_name, position=None, piece_string=None):
-        self.piece_name = list(PieceNames.keys())[0]  # "INVALID"
+        super().__init__()
+        self.piece_above = None
+        self.piece_below = None
         self.position = None
+        self.piece_name = "INVALID"
 
         if piece_string:
             if piece_string.isspace():
@@ -27,7 +28,7 @@ class Piece(PiecePositionBase):
             self.init(piece_name, position)
 
     def init(self, piece_name, position):
-        if piece_name == list(PieceNames.keys())[0]:  # "INVALID"
+        if piece_name == "INVALID":
             raise ValueError("Invalid piece_name.")
         self.piece_name = piece_name
         self.position = position

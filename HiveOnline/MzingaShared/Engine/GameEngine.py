@@ -32,7 +32,6 @@ class GameEngine:
         "help": "self.help()",
         "board": "self.board() if param_count == 0 else self.board(split[1])",
         "play": "self.raise_command_exception() if param_count < 1 else self.play(split[1])",
-        "pass": "self.pass_turn()",
         "validmoves": "self.valid_moves()",
         "undo": "self.undo() if param_count == 0 else self.undo(split[1])",
         "history": "self.history()",
@@ -140,7 +139,6 @@ class GameEngine:
         print("board")
         print("newgame")
         print("play")
-        print("pass")
         print("validmoves")
         print("bestmove")
         print("undo")
@@ -178,11 +176,6 @@ class GameEngine:
         self._game_board.play(Move(move_string=move_string))
         print(self._game_board)
         return str(self._game_board)
-
-    def pass_turn(self):
-        self.check_board()
-        self._game_board.pass_turn()
-        print(self._game_board)
 
     def valid_moves(self):
         self.check_board()
