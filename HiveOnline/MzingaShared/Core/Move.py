@@ -50,6 +50,6 @@ class Move(PiecePositionBase):
     def get_hash_code(self):
         hash_code = 17
         if self.piece_name != "INVALID":
-            hash_code = hash_code * 31 + int(self.piece_name)
+            hash_code = hash_code * 31 + hash(self.piece_name)
             hash_code = hash_code * 31 + self.position.get_hash_code()
         return hash_code

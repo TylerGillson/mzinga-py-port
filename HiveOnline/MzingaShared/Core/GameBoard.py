@@ -4,7 +4,6 @@ from Utils.Events import Broadcaster
 
 
 class GameBoard(Board):
-    _board_history = BoardHistory()
     BoardChanged = Broadcaster()
 
     def on_board_changed(self):
@@ -31,10 +30,11 @@ class GameBoard(Board):
         return self._board_history
 
     def __init__(self, board_string=None, game_type=None):
-        super().__init__(board_string=board_string, game_type=game_type)
-        self.last_piece_moved = None
         self._board_history = BoardHistory()
+        self.last_piece_moved = None
         self.BoardState = None
+
+        super().__init__(board_string=board_string, game_type=game_type)
 
     def __repr__(self):
         return super().__repr__()
