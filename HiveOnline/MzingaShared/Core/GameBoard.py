@@ -1,3 +1,4 @@
+from MzingaShared.Core import Move, EnumUtils
 from MzingaShared.Core.Board import Board, InvalidMoveException
 from MzingaShared.Core.BoardHistory import BoardHistory
 from Utils.Events import Broadcaster
@@ -42,7 +43,9 @@ class GameBoard(Board):
     def play(self, move):
         if move is None:
             raise ValueError("Invalid move.")
-
+        if move.is_pass:
+            self.pass_turn()
+            return
         if self.game_is_over:
             raise ValueError("You can't play, the game is over.")
 
@@ -84,10 +87,24 @@ class GameBoard(Board):
 
         self.trusted_play(move)
 
+    def pass_turn(self):
+        pass_turn = Move.pass_turn()
+
+        if self.game_is_over:
+            raise InvalidMoveException(pass_turn, "You can't pass, the game is over.")
+
+        if pass_turn not in self.get_valid_moves():
+            raise InvalidMoveException(pass_turn, "You can't pass when you have valid moves.")
+
+        self.trusted_play(pass_turn)
+
     def trusted_play(self, move):
-        target_piece = self.get_piece(move.piece_name)
-        original_position = target_piece.position
-        self.move_piece(target_piece, move.position)
+        original_position = None
+
+        if not move.is_pass:
+            target_piece = self.get_piece(move.piece_name)
+            original_position = target_piece.position
+            self.move_piece(target_piece, move.position)
 
         self._board_history.add(move, original_position)
         self.current_turn += 1
@@ -99,8 +116,9 @@ class GameBoard(Board):
             raise InvalidMoveException("You can't undo any more moves.")
 
         item = self._board_history.undo_last_move()
-        target_piece = self.get_piece(item.Move.piece_name)
-        self.move_piece(target_piece, item.OriginalPosition)
+        if not item.Move.is_pass:
+            target_piece = self.get_piece(item.Move.piece_name)
+            self.move_piece(target_piece, item.OriginalPosition)
 
         previous_move = self._board_history.last_move
         if previous_move:

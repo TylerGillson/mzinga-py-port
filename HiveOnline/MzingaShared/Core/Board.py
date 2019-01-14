@@ -219,7 +219,7 @@ class Board:
         return self.get_piece(position) is not None
 
     def get_piece_position(self, piece_name):
-        if piece_name == list(PieceNames.keys())[0]:  # "INVALID"
+        if piece_name == "INVALID":
             raise ValueError("Invalid piece_name.")
         return self.get_piece(piece_name).position
 
@@ -259,27 +259,23 @@ class Board:
         return piece
 
     def move_piece(self, piece, new_position, update_zobrist=False):
-        pos = piece.position
-        piece_name = piece.piece_name
-
         if not update_zobrist:
             self.move_piece(piece, new_position, True)
         else:
             if piece.in_play:
-                self._pieces_by_position.pop(pos)
+                # self._pieces_by_position[piece.position] = None
+                self._pieces_by_position.pop(piece.position)
 
                 if piece.piece_below is not None:
                     piece.piece_below.piece_above = None
                     piece.piece_below = None
 
                 # Remove from old position
-                self._zobrist_hash.toggle_piece(piece_name, pos)
+                self._zobrist_hash.toggle_piece(piece.piece_name, piece.position)
 
             piece.move(new_position)
-            pos = piece.position
-
             if piece.in_play:
-                self._pieces_by_position[pos] = piece
+                self._pieces_by_position[piece.position] = piece
 
                 if new_position.stack > 0:
                     pos_below = new_position.get_below()
@@ -288,7 +284,7 @@ class Board:
                     piece.piece_below = piece_below
 
                 # Add to new position
-                self._zobrist_hash.toggle_piece(piece_name, pos)
+                self._zobrist_hash.toggle_piece(piece.piece_name, piece.position)
 
     @staticmethod
     def piece_is_on_top(target_piece):
@@ -548,7 +544,7 @@ class Board:
         makes_noisy_ring, makes_defense_ring = self.makes_noisy_ring, self.makes_defense_ring
 
         for move in self.get_valid_moves(piece_name):
-            if move is None:
+            if move is None or move.is_pass:
                 continue
             if move.piece_name == piece_name:
                 is_pinned = False
@@ -749,8 +745,8 @@ class Board:
             null_entry = False
 
             if isinstance(cached, Move):
-                null_entry = cached == Move()
-            elif isinstance(cached, MoveSet):
+                null_entry = cached.is_pass
+            if isinstance(cached, MoveSet):
                 null_entry = cached.count == 0
 
             if cached is not None and not null_entry:
@@ -772,9 +768,13 @@ class Board:
         else:
             moves = MoveSet()
             add = moves.add
+            pass_turn = MoveCls.pass_turn
 
             if self.game_in_progress:
                 list(map(add, list(map(self.get_valid_moves, self.current_turn_pieces))))
+
+                if moves.count == 0:
+                    add(pass_turn())
 
             moves.lock()
             return moves
@@ -809,7 +809,6 @@ class Board:
                 elif self.current_turn == 1 and colour == "Black" and not_black_queen:
 
                     for i in range(EnumUtils.NumDirections):
-                        # noinspection PyUnresolvedReferences
                         neighbor = neighbour_at(i)
                         add(Move(piece_name=piece_name, position=neighbor))
                     return valid_moves
@@ -845,7 +844,7 @@ class Board:
         if target_piece.colour != target_colour:
             return valid_moves
 
-        if self._cached_valid_placement_positions is None:
+        if self._cached_valid_placement_positions is None or len(self._cached_valid_placement_positions) == 0:
             self._cached_valid_placement_positions = set()
             self._visited_placements.clear()
 

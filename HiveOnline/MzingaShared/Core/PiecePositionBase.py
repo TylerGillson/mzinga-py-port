@@ -9,7 +9,7 @@ class PiecePositionBase(object):
         self.position = None
         self.colour = None
         self.bug_type = None
-        self.piece_name = "INVALID"
+        self._piece_name = "INVALID"
 
     @property
     def piece_name(self):
@@ -37,11 +37,11 @@ class PiecePositionBase(object):
             sep = piece_string.find('[')
             name_string = piece_string[0:sep:]
             position_string = (piece_string[sep::]).replace('[', '').replace(']', '')
-            self.piece_name = EnumUtils.parse_short_name(name_string)
+            self._piece_name = EnumUtils.parse_short_name(name_string)
             self.position = Position.parse(position_string)
             return True
         except ValueError:
-            self.piece_name = "INVALID"
+            self._piece_name = "INVALID"
             self.position = None
             return False
 

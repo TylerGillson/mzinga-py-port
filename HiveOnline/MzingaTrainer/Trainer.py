@@ -21,7 +21,7 @@ from MzingaTrainer.TrainerSettings import TrainerSettings
 
 GameResults = ["Loss", "Draw", "Win"]
 
-run_profile = True
+run_profile = False
 
 
 class Trainer:
@@ -298,6 +298,8 @@ class Trainer:
         return board_state
 
     def get_best_move(self, game_board, ai):
+        game_board.GameType = ai.GameType
+
         if self.trainer_settings.MaxDepth >= 0:
             future = asyncio.ensure_future(
                 ai.get_best_move(

@@ -63,11 +63,15 @@ class BoardHistoryItem:
             if board_history_item_string.isspace():
                 raise ValueError("Invalid board_history_item_string")
 
-            split = list(filter(None, board_history_item_string.replace(' ', '>').split('>')))
-            starting_piece = Piece(split[0])
-            move = MoveCls(split[1])
-            self.Move = move
-            self.OriginalPosition = starting_piece.position
+            if board_history_item_string.upper().equals(Move.PassString):
+                self.Move = Move.pass_turn()
+                self.OriginalPosition = None
+            else:
+                split = list(filter(None, board_history_item_string.replace(' ', '>').split('>')))
+                starting_piece = Piece(split[0])
+                move = MoveCls(split[1])
+                self.Move = move
+                self.OriginalPosition = starting_piece.position
         else:
             if move is None:
                 raise ValueError("Invalid move.")
@@ -76,5 +80,8 @@ class BoardHistoryItem:
             self.OriginalPosition = original_position
 
     def __repr__(self):
+        if self.Move.is_pass:
+            return self.Move
+
         starting_piece = Piece(self.Move.piece_name, self.OriginalPosition)
         return "%s > %s" % (starting_piece, self.Move)
