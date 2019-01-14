@@ -48,9 +48,9 @@ class MoveSet(object):
 
         if isinstance(value, Move):
             return self._moves.append(value)
-        else:  # value is MoveSet or list of moves
-            if value.count > 0:
-                self._moves += value
+        else:
+            ext_iter = value._moves if isinstance(value, MoveSet) else value
+            self._moves.extend(ext_iter)
 
     def remove(self, value):
         if value is None:
@@ -60,8 +60,9 @@ class MoveSet(object):
 
         if isinstance(value, Move) and value in self._moves:
             return self._moves.remove(value)
-        else:  # value is MoveSet or list of moves
-            self._moves = list(set(self._moves) - set(value))
+        else:
+            diff_iter = value._moves if isinstance(value, MoveSet) else value
+            self._moves = list(set(self._moves) - set(diff_iter))
 
     def contains(self, value):
         if value is None:

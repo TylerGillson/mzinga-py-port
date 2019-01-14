@@ -21,7 +21,7 @@ from MzingaTrainer.TrainerSettings import TrainerSettings
 
 GameResults = ["Loss", "Draw", "Win"]
 
-run_profile = False
+run_profile = True
 
 
 class Trainer:

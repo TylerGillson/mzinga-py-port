@@ -313,8 +313,9 @@ class Board:
             # Check all pieces at this stack level
             for i in range(EnumUtils.NumDirections):
                 neighbor_piece = get_piece(n_at(i))
+                new = neighbor_piece not in analyzed_pieces and neighbor_piece not in pieces_to_look_at
 
-                if neighbor_piece is not None and neighbor_piece not in analyzed_pieces:
+                if neighbor_piece is not None and new:
                     pieces_to_look_at.append(neighbor_piece)
                     pieces_visited += 1
 

@@ -7,9 +7,9 @@ class TrainerSettings:
     LifecycleBattles = 1
     MaxMaxBattles = -1
     MaxMaxConcurrentBattles = -1
-    GameType = "Extended"  # "Original"
+    GameType = "Original"  # "Original"
 
-    _battleTimeLimit = datetime.timedelta(minutes=240)
+    _battleTimeLimit = datetime.timedelta(minutes=40)
     _bulkBattleTimeLimit = datetime.timedelta(minutes=300)
     _maxDraws = 1
     _maxBattles = MaxMaxBattles

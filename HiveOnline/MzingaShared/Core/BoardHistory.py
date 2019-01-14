@@ -31,11 +31,11 @@ class BoardHistory:
             self._items = []
 
     def __repr__(self):
-        items = [i for i in self._items]
+        items = [str(i) for i in self._items]
         if items:
             s = ""
             for i in items:
-                s += str(i) + ';'
+                s += i + ';'
             return s[:-1]
         return "No History"
 
@@ -76,8 +76,5 @@ class BoardHistoryItem:
             self.OriginalPosition = original_position
 
     def __repr__(self):
-        if self.Move.is_pass:
-            return self.Move
-
         starting_piece = Piece(self.Move.piece_name, self.OriginalPosition)
         return "%s > %s" % (starting_piece, self.Move)
