@@ -2,6 +2,7 @@
 import uuid
 import xml.etree.ElementTree as ElementTree
 
+from MzingaShared.Core.AI import BoardMetricWeights
 from MzingaShared.Core.AI.BoardMetricWeights import BoardMetricWeights as BoardMetricWeightsCls
 from MzingaShared.Core.AI import MetricWeights
 from MzingaShared.Core.AI.MetricWeights import MetricWeights as MetricWeightsCls
@@ -254,7 +255,7 @@ class Profile:
             elif node.tag == "last_updated":
                 last_updated_timestamp = datetime.datetime.strptime(node.text, '%Y-%m-%d %H:%M:%S.%f')
             elif node.tag == "board_metric_weights":
-                board_metric_weights = board_metric_weights.read_metric_weights_xml([subelem for subelem in node])
+                board_metric_weights = BoardMetricWeights.read_metric_weights_xml([subelem for subelem in node])
             elif node.tag in ["metric_weights", "start_metric_weights"]:
                 start_metric_weights = \
                     MetricWeights.read_metric_weights_xml([subelem for subelem in node], game_type)

@@ -37,7 +37,7 @@ class TrainerSettings:
     trans_table_size = 32
     max_depth = -1
 
-    turn_max_time = 5
+    _turn_max_time = None
 
     generate_min_weight = -100.0
     generate_max_weight = 100.0
@@ -176,3 +176,13 @@ class TrainerSettings:
         if value is None or value.isspace():
             raise ValueError("Invalid target_profile_path")
         self._target_profile_path = value
+
+    @property
+    def turn_max_time(self):
+        if self._turn_max_time is None:
+            self._turn_max_time = datetime.timedelta(seconds=5)
+        return self._turn_max_time
+
+    @turn_max_time.setter
+    def turn_max_time(self, value):
+        self._turn_max_time = datetime.timedelta(seconds=value)
