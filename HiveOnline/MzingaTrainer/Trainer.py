@@ -6,6 +6,7 @@ import math
 import queue
 import threading
 import os
+import multiprocessing as mp
 from typing import List
 from functools import reduce
 
@@ -22,6 +23,11 @@ from MzingaTrainer.TrainerSettings import TrainerSettings
 GameResults = ["Loss", "Draw", "Win"]
 
 run_profile = False
+
+
+def work(*args):
+    """ Multiprocessing methods must be pickleable, hence defined at the module level. """
+    args[0][0].simulate_tier_battle(*args[0][1:])
 
 
 class Trainer:
@@ -612,78 +618,22 @@ class Trainer:
 
             while len(current_tier) > 1:
                 self.log("Tournament tier %d start, %d participants." % (tier, len(current_tier)))
-
                 winners = []
-                for i in range(len(current_tier) // 2):
-                    profile_index = i * 2
 
-                    if profile_index == len(current_tier) - 1:
-                        # Odd profile out, gimme
-                        self.log("Tournament auto-advances %s." % ts(current_tier[profile_index]))
-                        winners.append(current_tier[profile_index])
-                    else:
-                        white_index = self.random.randrange(0, 2)  # Help mitigate top players always playing white
-                        white_profile = current_tier[profile_index + white_index]
-                        black_profile = current_tier[profile_index + 1 - white_index]
+                max_parallelism = mp.cpu_count() \
+                    if max_concurrent_battles == self.trainer_settings.max_max_concurrent_battles \
+                    else max_concurrent_battles
 
-                        round_result = "Draw"
+                # Generate list of lists of parameters for calls to simulate_tier:
+                args = (current_tier, ts, winners, max_draws, completed, remaining, path, time_limit, tournament_start)
+                # noinspection PyTypeChecker
+                inputs = [(self, i) + args for i in range(len(current_tier) // 2)]
 
-                        white_higher_rank = white_profile.elo_rating < black_profile.elo_rating
-                        draw_winner_profile = white_profile if white_higher_rank else black_profile
-
-                        w_s, b_s = ts(white_profile), ts(black_profile)
-                        self.log("Tournament match start %s vs. %s." % (w_s, b_s))
-
-                        if max_draws == 1:
-                            round_result = self.battle_profiles(white_profile, black_profile)
-                        else:
-                            rounds = 0
-                            while round_result == "Draw":
-                                self.log("Tournament round %d start." % (rounds + 1))
-                                round_result = self.battle_profiles(white_profile, black_profile)
-
-                                self.log("Tournament round %d end." % (rounds + 1))
-                                rounds += 1
-
-                                if rounds >= max_draws and round_result == "Draw":
-                                    self.log("Tournament match draw-out.")
-                                    break
-
-                        if round_result == "Draw":
-                            round_result = "WhiteWins" if draw_winner_profile == white_profile else "BlackWins"
-
-                        w_s, b_s = ts(white_profile), ts(black_profile)
-                        self.log("Tournament match end %s vs. %s." % (w_s, b_s))
-
-                        with self._progress_lock:
-                            completed += 1
-                            remaining -= 1
-
-                        # Add winner back into the participant queue
-                        if round_result == "WhiteWins":
-                            winners.append(white_profile)
-                        elif round_result == "BlackWins":
-                            winners.append(black_profile)
-
-                        self.log("Tournament advances %s." % ts(winners[i]))
-
-                        # Save Profiles
-                        with self._white_profile_lock:
-                            white_profile_path = "".join([path, str(white_profile.id), ".xml"])
-                            self.write_profile(white_profile_path, white_profile)
-
-                        with self._black_profile_lock:
-                            black_profile_path = "".join([path, str(black_profile.id), ".xml"])
-                            self.write_profile(black_profile_path, black_profile)
-
-                        with self._progress_lock:
-                            timeout_remaining = time_limit - (datetime.datetime.now() - tournament_start)
-
-                            progress, time_remaining = self.get_progress(tournament_start, completed, remaining)
-                            eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
-                            self.log("Tournament progress: %6.2f, ETA: %s." % (progress, eta))
-
-                        if timeout_remaining <= datetime.timedelta.min:
+                # Spawn simulate_tier processes across "max_parallelism" cores:
+                with mp.Pool(max_parallelism) as pool:
+                    for i in pool.imap_unordered(work, inputs):
+                        if i == -1:  # terminate the entire pool if a timeout occurs
+                            pool.terminate()
                             break
 
                 self.log("Tournament tier %d end." % tier)
@@ -703,6 +653,80 @@ class Trainer:
 
             best = list(sorted(profiles, key=lambda x: x.elo_rating))[0]
             self.log("Tournament Highest Elo: %s" % ts(best))
+
+    def simulate_tier_battle(self, i, current_tier, ts, winners, max_draws,
+                      completed, remaining, path, time_limit, tournament_start):
+        profile_index = i * 2
+
+        if profile_index == len(current_tier) - 1:
+            # Odd profile out, gimme
+            self.log("Tournament auto-advances %s." % ts(current_tier[profile_index]))
+            winners.append(current_tier[profile_index])
+        else:
+            white_index = self.random.randrange(0, 2)  # Help mitigate top players always playing white
+            white_profile = current_tier[profile_index + white_index]
+            black_profile = current_tier[profile_index + 1 - white_index]
+
+            round_result = "Draw"
+
+            white_higher_rank = white_profile.elo_rating < black_profile.elo_rating
+            draw_winner_profile = white_profile if white_higher_rank else black_profile
+
+            w_s, b_s = ts(white_profile), ts(black_profile)
+            self.log("Tournament match start %s vs. %s." % (w_s, b_s))
+
+            if max_draws == 1:
+                round_result = self.battle_profiles(white_profile, black_profile)
+            else:
+                rounds = 0
+                while round_result == "Draw":
+                    self.log("Tournament round %d start." % (rounds + 1))
+                    round_result = self.battle_profiles(white_profile, black_profile)
+
+                    self.log("Tournament round %d end." % (rounds + 1))
+                    rounds += 1
+
+                    if rounds >= max_draws and round_result == "Draw":
+                        self.log("Tournament match draw-out.")
+                        break
+
+            if round_result == "Draw":
+                round_result = "WhiteWins" if draw_winner_profile == white_profile else "BlackWins"
+
+            w_s, b_s = ts(white_profile), ts(black_profile)
+            self.log("Tournament match end %s vs. %s." % (w_s, b_s))
+
+            with self._progress_lock:
+                completed += 1
+                remaining -= 1
+
+            # Add winner back into the participant queue
+            if round_result == "WhiteWins":
+                winners.append(white_profile)
+            elif round_result == "BlackWins":
+                winners.append(black_profile)
+
+            self.log("Tournament advances %s." % ts(winners[i]))
+
+            # Save Profiles
+            with self._white_profile_lock:
+                white_profile_path = "".join([path, str(white_profile.id), ".xml"])
+                self.write_profile(white_profile_path, white_profile)
+
+            with self._black_profile_lock:
+                black_profile_path = "".join([path, str(black_profile.id), ".xml"])
+                self.write_profile(black_profile_path, black_profile)
+
+            with self._progress_lock:
+                timeout_remaining = time_limit - (datetime.datetime.now() - tournament_start)
+
+                progress, time_remaining = self.get_progress(tournament_start, completed, remaining)
+                eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
+                self.log("Tournament progress: %6.2f, ETA: %s." % (progress, eta))
+
+            if timeout_remaining <= datetime.timedelta.min:
+                return -1
+            return 1
 
     def to_string(self, val):
         if isinstance(val, datetime.timedelta):
