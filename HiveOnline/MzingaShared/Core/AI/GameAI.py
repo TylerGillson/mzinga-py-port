@@ -425,6 +425,9 @@ class GameAI:
         quiescence_search_async = self.quiescence_search_async
 
         for move in game_board.get_valid_moves():
+            if move.is_pass:
+                continue
+
             if is_noisy_move(move):
                 trusted_play(move)
                 value = -1 * await quiescence_search_async(game_board, depth - 1, -beta, -alpha, -colour)

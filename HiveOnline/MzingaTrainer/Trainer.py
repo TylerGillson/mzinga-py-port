@@ -24,10 +24,15 @@ GameResults = ["Loss", "Draw", "Win"]
 
 run_profile = False
 
+# Multiprocessing methods must be pickleable, hence defined at the module level:
 
-def work(*args):
-    """ Multiprocessing methods must be pickleable, hence defined at the module level. """
+
+def work_tournament(*args):
     args[0][0].simulate_tier_battle(*args[0][1:])
+
+
+def work_battle_royale(*args):
+    args[0][0].simulate_match(*args[0][1:])
 
 
 class Trainer:
@@ -70,6 +75,12 @@ class Trainer:
         self.board_metric_weights_cls = BoardMetricWeightsCls()
         self.metric_weights_cls = MetricWeightsCls(self._settings.game_type)
         self.start_time = None
+
+    def get_max_parallelism(self, max_concurrent_battles):
+        max_parallelism = mp.cpu_count() \
+            if max_concurrent_battles == self.trainer_settings.max_max_concurrent_battles \
+            else max_concurrent_battles
+        return max_parallelism
 
     def battle(self, white_profile_path=None, black_profile_path=None):
         if white_profile_path is None and black_profile_path is None:
@@ -136,56 +147,18 @@ class Trainer:
         if shuffle_profiles:
             matches = self.shuffle(matches)
 
-        for match in matches:
-            w_profile = match[0]
-            b_profile = match[1]
-            round_result = "Draw"
+        # Generate list of lists of parameters for calls to simulate_match:
+        args = (ts, max_draws, completed, remaining, path, time_limit, br_start)
+        # noinspection PyTypeChecker
+        inputs = [(self, match) + args for match in matches]
 
-            w_s, b_s = ts(w_profile), ts(b_profile)
-            self.log("Battle Royale match start %s vs. %s." % (w_s, b_s))
-
-            if max_draws == 1:
-                _ = self.battle_profiles(w_profile, b_profile)
-            else:
-                rounds = 0
-                while round_result == "Draw":
-                    self.log("Battle Royale round %d start." % rounds + 1)
-
-                    round_result = self.battle_profiles(w_profile, b_profile)
-
-                    self.log("Battle Royale round %d end." % rounds + 1)
-
-                    rounds += 1
-
-                    if rounds >= max_draws and round_result == "Draw":
-                        self.log("Battle Royale match draw-out.")
-                        break
-
-            w_s, b_s = ts(w_profile), ts(b_profile)
-            self.log("Battle Royale match end %s vs. %s." % (w_s, b_s))
-
-            with self._progress_lock:
-                completed += 1
-                remaining -= 1
-
-            # Save Profiles
-            with self._white_profile_lock:
-                w_profile_path = "".join([path, str(w_profile.id), ".xml"])
-                self.write_profile(w_profile_path, w_profile)
-
-            with self._black_profile_lock:
-                b_profile_path = "".join([path, str(b_profile.id), ".xml"])
-                self.write_profile(b_profile_path, b_profile)
-
-            with self._progress_lock:
-                timeout_remaining = time_limit - (datetime.datetime.now() - br_start)
-                progress, time_remaining = self.get_progress(br_start, completed, remaining)
-
-                eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
-                self.log("Battle Royale progress: %6.2f, ETA: %s." % (progress, eta))
-
-            if timeout_remaining <= datetime.timedelta.min:
-                break
+        # Spawn simulate_tier processes across "max_parallelism" cores:
+        max_parallelism = self.get_max_parallelism(max_concurrent_battles)
+        with mp.Pool(max_parallelism) as pool:
+            for i in pool.imap_unordered(work_battle_royale, inputs):
+                if i == -1:  # terminate the entire pool if a timeout occurs
+                    pool.terminate()
+                    break
 
         if time_limit - (datetime.datetime.now() - br_start) <= datetime.timedelta.min:
             self.log("Battle Royale time-out.")
@@ -195,6 +168,58 @@ class Trainer:
         best = list(sorted(profile_list, key=lambda x: x.elo_rating))[0]
 
         self.log("Battle Royale Highest Elo: %s" % ts(best))
+
+    def simulate_match(self, match, ts, max_draws, completed, remaining, path, time_limit, br_start):
+        w_profile = match[0]
+        b_profile = match[1]
+        round_result = "Draw"
+
+        w_s, b_s = ts(w_profile), ts(b_profile)
+        self.log("Battle Royale match start %s vs. %s." % (w_s, b_s))
+
+        if max_draws == 1:
+            _ = self.battle_profiles(w_profile, b_profile)
+        else:
+            rounds = 0
+            while round_result == "Draw":
+                self.log("Battle Royale round %d start." % rounds + 1)
+
+                round_result = self.battle_profiles(w_profile, b_profile)
+
+                self.log("Battle Royale round %d end." % rounds + 1)
+
+                rounds += 1
+
+                if rounds >= max_draws and round_result == "Draw":
+                    self.log("Battle Royale match draw-out.")
+                    break
+
+        w_s, b_s = ts(w_profile), ts(b_profile)
+        self.log("Battle Royale match end %s vs. %s." % (w_s, b_s))
+
+        with self._progress_lock:
+            completed += 1
+            remaining -= 1
+
+        # Save Profiles
+        with self._white_profile_lock:
+            w_profile_path = "".join([path, str(w_profile.id), ".xml"])
+            self.write_profile(w_profile_path, w_profile)
+
+        with self._black_profile_lock:
+            b_profile_path = "".join([path, str(b_profile.id), ".xml"])
+            self.write_profile(b_profile_path, b_profile)
+
+        with self._progress_lock:
+            timeout_remaining = time_limit - (datetime.datetime.now() - br_start)
+            progress, time_remaining = self.get_progress(br_start, completed, remaining)
+
+            eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
+            self.log("Battle Royale progress: %6.2f, ETA: %s." % (progress, eta))
+
+        if timeout_remaining <= datetime.timedelta.min:
+            return -1
+        return 1
 
     def battle_profiles(self, white_profile, black_profile):
         if white_profile is None:
@@ -620,18 +645,15 @@ class Trainer:
                 self.log("Tournament tier %d start, %d participants." % (tier, len(current_tier)))
                 winners = []
 
-                max_parallelism = mp.cpu_count() \
-                    if max_concurrent_battles == self.trainer_settings.max_max_concurrent_battles \
-                    else max_concurrent_battles
-
-                # Generate list of lists of parameters for calls to simulate_tier:
+                # Generate list of lists of parameters for calls to simulate_tier_battle:
                 args = (current_tier, ts, winners, max_draws, completed, remaining, path, time_limit, tournament_start)
                 # noinspection PyTypeChecker
                 inputs = [(self, i) + args for i in range(len(current_tier) // 2)]
 
                 # Spawn simulate_tier processes across "max_parallelism" cores:
+                max_parallelism = self.get_max_parallelism(max_concurrent_battles)
                 with mp.Pool(max_parallelism) as pool:
-                    for i in pool.imap_unordered(work, inputs):
+                    for i in pool.imap_unordered(work_tournament, inputs):
                         if i == -1:  # terminate the entire pool if a timeout occurs
                             pool.terminate()
                             break
@@ -655,7 +677,7 @@ class Trainer:
             self.log("Tournament Highest Elo: %s" % ts(best))
 
     def simulate_tier_battle(self, i, current_tier, ts, winners, max_draws,
-                      completed, remaining, path, time_limit, tournament_start):
+                             completed, remaining, path, time_limit, tournament_start):
         profile_index = i * 2
 
         if profile_index == len(current_tier) - 1:
