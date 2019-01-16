@@ -24,11 +24,15 @@ GameResults = ["Loss", "Draw", "Win"]
 
 run_profile = False
 
-# Multiprocessing methods must be pickleable, hence defined at the module level:
+completed, remaining = 0, 0
+current_tier, winners = [], []
 
 
 def work_tournament(*args):
-    args[0][0].simulate_tier_battle(*args[0][1:])
+    try:
+        args[0][0].simulate_tier_battle(*args[0][1:])
+    except IndexError:
+        pass
 
 
 def work_battle_royale(*args):
@@ -129,8 +133,9 @@ class Trainer:
         if max_battles == self.trainer_settings.max_max_battles:
             max_battles = combinations
         max_battles = min(max_battles, combinations)
-
         total = max_battles
+
+        global completed, remaining
         completed = 0
         remaining = total
 
@@ -148,7 +153,7 @@ class Trainer:
             matches = self.shuffle(matches)
 
         # Generate list of lists of parameters for calls to simulate_match:
-        args = (ts, max_draws, completed, remaining, path, time_limit, br_start)
+        args = (max_draws, path, time_limit, br_start)
         # noinspection PyTypeChecker
         inputs = [(self, match) + args for match in matches]
 
@@ -169,7 +174,8 @@ class Trainer:
 
         self.log("Battle Royale Highest Elo: %s" % ts(best))
 
-    def simulate_match(self, match, ts, max_draws, completed, remaining, path, time_limit, br_start):
+    def simulate_match(self, match, max_draws, path, time_limit, br_start):
+        ts = self.to_string
         w_profile = match[0]
         b_profile = match[1]
         round_result = "Draw"
@@ -197,6 +203,7 @@ class Trainer:
         w_s, b_s = ts(w_profile), ts(b_profile)
         self.log("Battle Royale match end %s vs. %s." % (w_s, b_s))
 
+        global completed, remaining
         with self._progress_lock:
             completed += 1
             remaining -= 1
@@ -212,7 +219,7 @@ class Trainer:
 
         with self._progress_lock:
             timeout_remaining = time_limit - (datetime.datetime.now() - br_start)
-            progress, time_remaining = self.get_progress(br_start, completed, remaining)
+            progress, time_remaining = self.get_progress(br_start)
 
             eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
             self.log("Battle Royale progress: %6.2f, ETA: %s." % (progress, eta))
@@ -285,6 +292,7 @@ class Trainer:
                 else:
                     move = self.get_best_move(game_board, ai)
                 game_board.play(move[0])
+                ai.reset_caches()
 
         except Exception as ex:
             self.log("Battle interrupted with exception: %s" % ex)
@@ -540,7 +548,9 @@ class Trainer:
                 self.log("Lifecycle generation %d end." % gen)
 
             if generations > 0:
-                progress, time_remaining = self.get_progress(lifecycle_start, gen, generations - gen)
+                global completed, remaining
+                completed, remaining = gen, generations - gen
+                progress, time_remaining = self.get_progress(lifecycle_start)
                 self.log("Lifecycle progress: %6.2f ETA %s." % (progress, self.to_string(time_remaining)))
 
             # Output analysis
@@ -628,6 +638,8 @@ class Trainer:
 
             profiles = self.load_profiles(path)
             total = len(profiles) - 1
+
+            global completed, remaining, current_tier, winners
             completed = 0
             remaining = total
 
@@ -646,7 +658,7 @@ class Trainer:
                 winners = []
 
                 # Generate list of lists of parameters for calls to simulate_tier_battle:
-                args = (current_tier, ts, winners, max_draws, completed, remaining, path, time_limit, tournament_start)
+                args = (max_draws, path, time_limit, tournament_start)
                 # noinspection PyTypeChecker
                 inputs = [(self, i) + args for i in range(len(current_tier) // 2)]
 
@@ -676,14 +688,17 @@ class Trainer:
             best = list(sorted(profiles, key=lambda x: x.elo_rating))[0]
             self.log("Tournament Highest Elo: %s" % ts(best))
 
-    def simulate_tier_battle(self, i, current_tier, ts, winners, max_draws,
-                             completed, remaining, path, time_limit, tournament_start):
+    def simulate_tier_battle(self, i, max_draws, path, time_limit, tournament_start):
+        global current_tier, winners
+        ts = self.to_string
+
         profile_index = i * 2
 
         if profile_index == len(current_tier) - 1:
             # Odd profile out, gimme
             self.log("Tournament auto-advances %s." % ts(current_tier[profile_index]))
-            winners.append(current_tier[profile_index])
+            with self._progress_lock:
+                winners.append(current_tier[profile_index])
         else:
             white_index = self.random.randrange(0, 2)  # Help mitigate top players always playing white
             white_profile = current_tier[profile_index + white_index]
@@ -718,17 +733,18 @@ class Trainer:
             w_s, b_s = ts(white_profile), ts(black_profile)
             self.log("Tournament match end %s vs. %s." % (w_s, b_s))
 
+            global completed, remaining
             with self._progress_lock:
                 completed += 1
                 remaining -= 1
 
-            # Add winner back into the participant queue
-            if round_result == "WhiteWins":
-                winners.append(white_profile)
-            elif round_result == "BlackWins":
-                winners.append(black_profile)
+                # Add winner back into the participant queue
+                if round_result == "WhiteWins":
+                    winners.append(white_profile)
+                elif round_result == "BlackWins":
+                    winners.append(black_profile)
 
-            self.log("Tournament advances %s." % ts(winners[i]))
+                self.log("Tournament advances %s." % ts(winners[i]))
 
             # Save Profiles
             with self._white_profile_lock:
@@ -742,7 +758,7 @@ class Trainer:
             with self._progress_lock:
                 timeout_remaining = time_limit - (datetime.datetime.now() - tournament_start)
 
-                progress, time_remaining = self.get_progress(tournament_start, completed, remaining)
+                progress, time_remaining = self.get_progress(tournament_start)
                 eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
                 self.log("Tournament progress: %6.2f, ETA: %s." % (progress, eta))
 
@@ -805,12 +821,8 @@ class Trainer:
         return seeded
 
     @staticmethod
-    def get_progress(start_time, completed, remaining):
-        if completed < 0:
-            raise ValueError("Invalid completed.")
-        if remaining < 0:
-            raise ValueError("Invalid remaining.")
-
+    def get_progress(start_time):
+        global completed, remaining
         total = completed + remaining
 
         if completed == 0:

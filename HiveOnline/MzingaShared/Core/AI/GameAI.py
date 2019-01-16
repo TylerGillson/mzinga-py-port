@@ -130,6 +130,7 @@ class GameAI:
 
         moves_to_evaluate = EvaluatedMoveCollection()
         best_move = None
+        best_move_from_cache = False
 
         # Try to get cached best move if available
         key = game_board.zobrist_key
@@ -137,23 +138,30 @@ class GameAI:
         if flag and t_entry.best_move is not None:
             best_move = EvaluatedMove(t_entry.best_move, t_entry.value, t_entry.depth)
             self.best_move_found.on_change.fire(self, best_move_params, best_move, handler_key=0)
+            best_move_from_cache = True
 
         if best_move is not None and best_move.score_after_move == float("inf"):
             # Winning move, don't search
             moves_to_evaluate.add(evaluated_move=best_move)
             return moves_to_evaluate
 
-        if self.game_type == "Original":
-            valid_moves = self.get_presorted_valid_moves(game_board, best_move)
-        else:
-            # Pre-sorting moves is extremely expensive and unnecessary when searching to depth ...
-            valid_moves = MoveSet(moves_list=game_board.get_valid_moves())
-            if valid_moves.count > self._max_branching_factor:
-                valid_moves.remove_range(self._max_branching_factor)
+        valid_moves = self.get_presorted_valid_moves(game_board, best_move)
+        # if self.game_type == "Original":
+        #     valid_moves = self.get_presorted_valid_moves(game_board, best_move)
+        # else:
+        #     # Pre-sorting moves is extremely expensive and unnecessary when searching to depth ...
+        #     valid_moves = MoveSet(moves_list=game_board.get_valid_moves())
+        #     if valid_moves.count > self._max_branching_factor:
+        #         valid_moves.remove_range(self._max_branching_factor)
 
         # If necessary, convert each entry to an EvaluatedMove:
         if isinstance(valid_moves[0], Move):
             valid_moves = list(map(lambda x: EvaluatedMove(x), valid_moves))
+
+        # Ensure that cached invalid best moves are not returned:
+        if best_move_from_cache and best_move.move not in [v.move for v in valid_moves]:
+            best_move = None
+            self.best_move_found.on_change.fire(self, best_move_params, best_move, handler_key=0)
 
         moves_to_evaluate.add(evaluated_moves=valid_moves, re_sort=False)
 

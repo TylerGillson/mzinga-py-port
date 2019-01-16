@@ -8,7 +8,7 @@ from MzingaShared.Core.Move import Move
 from Utils.Events import Broadcaster
 from Utils.TaskQueue import TaskQueue
 
-debug = True
+debug = False
 # loop = asyncio.get_event_loop()
 
 
