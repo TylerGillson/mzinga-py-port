@@ -32,7 +32,8 @@ def work_tournament(*args):
     try:
         args[0][0].simulate_tier_battle(*args[0][1:])
     except IndexError:
-        pass
+        args[0][0].log("Restarting due to IndexError")
+        work_tournament(*args)
 
 
 def work_battle_royale(*args):
@@ -236,26 +237,26 @@ class Trainer:
         if white_profile.id == black_profile.id:
             raise ValueError("Profile cannot battle itself.")
 
-        # Create Game
-        game_board = GameBoard(board_string="START", game_type=self.trainer_settings.game_type)
-
         # Create AIs
         white_ai = GameAI(GameAIConfig(
             white_profile.start_metric_weights,
             white_profile.end_metric_weights,
             self.trainer_settings.trans_table_size,
-            self._settings.game_type,
+            white_profile.game_type,
             board_weights=white_profile.board_metric_weights)
         )
         black_ai = GameAI(GameAIConfig(
             black_profile.start_metric_weights,
             black_profile.end_metric_weights,
             self.trainer_settings.trans_table_size,
-            self._settings.game_type,
+            black_profile.game_type,
             board_weights=black_profile.board_metric_weights)
         )
-        time_limit = self.trainer_settings.battle_time_limit
 
+        # Create Game
+        game_board = GameBoard(board_string="START", game_type=white_ai.game_type)
+
+        time_limit = self.trainer_settings.battle_time_limit
         w_s, b_s = self.to_string(white_profile), self.to_string(black_profile)
         self.log("Battle start %s vs. %s." % (w_s, b_s))
 
@@ -292,7 +293,14 @@ class Trainer:
                 else:
                     move = self.get_best_move(game_board, ai)
                 game_board.play(move[0])
-                ai.reset_caches()
+
+                # Re-build the game board between moves if pitting Original AI vs. Extended AI:
+                if self.trainer_settings.mixed_game_types:
+                    alt_game_type = "Original" if ai.game_type == "Extended" else "Extended"
+                    history = game_board.board_history
+
+                    game_board = GameBoard(board_string=game_board.board_string, game_type=alt_game_type)
+                    game_board.board_history = history
 
         except Exception as ex:
             self.log("Battle interrupted with exception: %s" % ex)
@@ -337,8 +345,6 @@ class Trainer:
         return board_state
 
     def get_best_move(self, game_board, ai):
-        game_board.game_type = ai.game_type
-
         if self.trainer_settings.max_depth >= 0:
             future = asyncio.ensure_future(
                 ai.get_best_move(

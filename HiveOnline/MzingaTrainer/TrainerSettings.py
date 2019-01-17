@@ -8,6 +8,7 @@ class TrainerSettings:
     max_max_battles = -1
     max_max_concurrent_battles = -1
     game_type = "Original"  # "Original"
+    mixed_game_types = False
 
     _battle_time_limit = datetime.timedelta(minutes=10)
     _bulk_battle_time_limit = datetime.timedelta(minutes=300)

@@ -72,6 +72,7 @@ class Program:
         print("Parameters:")
 
         print("-GameType                Original or Extended AI")
+        print("-MixedGameTypes          Whether original & extended AIs will be competing")
         print("-ProfilePath             Where the profiles are stored")
         print("-WhiteProfilePath        The white profile in a single battle")
         print("-BlackProfilePath        The black profile in a single battle")
@@ -104,6 +105,8 @@ class Program:
     def parse_args(arg, args, i, trainer_settings):
         if arg in ["gt", "gametype"]:
             trainer_settings.game_type = args[i + 1]
+        elif arg in ["mgt", "mixedgametypes"]:
+            trainer_settings.mixed_game_types = args[i + 1] == "True"
         elif arg in ["pp", "profilepath"]:
             trainer_settings.profile_path = args[i + 1]
         elif arg in ["wpp", "whiteprofilepath"]:
@@ -127,13 +130,13 @@ class Program:
         elif arg in ["mcb", "maxconcurrentbattles"]:
             trainer_settings.max_concurrent_battles = int(args[i + 1])
         elif arg in ["bsp", "battleshuffleprofiles"]:
-            trainer_settings.battle_shuffle_profiles = args[i + 1] == 'True'
+            trainer_settings.battle_shuffle_profiles = args[i + 1] == "True"
         elif arg in ["mdraws", "maxdraws"]:
             trainer_settings.max_draws = int(args[i + 1])
         elif arg in ["bbtl", "bulkbattletimelimit"]:
             trainer_settings.bulk_battle_time_limit = int(args[i + 1])
         elif arg in ["pr", "provisionalrules"]:
-            trainer_settings.provisional_rules = args[i + 1] == 'True'
+            trainer_settings.provisional_rules = args[i + 1] == "True"
         elif arg in ["pgc", "provisionalgamecount"]:
             trainer_settings.provisional_game_count = int(args[i + 1])
         elif arg in ["mminm", "mateminmix"]:
@@ -143,7 +146,7 @@ class Program:
         elif arg in ["mpc", "mateparentcount"]:
             trainer_settings.mate_parent_count = int(args[i + 1])
         elif arg in ["msp", "mateshuffleparents"]:
-            trainer_settings.mate_shuffle_parents = args[i + 1] == 'True'
+            trainer_settings.mate_shuffle_parents = args[i + 1] == "True"
         elif arg in ["tts", "transtablesize"]:
             trainer_settings.trans_table_size = int(args[i + 1])
         elif arg in ["mdepth", "maxdepth"]:

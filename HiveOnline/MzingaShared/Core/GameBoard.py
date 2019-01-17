@@ -30,8 +30,12 @@ class GameBoard(Board):
     def board_history(self):
         return self._board_history
 
+    @board_history.setter
+    def board_history(self, value):
+        self._board_history = value
+
     def __init__(self, board_string=None, game_type=None):
-        self._board_history = BoardHistory()
+        self.board_history = BoardHistory()
         self.last_piece_moved = None
         self.board_state = None
 
