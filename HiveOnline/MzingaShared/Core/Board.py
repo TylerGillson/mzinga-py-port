@@ -82,6 +82,14 @@ class Board:
         return s[:-1:]
 
     @property
+    def zobrist_hash(self):
+        return self._zobrist_hash
+
+    @zobrist_hash.setter
+    def zobrist_hash(self, value):
+        self._zobrist_hash = value
+
+    @property
     def zobrist_key(self):
         return self._zobrist_hash.value
     # END STATE PROPERTIES
@@ -138,14 +146,15 @@ class Board:
         self._last_piece_moved = value
     # END PIECE STATE PROPERTIES
 
-    def init_state_vars(self, game_type):
+    def init_state_vars(self, game_type, z_hash=None):
         self.board_state = "NotStarted"
         self.game_type = game_type
 
         self._board_metrics = BoardMetrics(game_type)
         self._current_turn = 0
 
-        self._zobrist_hash = ZobristHash()
+        self._zobrist_hash = z_hash if z_hash is not None else ZobristHash()
+
         self._pieces = []
         self._pieces_by_position = {}
         self._last_piece_moved = "INVALID"
@@ -159,8 +168,8 @@ class Board:
         self._cached_enemy_queen_neighbours = None
         self._cached_friendly_queen_neighbours = None
 
-    def __init__(self, board_string, game_type):
-        self.init_state_vars(game_type)
+    def __init__(self, board_string, game_type, z_hash):
+        self.init_state_vars(game_type, z_hash)
         self.init_pieces()
         self.dummy_queen = Piece("WhiteQueenBee")
 

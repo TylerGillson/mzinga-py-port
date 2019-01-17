@@ -298,8 +298,9 @@ class Trainer:
                 if self.trainer_settings.mixed_game_types:
                     alt_game_type = "Original" if ai.game_type == "Extended" else "Extended"
                     history = game_board.board_history
+                    z_hash = game_board.zobrist_hash
 
-                    game_board = GameBoard(board_string=game_board.board_string, game_type=alt_game_type)
+                    game_board = GameBoard(board_string=game_board.board_string, game_type=alt_game_type, z_hash=z_hash)
                     game_board.board_history = history
 
         except Exception as ex:
