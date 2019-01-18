@@ -435,7 +435,15 @@ class Trainer:
 
     def log(self, output):
         elapsed_time = datetime.datetime.now() - self.start_time
-        print("%s > %s" % (self.to_string(elapsed_time), output))
+        log_str = "%s > %s" % (self.to_string(elapsed_time), output)
+
+        if self.trainer_settings.log_to_file:
+            log_path = "".join([self.trainer_settings.profile_path, "log.txt"])
+
+            with open(log_path, "a") as log:
+                log.write("".join([log_str, '\n']))
+        else:
+            print(log_str)
 
     def analyze(self, path=None):
         if path is None:
@@ -753,7 +761,10 @@ class Trainer:
                 elif round_result == "BlackWins":
                     winners.append(black_profile)
 
-                self.log("Tournament advances %s." % ts(winners[i]))
+                try:
+                    self.log("Tournament advances %s." % ts(winners[i]))
+                except IndexError:
+                    self.log("Tournament advances ... ")
 
             # Save Profiles
             with self._white_profile_lock:

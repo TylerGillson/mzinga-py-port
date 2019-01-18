@@ -73,6 +73,7 @@ class Program:
 
         print("-GameType                Original or Extended AI")
         print("-MixedGameTypes          Whether original & extended AIs will be competing")
+        print("-LogToFile               Whether output is piped to a file or the console")
         print("-ProfilePath             Where the profiles are stored")
         print("-WhiteProfilePath        The white profile in a single battle")
         print("-BlackProfilePath        The black profile in a single battle")
@@ -107,6 +108,8 @@ class Program:
             trainer_settings.game_type = args[i + 1]
         elif arg in ["mgt", "mixedgametypes"]:
             trainer_settings.mixed_game_types = args[i + 1] == "True"
+        elif arg in ["ltf", "logtofile"]:
+            trainer_settings.log_to_file = args[i + 1] == "True"
         elif arg in ["pp", "profilepath"]:
             trainer_settings.profile_path = args[i + 1]
         elif arg in ["wpp", "whiteprofilepath"]:
