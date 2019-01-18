@@ -298,10 +298,12 @@ class Trainer:
                 if self.trainer_settings.mixed_game_types:
                     alt_game_type = "Original" if ai.game_type == "Extended" else "Extended"
                     history = game_board.board_history
+                    last_piece_moved = game_board.last_piece_moved
                     z_hash = game_board.zobrist_hash
 
                     game_board = GameBoard(board_string=game_board.board_string, game_type=alt_game_type, z_hash=z_hash)
                     game_board.board_history = history
+                    game_board.last_piece_moved = last_piece_moved
 
         except Exception as ex:
             self.log("Battle interrupted with exception: %s" % ex)

@@ -61,8 +61,6 @@ class GameAI:
     game_type = None
 
     _max_branching_factor = max_max_branching_factor  # To prevent search explosion
-    _transposition_table = None
-    _cached_board_scores = FixedCache(default_board_scores_cache_size)
 
     def __init__(self, config=None):
         if config:
@@ -75,13 +73,6 @@ class GameAI:
             self.end_metric_weights = config.end_metric_weights.clone() \
                 if config.end_metric_weights else MetricWeights(self.game_type)
 
-            if config.transposition_table_size_mb is not None:
-                if config.transposition_table_size_mb <= 0:
-                    raise ValueError("Invalid config.transposition_table_size_mb.")
-                self._transposition_table = TranspositionTable(config.transposition_table_size_mb * 1024 * 1024)
-            else:
-                self._transposition_table = TranspositionTable()
-
             if config.max_branching_factor is not None:
                 if config.max_branching_factor <= 0:
                     raise ValueError("Invalid config.max_branching_factor.")
@@ -91,11 +82,6 @@ class GameAI:
             self.board_metric_weights = BoardMetricWeights()
             self.start_metric_weights = MetricWeights(self.game_type)
             self.end_metric_weights = MetricWeights(self.game_type)
-            self._transposition_table = TranspositionTable()
-
-    def reset_caches(self):
-        self._transposition_table.clear()
-        self._cached_board_scores.clear()
 
     # region Move Evaluation
     def get_best_move(self, game_board, **kwargs):
@@ -130,22 +116,9 @@ class GameAI:
 
         moves_to_evaluate = EvaluatedMoveCollection()
         best_move = None
-        best_move_from_cache = False
-
-        # Try to get cached best move if available
-        key = game_board.zobrist_key
-        flag, t_entry = self._transposition_table.try_lookup(key)
-        if flag and t_entry.best_move is not None:
-            best_move = EvaluatedMove(t_entry.best_move, t_entry.value, t_entry.depth)
-            self.best_move_found.on_change.fire(self, best_move_params, best_move, handler_key=0)
-            best_move_from_cache = True
-
-        if best_move is not None and best_move.score_after_move == float("inf"):
-            # Winning move, don't search
-            moves_to_evaluate.add(evaluated_move=best_move)
-            return moves_to_evaluate
 
         valid_moves = self.get_presorted_valid_moves(game_board, best_move)
+
         # if self.game_type == "Original":
         #     valid_moves = self.get_presorted_valid_moves(game_board, best_move)
         # else:
@@ -158,15 +131,10 @@ class GameAI:
         if isinstance(valid_moves[0], Move):
             valid_moves = list(map(lambda x: EvaluatedMove(x), valid_moves))
 
-        # Ensure that cached invalid best moves are not returned:
-        if best_move_from_cache and best_move.move not in [v.move for v in valid_moves]:
-            best_move = None
-            self.best_move_found.on_change.fire(self, best_move_params, best_move, handler_key=0)
-
         moves_to_evaluate.add(evaluated_moves=valid_moves, re_sort=False)
 
+        # No need to search
         if moves_to_evaluate.count <= 1 or best_move_params.max_search_depth == 0:
-            # No need to search
             return moves_to_evaluate
 
         # Iterative search
@@ -199,9 +167,8 @@ class GameAI:
         alpha = float("-inf")
         beta = float("inf")
         colour = 1 if game_board.current_turn_colour == "White" else -1
-        alpha_original = alpha
-        best_value = None
         evaluated_moves = EvaluatedMoveCollection()
+        best_value = None
         first_move = True
 
         timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
@@ -239,8 +206,8 @@ class GameAI:
 
             undo_last_move()
 
+            # Cancel occurred during evaluation
             if value is None:
-                # Cancel occurred during evaluation
                 return EvaluatedMoveCollection(move_to_evaluate, False)
 
             evaluated_move = EvaluatedMove(move_to_evaluate.move, value, depth)
@@ -259,56 +226,27 @@ class GameAI:
                 if now() > start_time + timeout:
                     break
 
-        key = game_board.zobrist_key
-        t_entry = TranspositionTableEntry()
-
-        if best_value <= alpha_original:
-            # Losing move since alpha_original is negative infinity in this function
-            t_entry.type = TranspositionTableEntryType.upper_bound
-        else:
-            # Move is a lower bound winning move if best_value >= beta
-            # (always infinity in this function), otherwise it's exact
-            t_entry.type = TranspositionTableEntryType.lower_bound \
-                if best_value >= beta else TranspositionTableEntryType.exact
-            t_entry.best_move = evaluated_moves.best_move.move
-
-        t_entry.value = best_value
-        t_entry.depth = depth
-        self._transposition_table.store(key, t_entry)
         return evaluated_moves
     # end region
 
     # region Principal Variation Search
     async def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type, **kwargs):
-        alpha_original = alpha
-        key = game_board.zobrist_key
-
         timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
         start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
-
-        flag, t_entry = self._transposition_table.try_lookup(key)
-        if flag and t_entry.depth >= depth:
-            if t_entry.type == TranspositionTableEntryType.exact:
-                return t_entry.value
-            elif t_entry.type == TranspositionTableEntryType.lower_bound:
-                alpha = max(alpha, t_entry.value)
-            elif t_entry.type == TranspositionTableEntryType.upper_bound:
-                beta = min(beta, t_entry.value)
-
-            if alpha >= beta:
-                return t_entry.value
 
         if depth == 0 or game_board.game_is_over:
             return await self.quiescence_search_async(game_board, self.quiescent_search_max_depth, alpha, beta, colour)
 
         best_value = None
-        best_move = t_entry.best_move if t_entry else None
+        best_move = None
         first_move = True
 
-        if self.game_type == "Original":
-            moves = self.get_presorted_valid_moves(game_board, best_move)
-        else:
-            moves = MoveSet(moves_list=game_board.get_valid_moves())
+        moves = self.get_presorted_valid_moves(game_board, best_move)
+
+        # if self.game_type == "Original":
+        #     moves = self.get_presorted_valid_moves(game_board, best_move)
+        # else:
+        #     moves = MoveSet(moves_list=game_board.get_valid_moves())
 
         # Optimize loop:
         en_moves = ListExtensions.get_enumerable_by_order_type(moves, order_type) if order_type != "Default" else moves
@@ -349,7 +287,6 @@ class GameAI:
 
             if best_value is None or value >= best_value:
                 best_value = value
-                best_move = move
 
             if best_value >= beta:
                 break
@@ -357,20 +294,6 @@ class GameAI:
             if timeout:
                 if now() > start_time + timeout:
                     break
-
-        if best_value is not None:
-            t_entry = TranspositionTableEntry()
-
-            if best_value <= alpha_original:
-                t_entry.type = TranspositionTableEntryType.upper_bound
-            else:
-                t_entry.type = TranspositionTableEntryType.lower_bound \
-                    if best_value >= beta else TranspositionTableEntryType.exact
-                t_entry.best_move = best_move
-
-            t_entry.value = best_value
-            t_entry.depth = depth
-            self._transposition_table.store(key, t_entry)
 
         return best_value
     # endregion
@@ -464,14 +387,8 @@ class GameAI:
             elif game_board.board_state == "Draw":
                 return 0.0
 
-            key = game_board.zobrist_key
-            flag, score = self._cached_board_scores.try_lookup(key)
-            if flag:
-                return score
-
             board_metrics = game_board.get_board_metrics()
             score = self.calculate_board_score(None, board_metrics, self.start_metric_weights, self.end_metric_weights)
-            self._cached_board_scores.store(key, score)
             return score
 
         elif start_weights and end_weights:
