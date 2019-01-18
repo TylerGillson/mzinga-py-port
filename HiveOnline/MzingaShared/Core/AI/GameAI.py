@@ -1,11 +1,17 @@
-﻿import numpy as np
+﻿import sys
+
+try:
+    import numpy as np
+    eps = np.finfo(float).eps
+except ModuleNotFoundError:
+    eps = sys.float_info.min
+
 import functools
 import datetime
 
 from MzingaShared.Core import EnumUtils
 from MzingaShared.Core.EnumUtils import EnumUtils as EnumUtilsCls
 from Utils.Events import Broadcaster
-from MzingaShared.Core.FixedCache import FixedCache
 from MzingaShared.Core.Move import Move
 from MzingaShared.Core.MoveSet import MoveSet
 from MzingaShared.Core.AI.BoardMetricWeights import BoardMetricWeights
@@ -13,8 +19,6 @@ from MzingaShared.Core.AI.EvaluatedMove import EvaluatedMove
 from MzingaShared.Core.AI.EvaluatedMoveCollection import EvaluatedMoveCollection
 from MzingaShared.Core.AI.ListExtensions import ListExtensions
 from MzingaShared.Core.AI.MetricWeights import MetricWeights
-from MzingaShared.Core.AI.TranspositionTable import TranspositionTable, TranspositionTableEntry, \
-                                                    TranspositionTableEntryType
 
 
 class BestMoveFoundEventArgs(object):
@@ -116,16 +120,7 @@ class GameAI:
 
         moves_to_evaluate = EvaluatedMoveCollection()
         best_move = None
-
         valid_moves = self.get_presorted_valid_moves(game_board, best_move)
-
-        # if self.game_type == "Original":
-        #     valid_moves = self.get_presorted_valid_moves(game_board, best_move)
-        # else:
-        #     # Pre-sorting moves is extremely expensive and unnecessary when searching to depth ...
-        #     valid_moves = MoveSet(moves_list=game_board.get_valid_moves())
-        #     if valid_moves.count > self._max_branching_factor:
-        #         valid_moves.remove_range(self._max_branching_factor)
 
         # If necessary, convert each entry to an EvaluatedMove:
         if isinstance(valid_moves[0], Move):
@@ -175,10 +170,10 @@ class GameAI:
         start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
 
         # Optimize loop:
+        global eps
         trusted_play = game_board.trusted_play
         undo_last_move = game_board.undo_last_move
         principal_variation_search_async = self.principal_variation_search_async
-        eps = np.finfo(float).eps
         now = datetime.datetime.now
         eval_moves_add = evaluated_moves.add
 
@@ -240,20 +235,14 @@ class GameAI:
         best_value = None
         best_move = None
         first_move = True
-
         moves = self.get_presorted_valid_moves(game_board, best_move)
 
-        # if self.game_type == "Original":
-        #     moves = self.get_presorted_valid_moves(game_board, best_move)
-        # else:
-        #     moves = MoveSet(moves_list=game_board.get_valid_moves())
-
         # Optimize loop:
+        global eps
         en_moves = ListExtensions.get_enumerable_by_order_type(moves, order_type) if order_type != "Default" else moves
         trusted_play = game_board.trusted_play
         undo_last_move = game_board.undo_last_move
         principal_variation_search_async = self.principal_variation_search_async
-        eps = np.finfo(float).eps
         now = datetime.datetime.now
 
         for move in en_moves:
@@ -333,9 +322,12 @@ class GameAI:
                 return 1
 
         # Put noisy moves first
-        if game_board.is_noisy_move(a) and not game_board.is_noisy_move(b):
+        noisy_a = game_board.is_noisy_move(a)
+        noisy_b = game_board.is_noisy_move(b)
+
+        if noisy_a and not noisy_b:
             return -1
-        elif game_board.is_noisy_move(b) and not game_board.is_noisy_move(a):
+        elif noisy_b and not noisy_a:
             return 1
 
         return 0

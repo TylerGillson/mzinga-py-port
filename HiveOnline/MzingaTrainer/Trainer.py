@@ -4,7 +4,6 @@ import datetime
 import random
 import math
 import queue
-import threading
 import os
 import multiprocessing as mp
 from typing import List
@@ -24,30 +23,19 @@ GameResults = ["Loss", "Draw", "Win"]
 
 run_profile = False
 
-completed, remaining = 0, 0
-current_tier, winners = [], []
-
 
 def work_tournament(*args):
-    try:
-        args[0][0].simulate_tier_battle(*args[0][1:])
-    except IndexError:
-        args[0][0].log("Restarting due to IndexError")
-        work_tournament(*args)
+    return args[0][0].simulate_tier_battle(*args[0][1:])
 
 
 def work_battle_royale(*args):
-    args[0][0].simulate_match(*args[0][1:])
+    return args[0][0].simulate_match(*args[0][1:])
 
 
 class Trainer:
     _start_time = None
     _settings = None
     _random = None
-    _elo_lock = threading.Lock()
-    _progress_lock = threading.Lock()
-    _white_profile_lock = threading.Lock()
-    _black_profile_lock = threading.Lock()
 
     @property
     def start_time(self):
@@ -136,7 +124,6 @@ class Trainer:
         max_battles = min(max_battles, combinations)
         total = max_battles
 
-        global completed, remaining
         completed = 0
         remaining = total
 
@@ -154,28 +141,30 @@ class Trainer:
             matches = self.shuffle(matches)
 
         # Generate list of lists of parameters for calls to simulate_match:
-        args = (max_draws, path, time_limit, br_start)
+        args = (completed, remaining, max_draws, path, time_limit, br_start)
         # noinspection PyTypeChecker
         inputs = [(self, match) + args for match in matches]
 
         # Spawn simulate_tier processes across "max_parallelism" cores:
         max_parallelism = self.get_max_parallelism(max_concurrent_battles)
         with mp.Pool(max_parallelism) as pool:
-            for i in pool.imap_unordered(work_battle_royale, inputs):
-                if i == -1:  # terminate the entire pool if a timeout occurs
+            for battle_results in pool.imap_unordered(work_battle_royale, inputs):
+                # Terminate the entire pool if a timeout occurs:
+                if battle_results == -1:
                     pool.terminate()
                     break
+                else:
+                    completed += 1
+                    remaining -= 1
 
         if time_limit - (datetime.datetime.now() - br_start) <= datetime.timedelta.min:
             self.log("Battle Royale time-out.")
-
         self.log("Battle Royale end, elapsed time: %s." % ts(datetime.datetime.now() - br_start))
 
-        best = list(sorted(profile_list, key=lambda x: x.elo_rating))[0]
-
+        best = list(sorted(profile_list, key=lambda x: x.elo_rating, reverse=True))[0]
         self.log("Battle Royale Highest Elo: %s" % ts(best))
 
-    def simulate_match(self, match, max_draws, path, time_limit, br_start):
+    def simulate_match(self, completed, remaining, match, max_draws, path, time_limit, br_start):
         ts = self.to_string
         w_profile = match[0]
         b_profile = match[1]
@@ -190,11 +179,9 @@ class Trainer:
             rounds = 0
             while round_result == "Draw":
                 self.log("Battle Royale round %d start." % rounds + 1)
-
                 round_result = self.battle_profiles(w_profile, b_profile)
 
                 self.log("Battle Royale round %d end." % rounds + 1)
-
                 rounds += 1
 
                 if rounds >= max_draws and round_result == "Draw":
@@ -204,26 +191,18 @@ class Trainer:
         w_s, b_s = ts(w_profile), ts(b_profile)
         self.log("Battle Royale match end %s vs. %s." % (w_s, b_s))
 
-        global completed, remaining
-        with self._progress_lock:
-            completed += 1
-            remaining -= 1
-
         # Save Profiles
-        with self._white_profile_lock:
-            w_profile_path = "".join([path, str(w_profile.id), ".xml"])
-            self.write_profile(w_profile_path, w_profile)
+        w_profile_path = "".join([path, str(w_profile.id), ".xml"])
+        self.write_profile(w_profile_path, w_profile)
 
-        with self._black_profile_lock:
-            b_profile_path = "".join([path, str(b_profile.id), ".xml"])
-            self.write_profile(b_profile_path, b_profile)
+        b_profile_path = "".join([path, str(b_profile.id), ".xml"])
+        self.write_profile(b_profile_path, b_profile)
 
-        with self._progress_lock:
-            timeout_remaining = time_limit - (datetime.datetime.now() - br_start)
-            progress, time_remaining = self.get_progress(br_start)
-
-            eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
-            self.log("Battle Royale progress: %6.2f, ETA: %s." % (progress, eta))
+        # Display progress:
+        timeout_remaining = time_limit - (datetime.datetime.now() - br_start)
+        progress, time_remaining = self.get_progress(br_start, completed + 1, remaining - 1)
+        eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
+        self.log("Battle Royale progress: %6.2f, ETA: %s." % (progress, eta))
 
         if timeout_remaining <= datetime.timedelta.min:
             return -1
@@ -323,23 +302,17 @@ class Trainer:
         if board_state == "Draw":
             white_score, black_score, white_result, black_result = (0.5, 0.5, "Draw", "Draw")
 
-        with self._white_profile_lock:
-            white_rating = white_profile.elo_rating
-            white_k = EloUtils.provisional_k if self.is_provisional(white_profile) else EloUtils.default_k
+        # Prepare for ELO update:
+        white_rating = white_profile.elo_rating
+        white_k = EloUtils.provisional_k if self.is_provisional(white_profile) else EloUtils.default_k
+        black_rating = black_profile.elo_rating
+        black_k = EloUtils.provisional_k if self.is_provisional(black_profile) else EloUtils.default_k
 
-        with self._black_profile_lock:
-            black_rating = black_profile.elo_rating
-            black_k = EloUtils.provisional_k if self.is_provisional(black_profile) else EloUtils.default_k
-
-        with self._elo_lock:
-            white_end_rating, black_end_rating = EloUtilsCls.update_ratings(
-                white_rating, black_rating, white_score, black_score, white_k, black_k)
-
-        with self._white_profile_lock:
-            white_profile.update_record(white_end_rating, white_result)
-
-        with self._black_profile_lock:
-            black_profile.update_record(black_end_rating, black_result)
+        # Update ELO scores:
+        white_end_rating, black_end_rating = EloUtilsCls.update_ratings(
+            white_rating, black_rating, white_score, black_score, white_k, black_k)
+        white_profile.update_record(white_end_rating, white_result)
+        black_profile.update_record(black_end_rating, black_result)
 
         # Output Results
         w_s, b_s = self.to_string(white_profile), self.to_string(black_profile)
@@ -386,7 +359,7 @@ class Trainer:
             if provisional_rules:
                 profile_list = [p for p in profile_list if not self.is_provisional(p)]
 
-            profile_list = list(sorted(profile_list, key=lambda x: x.elo_rating))
+            profile_list = list(sorted(profile_list, key=lambda x: x.elo_rating, reverse=True))
 
             if keep_count == self.trainer_settings.cull_keep_max:
                 keep_count = max(self.trainer_settings.cull_min_keep_count, round(math.sqrt(len(profile_list))))
@@ -565,9 +538,7 @@ class Trainer:
                 self.log("Lifecycle generation %d end." % gen)
 
             if generations > 0:
-                global completed, remaining
-                completed, remaining = gen, generations - gen
-                progress, time_remaining = self.get_progress(lifecycle_start)
+                progress, time_remaining = self.get_progress(lifecycle_start, gen, generations - gen)
                 self.log("Lifecycle progress: %6.2f ETA %s." % (progress, self.to_string(time_remaining)))
 
             # Output analysis
@@ -656,7 +627,6 @@ class Trainer:
             profiles = self.load_profiles(path)
             total = len(profiles) - 1
 
-            global completed, remaining, current_tier, winners
             completed = 0
             remaining = total
 
@@ -675,17 +645,22 @@ class Trainer:
                 winners = []
 
                 # Generate list of lists of parameters for calls to simulate_tier_battle:
-                args = (max_draws, path, time_limit, tournament_start)
+                args = (completed, remaining, current_tier, max_draws, path, time_limit, tournament_start)
                 # noinspection PyTypeChecker
                 inputs = [(self, i) + args for i in range(len(current_tier) // 2)]
 
                 # Spawn simulate_tier processes across "max_parallelism" cores:
                 max_parallelism = self.get_max_parallelism(max_concurrent_battles)
                 with mp.Pool(max_parallelism) as pool:
-                    for i in pool.imap_unordered(work_tournament, inputs):
-                        if i == -1:  # terminate the entire pool if a timeout occurs
+                    for battle_results in pool.imap_unordered(work_tournament, inputs):
+                        # Terminate the entire pool if a timeout occurs:
+                        if battle_results == -1:
                             pool.terminate()
                             break
+                        else:
+                            winners.extend(battle_results)
+                            completed += 1
+                            remaining -= 1
 
                 self.log("Tournament tier %d end." % tier)
                 tier += 1
@@ -702,20 +677,19 @@ class Trainer:
                 winner = current_tier[0]
                 self.log("Tournament Winner: %s" % ts(winner))
 
-            best = list(sorted(profiles, key=lambda x: x.elo_rating))[0]
+            best = list(sorted(profiles, key=lambda x: x.elo_rating, reverse=True))[0]
             self.log("Tournament Highest Elo: %s" % ts(best))
 
-    def simulate_tier_battle(self, i, max_draws, path, time_limit, tournament_start):
-        global current_tier, winners
+    def simulate_tier_battle(self, i, completed, remaining, current_tier,
+                             max_draws, path, time_limit, tournament_start):
+        winners = []
         ts = self.to_string
-
         profile_index = i * 2
 
         if profile_index == len(current_tier) - 1:
             # Odd profile out, gimme
             self.log("Tournament auto-advances %s." % ts(current_tier[profile_index]))
-            with self._progress_lock:
-                winners.append(current_tier[profile_index])
+            winners.append(current_tier[profile_index])
         else:
             white_index = self.random.randrange(0, 2)  # Help mitigate top players always playing white
             white_profile = current_tier[profile_index + white_index]
@@ -750,41 +724,30 @@ class Trainer:
             w_s, b_s = ts(white_profile), ts(black_profile)
             self.log("Tournament match end %s vs. %s." % (w_s, b_s))
 
-            global completed, remaining
-            with self._progress_lock:
-                completed += 1
-                remaining -= 1
+            # Add winner back into the participant queue
+            if round_result == "WhiteWins":
+                winners.append(white_profile)
+            elif round_result == "BlackWins":
+                winners.append(black_profile)
 
-                # Add winner back into the participant queue
-                if round_result == "WhiteWins":
-                    winners.append(white_profile)
-                elif round_result == "BlackWins":
-                    winners.append(black_profile)
-
-                try:
-                    self.log("Tournament advances %s." % ts(winners[i]))
-                except IndexError:
-                    self.log("Tournament advances ... ")
+            self.log("Tournament advances %s." % ts(winners[0]))
 
             # Save Profiles
-            with self._white_profile_lock:
-                white_profile_path = "".join([path, str(white_profile.id), ".xml"])
-                self.write_profile(white_profile_path, white_profile)
+            white_profile_path = "".join([path, str(white_profile.id), ".xml"])
+            self.write_profile(white_profile_path, white_profile)
 
-            with self._black_profile_lock:
-                black_profile_path = "".join([path, str(black_profile.id), ".xml"])
-                self.write_profile(black_profile_path, black_profile)
+            black_profile_path = "".join([path, str(black_profile.id), ".xml"])
+            self.write_profile(black_profile_path, black_profile)
 
-            with self._progress_lock:
-                timeout_remaining = time_limit - (datetime.datetime.now() - tournament_start)
+            timeout_remaining = time_limit - (datetime.datetime.now() - tournament_start)
 
-                progress, time_remaining = self.get_progress(tournament_start)
-                eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
-                self.log("Tournament progress: %6.2f, ETA: %s." % (progress, eta))
+            progress, time_remaining = self.get_progress(tournament_start, completed + 1, remaining - 1)
+            eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
+            self.log("Tournament progress: %6.2f, ETA: %s." % (progress, eta))
 
             if timeout_remaining <= datetime.timedelta.min:
                 return -1
-            return 1
+            return winners
 
     def to_string(self, val):
         if isinstance(val, datetime.timedelta):
@@ -841,8 +804,7 @@ class Trainer:
         return seeded
 
     @staticmethod
-    def get_progress(start_time):
-        global completed, remaining
+    def get_progress(start_time, completed, remaining):
         total = completed + remaining
 
         if completed == 0:
