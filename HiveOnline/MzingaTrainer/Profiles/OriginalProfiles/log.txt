@@ -1,8 +1,0 @@
-0.0:0:0 > Lifecycle start.
-0.0:0:6 > Lifecycle generation 1 start.
-0.0:0:8 > Tournament start, ETA: 0.8:495:29700.
-0.0:0:8 > Tournament tier 1 start, 12 participants.
-0.0:0:8 > Tournament match start Nahimbaita(1126? 0/3/3) vs. Kilimbane(1258? 2/0/0).
-0.0:0:8 > Tournament match start Nabambaita(1221? 1/0/1) vs. Molishani(1156? 0/2/3).
-0.0:0:31 > Battle start Nabambaita(1221? 1/0/1) vs. Molishani(1156? 0/2/3).
-0.0:0:31 > Battle start Nahimbaita(1126? 0/3/3) vs. Kilimbane(1258? 2/0/0).

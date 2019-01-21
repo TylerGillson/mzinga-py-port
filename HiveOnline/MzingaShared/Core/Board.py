@@ -1,5 +1,4 @@
 import queue
-from collections import deque
 
 from MzingaShared.Core import Move as MoveCls, EnumUtils
 from MzingaShared.Core.BoardMetrics import BoardMetrics
@@ -8,10 +7,10 @@ from MzingaShared.Core.Move import Move
 from MzingaShared.Core.MoveSet import MoveSet
 from MzingaShared.Core.Piece import Piece
 from MzingaShared.Core import Position as PositionCls
-from MzingaShared.Core.Position import Position
+from MzingaShared.Core.Position import Position, parse as parse_position
 from MzingaShared.Core.ZobristHash import ZobristHash
 from MzingaShared.Core.EnumUtils import colours, colours_by_int, piece_names_by_int, piece_names, \
-                                        EnumUtils as EnumUtilsCls, rings, directions
+                                        EnumUtils as EnumUtilsCls, rings, directions, num_piece_names, num_directions
 
 board_states = ["NotStarted", "InProgress", "Draw", "WhiteWins", "BlackWins"]
 
@@ -70,6 +69,22 @@ class Board:
     @property
     def game_is_over(self):
         return self.board_state in ["WhiteWins", "BlackWins", "Draw"]
+
+    @property
+    def friendly_queen_neighbours_string(self):
+        if self._cached_friendly_queen_neighbours is None or len(self._cached_friendly_queen_neighbours) == 0:
+            return "None"
+        return str(self._cached_friendly_queen_neighbours)
+
+    @property
+    def enemy_queen_neighbours_string(self):
+        if self._cached_enemy_queen_neighbours is None or len(self._cached_enemy_queen_neighbours) == 0:
+            return "None"
+        return str(self._cached_enemy_queen_neighbours)
+
+    @property
+    def board_metrics_string(self):
+        return str(self._board_metrics)
 
     @property
     def board_string(self):
@@ -303,35 +318,51 @@ class Board:
         return target_piece.piece_below is None
 
     def is_one_hive(self):
-        pieces_in_play = [p for p in self._pieces_by_position.values() if p is not None]
-        pieces_visited, num_pieces = 1, len(pieces_in_play)  # pieces_visited == 1 to count 1st piece
-        pieces_to_look_at = deque([pieces_in_play[0]])
+        # Whether or not a piece has been found to be part of the hive
+        part_of_hive = [0] * num_piece_names
+        pieces_visited = 0
 
-        analyzed_pieces = set()
-        get_piece = self.get_piece
-
-        while len(pieces_to_look_at) > 0:
-            current_piece = pieces_to_look_at.pop()
-            n_at = current_piece.position.neighbour_at
-
-            # Check all pieces at this stack level
-            for i in range(EnumUtils.num_directions):
-                neighbor_piece = get_piece(n_at(i))
-                new = neighbor_piece not in analyzed_pieces and neighbor_piece not in pieces_to_look_at
-
-                if neighbor_piece is not None and new:
-                    pieces_to_look_at.append(neighbor_piece)
+        # Find a piece on the board to start checking
+        starting_piece = None
+        for piece_name in list(piece_names.keys())[1:]:
+            piece = self.get_piece(piece_name)
+            if piece is None or piece.in_hand:
+                part_of_hive[piece_names[piece_name]] = True
+                pieces_visited += 1
+            else:
+                part_of_hive[piece_names[piece_name]] = False
+                if starting_piece is None and piece.position.stack == 0:
+                    # Save off a starting piece on the bottom
+                    starting_piece = piece
+                    part_of_hive[piece_names[piece_name]] = True
                     pieces_visited += 1
 
-            # Check for all pieces above this one
-            piece_above = current_piece.piece_above
-            while piece_above is not None:
-                pieces_visited += 1
-                piece_above = piece_above.piece_above
+        # There is at least one piece on the board
+        if starting_piece is not None and pieces_visited < num_piece_names:
+            pieces_to_look_at = queue.Queue()
+            pieces_to_look_at.put(starting_piece)
 
-            analyzed_pieces.add(current_piece)
+            while not pieces_to_look_at.empty():
+                current_piece = pieces_to_look_at.get()
+                neighbour_at = current_piece.position.neighbour_at
 
-        return pieces_visited == num_pieces
+                # Check all pieces at this stack level
+                for i in range(num_directions):
+                    neighbor = neighbour_at(i)
+                    neighbor_piece = self.get_piece(neighbor)
+                    if neighbor_piece is not None and not part_of_hive[piece_names[neighbor_piece.piece_name]]:
+                        pieces_to_look_at.put(neighbor_piece)
+                        part_of_hive[piece_names[neighbor_piece.piece_name]] = True
+                        pieces_visited += 1
+
+                # Check for all pieces above this one
+                piece_above = current_piece.piece_above
+                while piece_above is not None:
+                    part_of_hive[piece_names[piece_above.piece_name]] = True
+                    pieces_visited += 1
+                    piece_above = piece_above.piece_above
+
+        return pieces_visited == num_piece_names
 
     # METRICS
     def get_board_metrics(self):
@@ -606,6 +637,20 @@ class Board:
                             enemy_count += 1
 
             return friendly_count + enemy_count, friendly_count, enemy_count
+
+    def set_queen_neighbours(self, wq_neighbour_str, bq_neighbour_str):
+        if wq_neighbour_str == "None":
+            wq_neighbours = None
+        else:
+            wq_neighbours = set([parse_position(x) for x in wq_neighbour_str[1:-1].split(' ')])
+
+        if bq_neighbour_str == "None":
+            bq_neighbours = None
+        else:
+            bq_neighbours = set([parse_position(x) for x in bq_neighbour_str[1:-1].split(' ')])
+
+        self._cached_enemy_queen_neighbours = bq_neighbours if self.current_turn_colour == "White" else wq_neighbours
+        self._cached_friendly_queen_neighbours = wq_neighbours if self.current_turn_colour == "White" else bq_neighbours
 
     def count_queen_neighbours(self, queen_position, colour):
         neighbour_count = 0

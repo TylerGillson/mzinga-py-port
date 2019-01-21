@@ -1,4 +1,9 @@
 ﻿import sys
+import django
+django.setup()
+
+from django.core.exceptions import ObjectDoesNotExist
+from mzinga.models import GameStateHash
 
 try:
     import numpy as np
@@ -9,6 +14,7 @@ except ModuleNotFoundError:
 import functools
 import datetime
 
+from MzingaShared.Core.BoardMetrics import BoardMetrics
 from MzingaShared.Core import EnumUtils
 from MzingaShared.Core.EnumUtils import EnumUtils as EnumUtilsCls
 from Utils.Events import Broadcaster
@@ -19,6 +25,8 @@ from MzingaShared.Core.AI.EvaluatedMove import EvaluatedMove
 from MzingaShared.Core.AI.EvaluatedMoveCollection import EvaluatedMoveCollection
 from MzingaShared.Core.AI.ListExtensions import ListExtensions
 from MzingaShared.Core.AI.MetricWeights import MetricWeights
+
+profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/"
 
 
 class BestMoveFoundEventArgs(object):
@@ -66,7 +74,9 @@ class GameAI:
 
     _max_branching_factor = max_max_branching_factor  # To prevent search explosion
 
-    def __init__(self, config=None):
+    def __init__(self, battle_key, config=None):
+        self.battle_key = battle_key
+
         if config:
             self.game_type = config.game_type
 
@@ -86,6 +96,12 @@ class GameAI:
             self.board_metric_weights = BoardMetricWeights()
             self.start_metric_weights = MetricWeights(self.game_type)
             self.end_metric_weights = MetricWeights(self.game_type)
+
+    def log(self, value):
+        log_path = "".join([profile_path, self.battle_key, "_move_log.txt"])
+
+        with open(log_path, "a") as log:
+            log.write("".join([value, '\n']))
 
     # region Move Evaluation
     def get_best_move(self, game_board, **kwargs):
@@ -112,6 +128,7 @@ class GameAI:
 
         # Make sure at least one move is reported
         self.best_move_found.on_change.fire(self, best_move_params, evaluated_moves.best_move, handler_key=0)
+        self.log("".join(["Returning Best Move: ", str(best_move_params.best_move.move)]))
         return best_move_params.best_move.move
 
     async def evaluate_moves_async(self, game_board, best_move_params, **kwargs):
@@ -127,6 +144,10 @@ class GameAI:
             valid_moves = list(map(lambda x: EvaluatedMove(x), valid_moves))
 
         moves_to_evaluate.add(evaluated_moves=valid_moves, re_sort=False)
+        self.log("Get Best Move Top Level:")
+        self.log(str(game_board))
+        self.log("Outer-most moves_to_evaluate:")
+        self.log(str(moves_to_evaluate))
 
         # No need to search
         if moves_to_evaluate.count <= 1 or best_move_params.max_search_depth == 0:
@@ -141,6 +162,8 @@ class GameAI:
 
             # "Re-sort" moves to evaluate based on the next iteration
             moves_to_evaluate = await self.evaluate_moves_to_depth_async(game_board, depth, moves_to_evaluate, **kwargs)
+            self.log("Re-sorted:")
+            self.log(str(moves_to_evaluate))
 
             # Fire best_move_found for current depth
             self.best_move_found.on_change.fire(self, best_move_params, moves_to_evaluate.best_move, handler_key=0)
@@ -178,6 +201,7 @@ class GameAI:
         eval_moves_add = evaluated_moves.add
 
         for move_to_evaluate in moves_to_evaluate.get_enumerator():
+            self.log("".join(["Evaluating: ", str(move_to_evaluate)]))
             update_alpha = False
             trusted_play(move_to_evaluate.move)
 
@@ -236,6 +260,8 @@ class GameAI:
         best_move = None
         first_move = True
         moves = self.get_presorted_valid_moves(game_board, best_move)
+        self.log("PVS Moves: ")
+        self.log(str(moves))
 
         # Optimize loop:
         global eps
@@ -347,7 +373,13 @@ class GameAI:
         undo_last_move = game_board.undo_last_move
         quiescence_search_async = self.quiescence_search_async
 
-        for move in game_board.get_valid_moves():
+        valid_moves = game_board.get_valid_moves()
+        self.log("Quiescence Search Valid Moves:")
+        self.log(str(valid_moves))
+
+        for move in valid_moves:
+            self.log("".join(["QS Evaluating: ", str(move)]))
+
             if move.is_pass:
                 continue
 
@@ -379,7 +411,25 @@ class GameAI:
             elif game_board.board_state == "Draw":
                 return 0.0
 
-            board_metrics = game_board.get_board_metrics()
+            # Attempt to retrieve board metrics from persistent cache:
+            try:
+                gsh = GameStateHash.objects.get(game_type=game_board.game_type,
+                                                game_state_hash=str(game_board.zobrist_key))
+                board_metrics = BoardMetrics(game_board.game_type, metric_string=gsh.board_metrics)
+                game_board.set_queen_neighbours(gsh.white_queen_neighbours, gsh.black_queen_neighbours)
+
+            # Otherwise, calculate them and save the results:
+            except ObjectDoesNotExist:
+                board_metrics = game_board.get_board_metrics()
+                gsh = GameStateHash(
+                    game_type=game_board.game_type,
+                    game_state_hash=str(game_board.zobrist_key),
+                    board_metrics=game_board.board_metrics_string,
+                    white_queen_neighbours=game_board.friendly_queen_neighbours_string,
+                    black_queen_neighbours=game_board.enemy_queen_neighbours_string
+                )
+                gsh.save()
+
             score = self.calculate_board_score(None, board_metrics, self.start_metric_weights, self.end_metric_weights)
             return score
 

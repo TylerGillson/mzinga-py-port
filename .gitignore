@@ -1,2 +1,7 @@
 HiveOnline/HiveOnline/settings.py
+
 *.xml
+*.pyc
+*log.txt
+*.csv
+*.sqlite3

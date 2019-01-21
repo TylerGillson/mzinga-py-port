@@ -216,15 +216,17 @@ class Trainer:
         if white_profile.id == black_profile.id:
             raise ValueError("Profile cannot battle itself.")
 
+        battle_key = "".join([white_profile.name, "_", black_profile.name])
+
         # Create AIs
-        white_ai = GameAI(GameAIConfig(
+        white_ai = GameAI(battle_key, GameAIConfig(
             white_profile.start_metric_weights,
             white_profile.end_metric_weights,
             self.trainer_settings.trans_table_size,
             white_profile.game_type,
             board_weights=white_profile.board_metric_weights)
         )
-        black_ai = GameAI(GameAIConfig(
+        black_ai = GameAI(battle_key, GameAIConfig(
             black_profile.start_metric_weights,
             black_profile.end_metric_weights,
             self.trainer_settings.trans_table_size,
@@ -407,11 +409,13 @@ class Trainer:
         return [self.read_profile(path + f) for f in files]
 
     def log(self, output):
-        elapsed_time = datetime.datetime.now() - self.start_time
+        now = datetime.datetime.now()
+        elapsed_time = now - self.start_time
         log_str = "%s > %s" % (self.to_string(elapsed_time), output)
 
         if self.trainer_settings.log_to_file:
-            log_path = "".join([self.trainer_settings.profile_path, "log.txt"])
+            timestamp = self.start_time.strftime("%Y_%m_%d.%H:%M")
+            log_path = "".join([self.trainer_settings.profile_path, timestamp, "_log.txt"])
 
             with open(log_path, "a") as log:
                 log.write("".join([log_str, '\n']))
@@ -677,7 +681,7 @@ class Trainer:
                 winner = current_tier[0]
                 self.log("Tournament Winner: %s" % ts(winner))
 
-            best = list(sorted(profiles, key=lambda x: x.elo_rating, reverse=True))[0]
+            best = list(sorted(profiles, key=lambda x: x.elo_rating))[0]
             self.log("Tournament Highest Elo: %s" % ts(best))
 
     def simulate_tier_battle(self, i, completed, remaining, current_tier,
