@@ -681,7 +681,7 @@ class Trainer:
                 winner = current_tier[0]
                 self.log("Tournament Winner: %s" % ts(winner))
 
-            best = list(sorted(profiles, key=lambda x: x.elo_rating))[0]
+            best = list(sorted(profiles, key=lambda x: x.elo_rating, reverse=True))[0]
             self.log("Tournament Highest Elo: %s" % ts(best))
 
     def simulate_tier_battle(self, i, completed, remaining, current_tier,
