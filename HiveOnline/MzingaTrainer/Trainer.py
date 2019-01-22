@@ -164,7 +164,7 @@ class Trainer:
         best = list(sorted(profile_list, key=lambda x: x.elo_rating, reverse=True))[0]
         self.log("Battle Royale Highest Elo: %s" % ts(best))
 
-    def simulate_match(self, completed, remaining, match, max_draws, path, time_limit, br_start):
+    def simulate_match(self, match, completed, remaining, max_draws, path, time_limit, br_start):
         ts = self.to_string
         w_profile = match[0]
         b_profile = match[1]
@@ -529,11 +529,11 @@ class Trainer:
                                         self.trainer_settings.battle_shuffle_profiles,
                                         self.trainer_settings.max_concurrent_battles)
                     elif battles > 0:
-                        args = [path, self.trainer_settings.max_battles, self.trainer_settings.max_draws,
-                                self.trainer_settings.bulk_battle_time_limit,
-                                self.trainer_settings.battle_shuffle_profiles,
-                                self.trainer_settings.max_concurrent_battles]
-                        self.battle_royale(args)
+                        self.battle_royale(path, self.trainer_settings.max_battles,
+                                           self.trainer_settings.max_draws,
+                                           self.trainer_settings.bulk_battle_time_limit,
+                                           self.trainer_settings.battle_shuffle_profiles,
+                                           self.trainer_settings.max_concurrent_battles)
 
             # Cull & Mate
             self.cull(path, self.trainer_settings.cull_keep_count, self.trainer_settings.provisional_rules)

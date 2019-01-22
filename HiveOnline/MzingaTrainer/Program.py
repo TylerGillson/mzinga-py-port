@@ -155,7 +155,7 @@ class Program:
         elif arg in ["mdepth", "maxdepth"]:
             trainer_settings.max_depth = int(args[i + 1])
         elif arg in ["tmt", "turnmaxtime"]:
-            trainer_settings.turn_max_time = datetime.timedelta(seconds=int(args[i + 1]))
+            trainer_settings.turn_max_time = int(args[i + 1])
         elif arg in ["btl", "battletimelimit"]:
             trainer_settings.battle_time_limit = int(args[i + 1])
         elif arg in ["tpp", "targetprofilepath"]:
