@@ -17,7 +17,7 @@ import datetime
 from MzingaShared.Core.BoardMetrics import BoardMetrics
 from MzingaShared.Core import EnumUtils
 from MzingaShared.Core.EnumUtils import EnumUtils as EnumUtilsCls
-from Utils.Events import Broadcaster
+from MzingaShared.Core.FixedCache import FixedCache
 from MzingaShared.Core.Move import Move
 from MzingaShared.Core.MoveSet import MoveSet
 from MzingaShared.Core.AI.BoardMetricWeights import BoardMetricWeights
@@ -25,8 +25,12 @@ from MzingaShared.Core.AI.EvaluatedMove import EvaluatedMove
 from MzingaShared.Core.AI.EvaluatedMoveCollection import EvaluatedMoveCollection
 from MzingaShared.Core.AI.ListExtensions import ListExtensions
 from MzingaShared.Core.AI.MetricWeights import MetricWeights
+from MzingaShared.Core.AI.TranspositionTable import TranspositionTable, \
+                                                    TranspositionTableEntry, TranspositionTableEntryType
+from Utils.Events import Broadcaster
 
-profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/"
+debug = False
+debug_log_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/"
 
 
 class BestMoveFoundEventArgs(object):
@@ -73,6 +77,16 @@ class GameAI:
     game_type = None
 
     _max_branching_factor = max_max_branching_factor  # To prevent search explosion
+    _transposition_table = None
+    _cached_board_scores = FixedCache(default_board_scores_cache_size)
+
+    @property
+    def transposition_table_hits(self):
+        return self._transposition_table.metrics.hits
+
+    @property
+    def cached_board_score_hits(self):
+        return self._cached_board_scores.metrics.hits
 
     def __init__(self, battle_key, config=None):
         self.battle_key = battle_key
@@ -87,6 +101,13 @@ class GameAI:
             self.end_metric_weights = config.end_metric_weights.clone() \
                 if config.end_metric_weights else MetricWeights(self.game_type)
 
+            if config.transposition_table_size_mb is not None:
+                if config.transposition_table_size_mb <= 0:
+                    raise ValueError("Invalid config.transposition_table_size_mb.")
+                self._transposition_table = TranspositionTable(config.transposition_table_size_mb * 1024 * 1024)
+            else:
+                self._transposition_table = TranspositionTable()
+
             if config.max_branching_factor is not None:
                 if config.max_branching_factor <= 0:
                     raise ValueError("Invalid config.max_branching_factor.")
@@ -96,9 +117,14 @@ class GameAI:
             self.board_metric_weights = BoardMetricWeights()
             self.start_metric_weights = MetricWeights(self.game_type)
             self.end_metric_weights = MetricWeights(self.game_type)
+            self._transposition_table = TranspositionTable()
+
+    def reset_caches(self):
+        self._transposition_table.clear()
+        self._cached_board_scores.clear()
 
     def log(self, value):
-        log_path = "".join([profile_path, self.battle_key, "_move_log.txt"])
+        log_path = "".join([debug_log_path, self.battle_key, "_move_log.txt"])
 
         with open(log_path, "a") as log:
             log.write("".join([value, '\n']))
@@ -128,7 +154,9 @@ class GameAI:
 
         # Make sure at least one move is reported
         self.best_move_found.on_change.fire(self, best_move_params, evaluated_moves.best_move, handler_key=0)
-        self.log("".join(["Returning Best Move: ", str(best_move_params.best_move.move)]))
+        if debug:
+            self.log("".join(["Returning Best Move: ", str(best_move_params.best_move.move)]))
+
         return best_move_params.best_move.move
 
     async def evaluate_moves_async(self, game_board, best_move_params, **kwargs):
@@ -137,6 +165,19 @@ class GameAI:
 
         moves_to_evaluate = EvaluatedMoveCollection()
         best_move = None
+
+        # Try to get cached best move if available
+        key = game_board.zobrist_key
+        flag, t_entry = self._transposition_table.try_lookup(key)
+        if flag and t_entry.best_move is not None:
+            best_move = EvaluatedMove(t_entry.best_move, t_entry.value, t_entry.depth)
+            self.best_move_found.on_change.fire(self, best_move_params, best_move, handler_key=0)
+
+        if best_move is not None and best_move.score_after_move == float("inf"):
+            # Winning move, don't search
+            moves_to_evaluate.add(evaluated_move=best_move)
+            return moves_to_evaluate
+
         valid_moves = self.get_presorted_valid_moves(game_board, best_move)
 
         # If necessary, convert each entry to an EvaluatedMove:
@@ -144,10 +185,11 @@ class GameAI:
             valid_moves = list(map(lambda x: EvaluatedMove(x), valid_moves))
 
         moves_to_evaluate.add(evaluated_moves=valid_moves, re_sort=False)
-        self.log("Get Best Move Top Level:")
-        self.log(str(game_board))
-        self.log("Outer-most moves_to_evaluate:")
-        self.log(str(moves_to_evaluate))
+        if debug:
+            self.log("Get Best Move Top Level:")
+            self.log(str(game_board))
+            self.log("Outer-most moves_to_evaluate:")
+            self.log(str(moves_to_evaluate))
 
         # No need to search
         if moves_to_evaluate.count <= 1 or best_move_params.max_search_depth == 0:
@@ -162,8 +204,9 @@ class GameAI:
 
             # "Re-sort" moves to evaluate based on the next iteration
             moves_to_evaluate = await self.evaluate_moves_to_depth_async(game_board, depth, moves_to_evaluate, **kwargs)
-            self.log("Re-sorted:")
-            self.log(str(moves_to_evaluate))
+            if debug:
+                self.log("Re-sorted:")
+                self.log(str(moves_to_evaluate))
 
             # Fire best_move_found for current depth
             self.best_move_found.on_change.fire(self, best_move_params, moves_to_evaluate.best_move, handler_key=0)
@@ -185,9 +228,10 @@ class GameAI:
         alpha = float("-inf")
         beta = float("inf")
         colour = 1 if game_board.current_turn_colour == "White" else -1
-        evaluated_moves = EvaluatedMoveCollection()
+        alpha_original = alpha
         best_value = None
         first_move = True
+        evaluated_moves = EvaluatedMoveCollection()
 
         timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
         start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
@@ -201,7 +245,9 @@ class GameAI:
         eval_moves_add = evaluated_moves.add
 
         for move_to_evaluate in moves_to_evaluate.get_enumerator():
-            self.log("".join(["Evaluating: ", str(move_to_evaluate)]))
+            if debug:
+                self.log("".join(["Evaluating: ", str(move_to_evaluate)]))
+
             update_alpha = False
             trusted_play(move_to_evaluate.move)
 
@@ -245,23 +291,55 @@ class GameAI:
                 if now() > start_time + timeout:
                     break
 
+        key = game_board.zobrist_key
+        t_entry = TranspositionTableEntry()
+
+        if best_value <= alpha_original:
+            # Losing move since alpha_original is negative infinity in this function
+            t_entry.type = TranspositionTableEntryType.upper_bound
+        else:
+            # Move is a lower bound winning move if best_value >= beta
+            # (always infinity in this function), otherwise it's exact
+            t_entry.type = TranspositionTableEntryType.lower_bound \
+                if best_value >= beta else TranspositionTableEntryType.exact
+            t_entry.best_move = evaluated_moves.best_move.move
+
+        t_entry.value = best_value
+        t_entry.depth = depth
+        self._transposition_table.store(key, t_entry)
         return evaluated_moves
     # end region
 
     # region Principal Variation Search
     async def principal_variation_search_async(self, game_board, depth, alpha, beta, colour, order_type, **kwargs):
+        alpha_original = alpha
+        key = game_board.zobrist_key
+
         timeout = kwargs.get('max_time') if 'max_time' in kwargs else None
         start_time = kwargs.get('start_time') if 'start_time' in kwargs else None
+
+        flag, t_entry = self._transposition_table.try_lookup(key)
+        if flag and t_entry.depth >= depth:
+            if t_entry.type == TranspositionTableEntryType.exact:
+                return t_entry.value
+            elif t_entry.type == TranspositionTableEntryType.lower_bound:
+                alpha = max(alpha, t_entry.value)
+            elif t_entry.type == TranspositionTableEntryType.upper_bound:
+                beta = min(beta, t_entry.value)
+
+            if alpha >= beta:
+                return t_entry.value
 
         if depth == 0 or game_board.game_is_over:
             return await self.quiescence_search_async(game_board, self.quiescent_search_max_depth, alpha, beta, colour)
 
         best_value = None
-        best_move = None
+        best_move = t_entry.best_move if t_entry else None
         first_move = True
         moves = self.get_presorted_valid_moves(game_board, best_move)
-        self.log("PVS Moves: ")
-        self.log(str(moves))
+        if debug:
+            self.log("PVS Moves: ")
+            self.log(str(moves))
 
         # Optimize loop:
         global eps
@@ -302,6 +380,7 @@ class GameAI:
 
             if best_value is None or value >= best_value:
                 best_value = value
+                best_move = move
 
             if best_value >= beta:
                 break
@@ -309,6 +388,20 @@ class GameAI:
             if timeout:
                 if now() > start_time + timeout:
                     break
+
+        if best_value is not None:
+            t_entry = TranspositionTableEntry()
+
+            if best_value <= alpha_original:
+                t_entry.type = TranspositionTableEntryType.upper_bound
+            else:
+                t_entry.type = TranspositionTableEntryType.lower_bound \
+                    if best_value >= beta else TranspositionTableEntryType.exact
+                t_entry.best_move = best_move
+
+            t_entry.value = best_value
+            t_entry.depth = depth
+            self._transposition_table.store(key, t_entry)
 
         return best_value
     # endregion
@@ -374,11 +467,13 @@ class GameAI:
         quiescence_search_async = self.quiescence_search_async
 
         valid_moves = game_board.get_valid_moves()
-        self.log("Quiescence Search Valid Moves:")
-        self.log(str(valid_moves))
+        if debug:
+            self.log("Quiescence Search Valid Moves:")
+            self.log(str(valid_moves))
 
         for move in valid_moves:
-            self.log("".join(["QS Evaluating: ", str(move)]))
+            if debug:
+                self.log("".join(["QS Evaluating: ", str(move)]))
 
             if move.is_pass:
                 continue
@@ -411,26 +506,50 @@ class GameAI:
             elif game_board.board_state == "Draw":
                 return 0.0
 
+            # Attempt to retrieve board score from transposition table:
+            key = game_board.zobrist_key
+            flag, score = self._cached_board_scores.try_lookup(key)
+            if flag:
+                return score
+
+            def calculate_board_metrics(overwrite=False, model_instance=None):
+                bm = game_board.get_board_metrics()
+
+                # Create or overwrite cached game state model instance:
+                if overwrite:
+                    model_instance.game_type = game_board.game_type
+                    model_instance.board_metrics = game_board.board_metrics_string
+                    model_instance.save()
+                else:
+                    game_state_hash = GameStateHash(
+                        game_state_hash=str(key),
+                        game_type=game_board.game_type,
+                        board_metrics=game_board.board_metrics_string,
+                        white_queen_neighbours=game_board.friendly_queen_neighbours_string,
+                        black_queen_neighbours=game_board.enemy_queen_neighbours_string
+                    )
+                    game_state_hash.save()
+                return bm
+
             # Attempt to retrieve board metrics from persistent cache:
             try:
-                gsh = GameStateHash.objects.get(game_type=game_board.game_type,
-                                                game_state_hash=str(game_board.zobrist_key))
-                board_metrics = BoardMetrics(game_board.game_type, metric_string=gsh.board_metrics)
-                game_board.set_queen_neighbours(gsh.white_queen_neighbours, gsh.black_queen_neighbours)
+                gsh = GameStateHash.objects.get(game_state_hash=str(key))
+
+                # Extended entries are authoritative (preventing duplicates) ...
+                if game_board.game_type == "Extended" and gsh.game_type == "Original":
+                    # So, overwrite entries of Original game type:
+                    board_metrics = calculate_board_metrics(overwrite=True, model_instance=gsh)
+                else:
+                    # Otherwise, de-serialize entry:
+                    board_metrics = BoardMetrics(game_board.game_type, metric_string=gsh.board_metrics)
+                    game_board.set_queen_neighbours(gsh.white_queen_neighbours, gsh.black_queen_neighbours)
 
             # Otherwise, calculate them and save the results:
             except ObjectDoesNotExist:
-                board_metrics = game_board.get_board_metrics()
-                gsh = GameStateHash(
-                    game_type=game_board.game_type,
-                    game_state_hash=str(game_board.zobrist_key),
-                    board_metrics=game_board.board_metrics_string,
-                    white_queen_neighbours=game_board.friendly_queen_neighbours_string,
-                    black_queen_neighbours=game_board.enemy_queen_neighbours_string
-                )
-                gsh.save()
+                board_metrics = calculate_board_metrics()
 
             score = self.calculate_board_score(None, board_metrics, self.start_metric_weights, self.end_metric_weights)
+            self._cached_board_scores.store(key, score)
             return score
 
         elif start_weights and end_weights:

@@ -21,7 +21,7 @@ from MzingaTrainer.TrainerSettings import TrainerSettings
 
 GameResults = ["Loss", "Draw", "Win"]
 
-run_profile = False
+run_profile = True
 
 
 def work_tournament(*args):
@@ -209,6 +209,12 @@ class Trainer:
         return 1
 
     def battle_profiles(self, white_profile, black_profile):
+        # Conditionally profile the battle:
+        pr = None
+        if run_profile:
+            pr = cProfile.Profile()
+            pr.enable()
+
         if white_profile is None:
             raise ValueError("Invalid white_profile.")
         if black_profile is None:
@@ -262,17 +268,7 @@ class Trainer:
                     break
 
                 ai = white_ai if game_board.current_turn_colour == "White" else black_ai
-
-                ############################################################
-                if run_profile:
-                    pr = cProfile.Profile()
-                    pr.enable()
-                    move = self.get_best_move(game_board, ai)
-                    pr.disable()
-                    pr.dump_stats('/Users/tylergillson/Desktop/output.prof')
-                ############################################################
-                else:
-                    move = self.get_best_move(game_board, ai)
+                move = self.get_best_move(game_board, ai)
                 game_board.play(move[0])
 
                 # Re-build the game board between moves if pitting Original AI vs. Extended AI:
@@ -316,9 +312,14 @@ class Trainer:
         white_profile.update_record(white_end_rating, white_result)
         black_profile.update_record(black_end_rating, black_result)
 
-        # Output Results
+        # Output battle result:
         w_s, b_s = self.to_string(white_profile), self.to_string(black_profile)
         self.log("Battle end %s %s vs. %s" % (board_state, w_s, b_s))
+
+        # Output profile results:
+        if run_profile:
+            pr.disable()
+            pr.dump_stats('/Users/tylergillson/Desktop/output.prof')
 
         return board_state
 

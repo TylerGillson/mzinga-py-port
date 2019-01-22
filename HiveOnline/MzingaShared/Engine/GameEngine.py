@@ -151,6 +151,7 @@ class GameEngine:
         if debug:
             if not (board_string is None or board_string.isspace()):
                 self._game_board = GameBoard(board_string=board_string, game_type=self.config.game_type)
+                self._game_ai.reset_caches()
         if self._game_board is None:
             raise NoBoardException
         print(self._game_board)
@@ -160,6 +161,7 @@ class GameEngine:
             self._game_board = GameBoard(board_string=kwargs.pop("board_string"), game_type=kwargs.pop("game_type"))
         else:
             self._game_board = GameBoard(board_string="START", game_type=self.config.game_type)
+        self._game_ai.reset_caches()
         print(self._game_board)
         return str(self._game_board)
 

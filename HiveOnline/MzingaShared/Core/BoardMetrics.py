@@ -27,7 +27,7 @@ class BoardMetrics(object):
         else:
             pm_start = metric_string.find('[')
             base_values = metric_string[0:pm_start-1].split(';')
-            self.game_type = base_values[0]
+            self.game_type = game_type
             self.board_state = base_values[1]
             self.pieces_in_play = int(base_values[2])
             self.pieces_in_hand = int(base_values[3])
