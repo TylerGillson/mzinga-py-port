@@ -3,8 +3,9 @@ billiard==3.5.0.4
 celery==4.2.1
 certifi==2018.11.29
 chardet==3.0.4
+Cython==0.29.1
 defusedxml==0.5.0
-Django==2.1.2
+Django==2.1.5
 django-allauth==0.38.0
 django-rest-auth==0.9.3
 djangorestframework==3.9.0
