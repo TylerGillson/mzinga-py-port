@@ -1,9 +1,14 @@
 ﻿import sys
-import django
-django.setup()
 
-from django.core.exceptions import ObjectDoesNotExist
-from mzinga.models import GameStateHash
+try:
+    import django
+    django.setup()
+
+    from django.core.exceptions import ObjectDoesNotExist
+    from mzinga.models import GameStateHash
+    use_persistent_cache = True
+except ModuleNotFoundError:
+    use_persistent_cache = False
 
 try:
     import numpy as np
@@ -512,45 +517,46 @@ class GameAI:
             if flag:
                 return score
 
-            """
-            def calculate_board_metrics(overwrite=False, model_instance=None):
-                bm = game_board.get_board_metrics()
+            # Only use persistent caching when django is available:
+            if use_persistent_cache:
+                def calculate_board_metrics(overwrite=False, model_instance=None):
+                    bm = game_board.get_board_metrics()
 
-                # Create or overwrite cached game state model instance:
-                if overwrite:
-                    model_instance.game_type = game_board.game_type
-                    model_instance.board_metrics = game_board.board_metrics_string
-                    model_instance.save()
-                else:
-                    game_state_hash = GameStateHash(
-                        game_state_hash=str(key),
-                        game_type=game_board.game_type,
-                        board_metrics=game_board.board_metrics_string,
-                        white_queen_neighbours=game_board.friendly_queen_neighbours_string,
-                        black_queen_neighbours=game_board.enemy_queen_neighbours_string
-                    )
-                    game_state_hash.save()
-                return bm
-            
-            # Attempt to retrieve board metrics from persistent cache:
-            try:
-                gsh = GameStateHash.objects.get(game_state_hash=str(key))
+                    # Create or overwrite cached game state model instance:
+                    if overwrite:
+                        model_instance.game_type = game_board.game_type
+                        model_instance.board_metrics = game_board.board_metrics_string
+                        model_instance.save()
+                    else:
+                        game_state_hash = GameStateHash(
+                            game_state_hash=str(key),
+                            game_type=game_board.game_type,
+                            board_metrics=game_board.board_metrics_string,
+                            white_queen_neighbours=game_board.friendly_queen_neighbours_string,
+                            black_queen_neighbours=game_board.enemy_queen_neighbours_string
+                        )
+                        game_state_hash.save()
+                    return bm
 
-                # Extended entries are authoritative (preventing duplicates) ...
-                if game_board.game_type == "Extended" and gsh.game_type == "Original":
-                    # So, overwrite entries of Original game type:
-                    board_metrics = calculate_board_metrics(overwrite=True, model_instance=gsh)
-                else:
-                    # Otherwise, de-serialize entry:
-                    board_metrics = BoardMetrics(game_board.game_type, metric_string=gsh.board_metrics)
-                    game_board.set_queen_neighbours(gsh.white_queen_neighbours, gsh.black_queen_neighbours)
+                # Attempt to retrieve board metrics from persistent cache:
+                try:
+                    gsh = GameStateHash.objects.get(game_state_hash=str(key))
 
-            # Otherwise, calculate them and save the results:
-            except ObjectDoesNotExist:
-                board_metrics = calculate_board_metrics()
-            """
+                    # Extended entries are authoritative (preventing duplicates) ...
+                    if game_board.game_type == "Extended" and gsh.game_type == "Original":
+                        # So, overwrite entries of Original game type:
+                        board_metrics = calculate_board_metrics(overwrite=True, model_instance=gsh)
+                    else:
+                        # Otherwise, de-serialize entry:
+                        board_metrics = BoardMetrics(game_board.game_type, metric_string=gsh.board_metrics)
+                        game_board.set_queen_neighbours(gsh.white_queen_neighbours, gsh.black_queen_neighbours)
 
-            board_metrics = game_board.get_board_metrics()
+                # Otherwise, calculate them and save the results:
+                except ObjectDoesNotExist:
+                    board_metrics = calculate_board_metrics()
+            else:
+                board_metrics = game_board.get_board_metrics()
+
             score = self.calculate_board_score(None, board_metrics, self.start_metric_weights, self.end_metric_weights)
             self._cached_board_scores.store(key, score)
             return score
