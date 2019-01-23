@@ -337,7 +337,12 @@ class Trainer:
                     max_time=self.trainer_settings.turn_max_time,
                     max_helper_threads=self.trainer_settings.max_helper_threads))
 
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
         done, _ = loop.run_until_complete(asyncio.wait([future]))
         results = [fut.result() for fut in done]
         return results

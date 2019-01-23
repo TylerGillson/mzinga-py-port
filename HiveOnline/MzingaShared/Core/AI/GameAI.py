@@ -512,6 +512,7 @@ class GameAI:
             if flag:
                 return score
 
+            """
             def calculate_board_metrics(overwrite=False, model_instance=None):
                 bm = game_board.get_board_metrics()
 
@@ -530,7 +531,7 @@ class GameAI:
                     )
                     game_state_hash.save()
                 return bm
-
+            
             # Attempt to retrieve board metrics from persistent cache:
             try:
                 gsh = GameStateHash.objects.get(game_state_hash=str(key))
@@ -547,7 +548,9 @@ class GameAI:
             # Otherwise, calculate them and save the results:
             except ObjectDoesNotExist:
                 board_metrics = calculate_board_metrics()
+            """
 
+            board_metrics = game_board.get_board_metrics()
             score = self.calculate_board_score(None, board_metrics, self.start_metric_weights, self.end_metric_weights)
             self._cached_board_scores.store(key, score)
             return score
