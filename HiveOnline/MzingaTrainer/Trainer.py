@@ -1,6 +1,7 @@
 ﻿import asyncio
 import cProfile
 import datetime
+import gc
 import random
 import math
 import queue
@@ -147,10 +148,12 @@ class Trainer:
 
         # Spawn simulate_tier processes across "max_parallelism" cores:
         max_parallelism = self.get_max_parallelism(max_concurrent_battles)
+        chunk_size = len(inputs) // max_parallelism
+
         with mp.Pool(max_parallelism) as pool:
-            for battle_results in pool.imap_unordered(work_battle_royale, inputs):
+            for battle_result in pool.imap_unordered(work_battle_royale, inputs, chunksize=chunk_size):
                 # Terminate the entire pool if a timeout occurs:
-                if battle_results == -1:
+                if battle_result == -1:
                     pool.terminate()
                     break
                 else:
@@ -203,6 +206,8 @@ class Trainer:
         progress, time_remaining = self.get_progress(br_start, completed + 1, remaining - 1)
         eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
         self.log("Battle Royale progress: %6.2f, ETA: %s." % (progress, eta))
+
+        gc.collect()
 
         if timeout_remaining <= datetime.timedelta.min:
             return -1
@@ -324,6 +329,12 @@ class Trainer:
         return board_state
 
     def get_best_move(self, game_board, ai):
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
         if self.trainer_settings.max_depth >= 0:
             future = asyncio.ensure_future(
                 ai.get_best_move(
@@ -336,12 +347,6 @@ class Trainer:
                     game_board,
                     max_time=self.trainer_settings.turn_max_time,
                     max_helper_threads=self.trainer_settings.max_helper_threads))
-
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
 
         done, _ = loop.run_until_complete(asyncio.wait([future]))
         results = [fut.result() for fut in done]
@@ -661,14 +666,16 @@ class Trainer:
 
                 # Spawn simulate_tier processes across "max_parallelism" cores:
                 max_parallelism = self.get_max_parallelism(max_concurrent_battles)
+                chunk_size = len(inputs) // max_parallelism
+
                 with mp.Pool(max_parallelism) as pool:
-                    for battle_results in pool.imap_unordered(work_tournament, inputs):
+                    for battle_result in pool.imap_unordered(work_tournament, inputs, chunksize=chunk_size):
                         # Terminate the entire pool if a timeout occurs:
-                        if battle_results == -1:
+                        if battle_result == -1:
                             pool.terminate()
                             break
                         else:
-                            winners.extend(battle_results)
+                            winners.extend(battle_result)
                             completed += 1
                             remaining -= 1
 
@@ -754,6 +761,8 @@ class Trainer:
             progress, time_remaining = self.get_progress(tournament_start, completed + 1, remaining - 1)
             eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
             self.log("Tournament progress: %6.2f, ETA: %s." % (progress, eta))
+
+            gc.collect()
 
             if timeout_remaining <= datetime.timedelta.min:
                 return -1
