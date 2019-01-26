@@ -6,10 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="aa05651a-1eca-4dbd-9b9c-26b22eb664c0" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/dictionaries/tylergillson.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/tylergillson.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAI.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAI.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/GameBoard.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/GameBoard.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Program.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Program.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Trainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Trainer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HiveOnline/MzingaTrainer/TrainerSettings.py" beforeDir="false" afterPath="$PROJECT_DIR$/HiveOnline/MzingaTrainer/TrainerSettings.py" afterDir="false" />
@@ -25,8 +21,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Program.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="144">
-              <caret line="110" column="46" lean-forward="true" selection-start-line="110" selection-start-column="46" selection-end-line="110" selection-end-column="46" />
+            <state relative-caret-position="231">
+              <caret line="117" column="45" lean-forward="true" selection-start-line="117" selection-start-column="45" selection-end-line="117" selection-end-column="45" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -34,15 +30,39 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Trainer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1605">
-              <caret line="328" selection-start-line="328" selection-end-line="328" />
+            <state relative-caret-position="239">
+              <caret line="344" column="21" lean-forward="true" selection-start-line="344" selection-start-column="21" selection-end-line="344" selection-end-column="21" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
+                <element signature="e#1076#1099#0" />
+                <element signature="e#1165#1230#0" />
+                <element signature="e#1286#1307#0" />
+                <element signature="e#1385#1491#0" />
+                <element signature="e#1537#1652#0" />
+                <element signature="e#1686#1899#0" />
+                <element signature="e#1968#2165#0" />
+                <element signature="e#2251#3130#0" />
                 <element signature="e#3094#6487#0" />
                 <element signature="e#6595#8267#0" />
+                <element signature="e#8338#13165#0" />
+                <element signature="e#14180#15846#0" />
+                <element signature="e#15892#16431#0" />
+                <element signature="e#16493#16686#0" />
+                <element signature="e#16723#17211#0" />
+                <element signature="e#17255#19804#0" />
+                <element signature="e#19911#20970#0" />
+                <element signature="e#21048#23389#0" />
+                <element signature="e#23437#25843#0" />
+                <element signature="e#32618#33043#0" />
+                <element signature="e#33092#33242#0" />
+                <element signature="e#33282#33534#0" />
+                <element signature="e#33595#33665#0" />
+                <element signature="e#33736#33802#0" />
+                <element signature="e#33858#34302#0" />
+                <element signature="e#34386#34969#0" />
               </folding>
             </state>
           </provider>
@@ -63,8 +83,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/TrainerSettings.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="216">
-              <caret line="31" lean-forward="true" selection-start-line="31" selection-end-line="31" />
+            <state relative-caret-position="218">
+              <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
             </state>
           </provider>
         </entry>
@@ -81,10 +101,10 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAI.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="644">
+            <state relative-caret-position="1321">
               <caret line="555" selection-start-line="555" selection-end-line="555" />
             </state>
           </provider>
@@ -217,12 +237,12 @@
         <option value="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profiles/OriginalProfiles/0e63d18e-7426-492d-a30e-45ce63090c6a.xml" />
         <option value="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profiles/original_mzinga_ai.xml" />
         <option value="$PROJECT_DIR$/README.md" />
-        <option value="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Program.py" />
-        <option value="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Trainer.py" />
         <option value="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/GameBoard.py" />
         <option value="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py" />
         <option value="$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAI.py" />
+        <option value="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Program.py" />
         <option value="$PROJECT_DIR$/HiveOnline/MzingaTrainer/TrainerSettings.py" />
+        <option value="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Trainer.py" />
       </list>
     </option>
   </component>
@@ -289,6 +309,14 @@
               <item name="HiveOnline" type="462c0819:PsiDirectoryNode" />
               <item name="MzingaTrainer" type="462c0819:PsiDirectoryNode" />
               <item name="Profiles" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="MzingaPorted" type="b2602c69:ProjectViewProjectNode" />
+              <item name="MzingaPorted" type="462c0819:PsiDirectoryNode" />
+              <item name="HiveOnline" type="462c0819:PsiDirectoryNode" />
+              <item name="MzingaTrainer" type="462c0819:PsiDirectoryNode" />
+              <item name="Profiles" type="462c0819:PsiDirectoryNode" />
+              <item name="OriginalProfiles" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="MzingaPorted" type="b2602c69:ProjectViewProjectNode" />
@@ -457,7 +485,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/HiveOnline/MzingaTrainer/Program.py" />
-      <option name="PARAMETERS" value="generate -GenerateCount 11 -GameType Extended" />
+      <option name="PARAMETERS" value="generate -GenerateCount 2 -GameType Original" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -611,13 +639,13 @@
     <frame x="0" y="23" width="1440" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49492902" visible="true" weight="0.17758985" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49492902" visible="true" weight="0.17758985" />
       <window_info id="Structure" order="1" sideWeight="0.505071" side_tool="true" weight="0.16701902" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32356688" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.2878981" />
-      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49753347" visible="true" weight="0.55159235" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.49753347" visible="true" weight="0.3923567" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32866243" />
@@ -900,17 +928,6 @@
     <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/2019_01_25.19:58_log.txt">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/2019_01_25.16:27_log.txt">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/2019_01_25.20:08_log.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1398" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/2019_01_25.23:14_log.txt">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/EnumUtils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-86" />
@@ -919,34 +936,12 @@
     <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/0eaf1013-f408-4636-bc81-618f758e3dde.xml">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Program.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="110" column="46" lean-forward="true" selection-start-line="110" selection-start-column="46" selection-end-line="110" selection-end-column="46" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/Board.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="234">
           <caret line="200" selection-start-line="200" selection-end-line="200" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Trainer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1605">
-          <caret line="328" selection-start-line="328" selection-end-line="328" />
-          <folding>
-            <element signature="e#0#14#0" expanded="true" />
-            <element signature="e#3094#6487#0" />
-            <element signature="e#6595#8267#0" />
           </folding>
         </state>
       </provider>
@@ -970,17 +965,78 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/TrainerSettings.py">
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAI.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="216">
-          <caret line="31" lean-forward="true" selection-start-line="31" selection-end-line="31" />
+        <state relative-caret-position="1321">
+          <caret line="555" selection-start-line="555" selection-end-line="555" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaShared/Core/AI/GameAI.py">
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/2019_01_25.23:14_log.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="644">
-          <caret line="555" selection-start-line="555" selection-end-line="555" />
+        <state relative-caret-position="-1282" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/2019_01_25.20:08_log.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1741" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/2019_01_25.16:27_log.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1741" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Program.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="231">
+          <caret line="117" column="45" lean-forward="true" selection-start-line="117" selection-start-column="45" selection-end-line="117" selection-end-column="45" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/TrainerSettings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="218">
+          <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HiveOnline/MzingaTrainer/Trainer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="239">
+          <caret line="344" column="21" lean-forward="true" selection-start-line="344" selection-start-column="21" selection-end-line="344" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#14#0" expanded="true" />
+            <element signature="e#1076#1099#0" />
+            <element signature="e#1165#1230#0" />
+            <element signature="e#1286#1307#0" />
+            <element signature="e#1385#1491#0" />
+            <element signature="e#1537#1652#0" />
+            <element signature="e#1686#1899#0" />
+            <element signature="e#1968#2165#0" />
+            <element signature="e#2251#3130#0" />
+            <element signature="e#3094#6487#0" />
+            <element signature="e#6595#8267#0" />
+            <element signature="e#8338#13165#0" />
+            <element signature="e#14180#15846#0" />
+            <element signature="e#15892#16431#0" />
+            <element signature="e#16493#16686#0" />
+            <element signature="e#16723#17211#0" />
+            <element signature="e#17255#19804#0" />
+            <element signature="e#19911#20970#0" />
+            <element signature="e#21048#23389#0" />
+            <element signature="e#23437#25843#0" />
+            <element signature="e#32618#33043#0" />
+            <element signature="e#33092#33242#0" />
+            <element signature="e#33282#33534#0" />
+            <element signature="e#33595#33665#0" />
+            <element signature="e#33736#33802#0" />
+            <element signature="e#33858#34302#0" />
+            <element signature="e#34386#34969#0" />
+          </folding>
         </state>
       </provider>
     </entry>

@@ -339,10 +339,16 @@ class Trainer:
                     max_depth=self.trainer_settings.max_depth,
                     max_helper_threads=self.trainer_settings.max_helper_threads))
         else:
+            # In a mixed battle, adjust the turn time for the Original AI according to a handicap:
+            time = self.trainer_settings.turn_max_time
+            if self.trainer_settings.mixed_game_types:
+                if game_board.current_turn_colour != self.trainer_settings.extended_colour:
+                    time *= self.trainer_settings.mixed_game_time_handicap
+
             future = asyncio.ensure_future(
                 ai.get_best_move(
                     game_board,
-                    max_time=self.trainer_settings.turn_max_time,
+                    max_time=time,
                     max_helper_threads=self.trainer_settings.max_helper_threads))
 
         done, _ = loop.run_until_complete(asyncio.wait([future]))
@@ -691,6 +697,7 @@ class Trainer:
                 winner = current_tier[0]
                 self.log("Tournament Winner: %s" % ts(winner))
 
+            profiles = self.load_profiles(path)  # re-load updated profiles
             best = list(sorted(profiles, key=lambda x: x.elo_rating, reverse=True))[0]
             self.log("Tournament Highest Elo: %s" % ts(best))
 

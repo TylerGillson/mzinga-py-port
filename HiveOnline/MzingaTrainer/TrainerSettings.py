@@ -12,6 +12,7 @@ class TrainerSettings:
 
     game_type = "Original"
     mixed_game_types = False
+    mixed_game_time_handicap = 1
     extended_colour = None
     battle_repeat = 1
 
@@ -25,7 +26,7 @@ class TrainerSettings:
     cull_min_keep_count = 2
     cull_keep_max = -1
 
-    _profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/ExtendedProfiles/"
+    _profile_path = "/Users/tylergillson/Dropbox/UofC/F2018/CPSC.502.06/MzingaPorted/HiveOnline/MzingaTrainer/Profiles/OriginalProfiles/"
     _white_profile_path = None
     _black_profile_path = None
     _target_profile_path = None

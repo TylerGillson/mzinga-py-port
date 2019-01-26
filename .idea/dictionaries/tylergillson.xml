@@ -2,6 +2,7 @@
   <dictionary name="tylergillson">
     <words>
       <w>asyncio</w>
+      <w>battlerepeat</w>
       <w>battleroyale</w>
       <w>battleshuffleprofiles</w>
       <w>battletimelimit</w>
@@ -13,6 +14,7 @@
       <w>dest</w>
       <w>dropbox</w>
       <w>elems</w>
+      <w>extendedcolour</w>
       <w>filepath</w>
       <w>gametype</w>
       <w>generatecount</w>
@@ -34,6 +36,8 @@
       <w>maxhelperthreads</w>
       <w>mdepth</w>
       <w>mdraws</w>
+      <w>mgth</w>
+      <w>mixedgametimehandicap</w>
       <w>mixedgametypes</w>
       <w>mmaxm</w>
       <w>mminm</w>
