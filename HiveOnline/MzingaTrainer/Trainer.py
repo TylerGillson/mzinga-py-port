@@ -87,14 +87,16 @@ class Trainer:
 
         self.start_time = datetime.datetime.now()
 
-        # Load, then battle profiles:
-        white_profile = self.read_profile(white_profile_path)
-        black_profile = self.read_profile(black_profile_path)
-        self.battle_profiles(white_profile, black_profile)
+        for i in range(self.trainer_settings.battle_repeat):
+            # Load, then battle profiles:
+            white_profile = self.read_profile(white_profile_path)
+            black_profile = self.read_profile(black_profile_path)
 
-        # Save Profiles
-        self.write_profile(white_profile_path, white_profile)
-        self.write_profile(black_profile_path, black_profile)
+            self.battle_profiles(white_profile, black_profile)
+
+            # Save Profiles
+            self.write_profile(white_profile_path, white_profile)
+            self.write_profile(black_profile_path, black_profile)
 
     def battle_royale(self, *args):
         if len(args) == 0:
@@ -246,7 +248,13 @@ class Trainer:
         )
 
         # Create Game
-        game_board = GameBoard(board_string="START", game_type=white_ai.game_type)
+        kwargs = {
+            "board_string": "START",
+            "game_type": "Extended" if self.trainer_settings.mixed_game_types else white_ai.game_type,
+            "mixed_battle": self.trainer_settings.mixed_game_types,
+            "extended_colour": self.trainer_settings.extended_colour,
+        }
+        game_board = GameBoard(**kwargs)
 
         time_limit = self.trainer_settings.battle_time_limit
         w_s, b_s = self.to_string(white_profile), self.to_string(black_profile)
@@ -275,17 +283,6 @@ class Trainer:
                 ai = white_ai if game_board.current_turn_colour == "White" else black_ai
                 move = self.get_best_move(game_board, ai)
                 game_board.play(move[0])
-
-                # Re-build the game board between moves if pitting Original AI vs. Extended AI:
-                if self.trainer_settings.mixed_game_types:
-                    alt_game_type = "Original" if ai.game_type == "Extended" else "Extended"
-                    history = game_board.board_history
-                    last_piece_moved = game_board.last_piece_moved
-                    z_hash = game_board.zobrist_hash
-
-                    game_board = GameBoard(board_string=game_board.board_string, game_type=alt_game_type, z_hash=z_hash)
-                    game_board.board_history = history
-                    game_board.last_piece_moved = last_piece_moved
 
         except Exception as ex:
             self.log("Battle interrupted with exception: %s" % ex)

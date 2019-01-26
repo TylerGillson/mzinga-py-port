@@ -17,7 +17,12 @@ board_states = ["NotStarted", "InProgress", "Draw", "WhiteWins", "BlackWins"]
 
 class Board:
     board_state = None
+
     game_type = None
+    dummy_queen = None
+
+    mixed_battle = False
+    extended_colour = None
 
     _board_metrics = None
     _current_turn = 0
@@ -161,14 +166,18 @@ class Board:
         self._last_piece_moved = value
     # END PIECE STATE PROPERTIES
 
-    def init_state_vars(self, game_type, z_hash=None):
+    def init_state_vars(self, game_type, mixed_battle, extended_colour):
         self.board_state = "NotStarted"
         self.game_type = game_type
+
+        self.mixed_battle = mixed_battle
+        self.extended_colour = extended_colour
+        self.dummy_queen = Piece("WhiteQueenBee")
 
         self._board_metrics = BoardMetrics(game_type)
         self._current_turn = 0
 
-        self._zobrist_hash = z_hash if z_hash is not None else ZobristHash()
+        self._zobrist_hash = ZobristHash()
 
         self._pieces = []
         self._pieces_by_position = {}
@@ -183,10 +192,9 @@ class Board:
         self._cached_enemy_queen_neighbours = None
         self._cached_friendly_queen_neighbours = None
 
-    def __init__(self, board_string, game_type, z_hash):
-        self.init_state_vars(game_type, z_hash)
+    def __init__(self, board_string, game_type, mixed_battle=False, extended_colour=None):
+        self.init_state_vars(game_type, mixed_battle, extended_colour)
         self.init_pieces()
-        self.dummy_queen = Piece("WhiteQueenBee")
 
         # New game constructor
         if board_string == "START":

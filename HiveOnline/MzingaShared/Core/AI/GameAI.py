@@ -84,6 +84,7 @@ class GameAI:
 
     def __init__(self, battle_key, config=None):
         self.battle_key = battle_key
+        self.use_extended = True
 
         if config:
             self.game_type = config.game_type
@@ -506,6 +507,10 @@ class GameAI:
             if flag:
                 return score
 
+            # Ignore extended metrics for the Original profile in a mixed battle:
+            if game_board.mixed_battle:
+                self.use_extended = game_board.current_turn_colour == game_board.extended_colour
+
             board_metrics = game_board.get_board_metrics()
             score = self.calculate_board_score(None, board_metrics, self.start_metric_weights, self.end_metric_weights)
             self._cached_board_scores.store(key, score)
@@ -535,7 +540,7 @@ class GameAI:
             get = mw.get
 
             # Optionally compute extended board metrics:
-            if self.game_type == "Extended":
+            if self.game_type == "Extended" and self.use_extended:
                 bmw_get = self.board_metric_weights.get
                 queen_bee_life_weight = bmw_get("queen_bee_life_weight")
                 queen_bee_tight_spaces_weight = bmw_get("queen_bee_tight_spaces_weight")
@@ -566,7 +571,7 @@ class GameAI:
                                       * board_metrics[piece_name].enemy_neighbour_count
 
                 # Optionally compute extended piece metrics:
-                if self.game_type == "Extended":
+                if self.game_type == "Extended" and self.use_extended:
                     score += colour_value * get(bug_type, "can_make_noisy_ring_weight") \
                         * board_metrics[piece_name].can_make_noisy_ring
                     score += colour_value * get(bug_type, "can_make_defense_ring_weight") \

@@ -58,21 +58,23 @@ class Program:
 
         print("Commands:")
 
-        print("battle                 Fight a single battle between two profiles")      # Tested
-        print("battleroyale           Fight every profile against each other")          # Tested
-        print("cull                   Delete the lowest ranking profiles")              # Tested
-        print("enumerate              List all of the profiles")                        # Tested
-        print("analyze                Analyze all of the profiles")                     # Tested
-        print("generate               Create new random profiles")                      # Tested
-        print("lifecycle              Battle, cull, mate cycle for profiles")           # Tested
-        print("mate                   Mate every profile with each other")              # Tested
-        print("tournament             Fight a single elimination tournament")           # Tested
+        print("battle                 Fight one or more battles between two profiles")
+        print("battleroyale           Fight every profile against each other")
+        print("cull                   Delete the lowest ranking profiles")
+        print("enumerate              List all of the profiles")
+        print("analyze                Analyze all of the profiles")
+        print("generate               Create new random profiles")
+        print("lifecycle              Battle, cull, mate cycle for profiles")
+        print("mate                   Mate every profile with each other")
+        print("tournament             Fight a single elimination tournament")
         print()
 
         print("Parameters:")
 
         print("-GameType                Original or Extended AI")
         print("-MixedGameTypes          Whether original & extended AIs will be competing")
+        print("-ExtendedColour          Which colour is Extended in a mixed battle")
+        print("-BattleRepeat            How many head-to-head battles to simulate in battle mode")
         print("-LogToFile               Whether output is piped to a file or the console")
         print("-ProfilePath             Where the profiles are stored")
         print("-WhiteProfilePath        The white profile in a single battle")
@@ -108,6 +110,10 @@ class Program:
             trainer_settings.game_type = args[i + 1]
         elif arg in ["mgt", "mixedgametypes"]:
             trainer_settings.mixed_game_types = args[i + 1] == "True"
+        elif arg in ['br', 'battlerepeat']:
+            trainer_settings.battle_repeat = int(args[i + 1])
+        elif arg in ['ec', 'extendedcolour']:
+            trainer_settings.extended_colour = args[i + 1]
         elif arg in ["ltf", "logtofile"]:
             trainer_settings.log_to_file = args[i + 1] == "True"
         elif arg in ["pp", "profilepath"]:

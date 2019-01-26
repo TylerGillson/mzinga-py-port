@@ -3,13 +3,17 @@
 
 class TrainerSettings:
 
+    log_to_file = False
+
     battle_shuffle_profiles = False
     lifecycle_battles = 1
     max_max_battles = -1
     max_max_concurrent_battles = -1
+
     game_type = "Original"
     mixed_game_types = False
-    log_to_file = False
+    extended_colour = None
+    battle_repeat = 1
 
     _battle_time_limit = datetime.timedelta(minutes=10)
     _bulk_battle_time_limit = datetime.timedelta(minutes=300)

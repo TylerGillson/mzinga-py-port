@@ -34,12 +34,12 @@ class GameBoard(Board):
     def board_history(self, value):
         self._board_history = value
 
-    def __init__(self, board_string=None, game_type=None, z_hash=None):
+    def __init__(self, board_string=None, game_type=None, **kwargs):
         self.board_history = BoardHistory()
         self.last_piece_moved = None
         self.board_state = None
 
-        super().__init__(board_string=board_string, game_type=game_type, z_hash=z_hash)
+        super().__init__(board_string=board_string, game_type=game_type, **kwargs)
 
     def __repr__(self):
         return super().__repr__()
