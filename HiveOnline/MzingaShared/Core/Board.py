@@ -517,15 +517,12 @@ class Board:
             return classically_noisy
         # Extended AI checks for moves which trap pieces into a space adjacent to the enemy queen:
         else:
-            # Avoid extra work if the move is already noisy in the original sense:
-            if classically_noisy:
-                return classically_noisy
-
             moving_piece = self.get_piece(move.piece_name)
             original_position = moving_piece.position
 
-            if original_position is None:
-                return move_to_adjacent and not piece_already_adjacent
+            # Avoid extra work if the move is already noisy in the original sense or the move is a placement:
+            if classically_noisy or original_position is None:
+                return classically_noisy
 
             # Determine whether the move traps any pieces:
             pre_move_trapped_neighbours = set(self.get_trapped_neighbours(move.position))

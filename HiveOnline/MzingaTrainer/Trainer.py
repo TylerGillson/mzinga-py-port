@@ -838,7 +838,7 @@ class Trainer:
             time_remaining = datetime.timedelta.min
         else:
             elapsed_time = datetime.datetime.now() - start_time
-            elapsed_ms = elapsed_time.seconds / 1000
+            elapsed_ms = elapsed_time.total_seconds() * 1000
             avg_ms = elapsed_ms / completed
 
             progress = completed / total
