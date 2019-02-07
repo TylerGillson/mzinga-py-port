@@ -1,5 +1,10 @@
 # mzinga-py-port
 
+- [Overview](#overview)
+- [What's New](#whats-new)
+- [Usage](#usage)
+- [Limitations](#limitations)
+
 ## Overview
 mzinga-py-port is a Python implementation and extension of Jon Thysell's Mzinga system, which was written in C#. [See Mzinga.](https://github.com/jonthysell/Mzinga)
 My attempts at improving Mzinga are being conducted as an Honours undergraduate research project in AI.
@@ -30,6 +35,15 @@ A random index into an arbitrary metric weight vector is selected. The child the
 
 #### Mutate
 A random index into the child's metric weight vector is selected. The metric weight at said index is then randomly modulated either up or down by a value selected at random from {1, ..., 10}.
+
+## Usage
+There are two primary executables: MzingaEngine/Program.py and MzingaTrainer/Program.py, which launch the game engine and the trainer (metric weight optimization module), respectively.
+
+### Game Engine
+The game engine is used to play against the default AI, whose configuration file is: MzingaShared/Engine/GameEngineConfig.py. To play, ensure that your PYTHONPATH is configured correctly, then execute: ```python3 Program.py```. Once the game engine has loaded, type ```help``` to see a summary of all the game engine commands. See also: [Jon Thysell's Game Engine Documentation](https://github.com/jonthysell/Mzinga/wiki/UniversalHiveProtocol#engine-commands).
+
+### Trainer
+The trainer executes an evolutionary algorithm to obtain optimized metric weights for the default game engine's AI. It has many configuration options, which can be reviewed in: MzingaTrainer/Program.py. Also: the RunConfigurations folder contains a directory of PyCharm run configurations which are a good place to start. 
 
 ## Limitations
 For the sake of expediency, my Python implementation lacks support for any of Hive's expansion pieces.
