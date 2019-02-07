@@ -6,8 +6,7 @@
 - [Limitations](#limitations)
 
 ## Overview
-mzinga-py-port is a Python implementation and extension of Jon Thysell's Mzinga system, which was written in C#. [See Mzinga.](https://github.com/jonthysell/Mzinga)
-My attempts at improving Mzinga are being conducted as an Honours undergraduate research project in AI.
+mzinga-py-port is a Python implementation and extension of Jon Thysell's [Mzinga](https://github.com/jonthysell/Mzinga) system, which was written in C#. My attempts at improving Mzinga are being conducted as an Honours undergraduate research project in AI.
 
 ## What's New?
 The extended Mzinga system allows full backwards compatibility with the original system, while introducing
@@ -43,7 +42,20 @@ There are two primary executables: MzingaEngine/Program.py and MzingaTrainer/Pro
 The game engine is used to play against the default AI, whose configuration file is: MzingaShared/Engine/GameEngineConfig.py. To play, ensure that your PYTHONPATH is configured correctly, then execute: ```python3 Program.py```. Once the game engine has loaded, type ```help``` to see a summary of all the game engine commands. See also: [Jon Thysell's Game Engine Documentation](https://github.com/jonthysell/Mzinga/wiki/UniversalHiveProtocol#engine-commands).
 
 ### Trainer
-The trainer executes an evolutionary algorithm to obtain optimized metric weights for the default game engine's AI. It has many configuration options, which can be reviewed in: MzingaTrainer/Program.py. Also: the RunConfigurations folder contains a directory of PyCharm run configurations which are a good place to start. 
+The trainer executes an evolutionary algorithm to obtain optimized metric weights for the default game engine's AI. It has many configuration options, which can be reviewed in: MzingaTrainer/Program.py. The RunConfigurations folder contains a directory of PyCharm run configurations which are a good place to start. 
+
+Primary Functionalities:
+1. Battle - compete two AI profiles against each other 1 or more times consecutively.
+2. Battle Royale - have each AI profile in a group of AI profiles compete against every other AI once.
+3. Cull - eliminate a specific number of AI profiles from a group having the lowest ELO scores.
+4. Enumerate - list each AI profile (name + wins/losses/draws) in a directory in order of ELO score.
+5. Analyze - generate a .csv file containing all the data for the AI profiles in a directory.
+6. Generate - generate a specific number of AI profiles with random metric weights (Original or Extended).
+7. Lifecycle - iteratively compete (via Battle Royale or Tournament), breed, then cull a pool of AI profiles for a specific number of generations. This is the "evolutionary algorithm" which can be used to obtain optimized metric weights.
+8. Mate - pair off and mate the AI profiles in a directory (pair randomly or based on ELO score).
+9. Tournament - pair off the AI profiles in a directory and have them execute a round-robin tournament.
+
+Each of the latter functionalities can be configured in a variety of ways. Please refer to the run configurations, as well as MzingaTrainer/Program.py, MzingaTrainer/Trainer.py, and MzingaTrainer/TrainerSettings.py for a deeper understanding of their possible usage.
 
 ## Limitations
 For the sake of expediency, my Python implementation lacks support for any of Hive's expansion pieces.
