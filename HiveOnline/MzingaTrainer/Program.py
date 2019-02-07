@@ -1,5 +1,4 @@
 ﻿import sys
-import datetime
 
 from MzingaTrainer.Trainer import Trainer
 
@@ -44,7 +43,9 @@ class Program:
         except KeyError:
             self.show_help()
         except Exception as ex:
-            print("Error: %s" % ex)
+            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            message = template.format(type(ex).__name__, ex.args)
+            print(message)
         finally:
             return
 

@@ -79,7 +79,6 @@ class Trainer:
     def battle(self, white_profile_path=None, black_profile_path=None):
         if white_profile_path is None and black_profile_path is None:
             return self.battle(self.trainer_settings.white_profile_path, self.trainer_settings.black_profile_path)
-
         if white_profile_path.isspace():
             raise ValueError("Invalid white_profile_path.")
         if black_profile_path.isspace():
