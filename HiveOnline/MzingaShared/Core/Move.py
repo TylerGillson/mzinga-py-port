@@ -1,8 +1,7 @@
 from MzingaShared.Core.EnumUtils import EnumUtils
-from MzingaShared.Core.EnumUtils import piece_names
 from MzingaShared.Core.PiecePositionBase import PiecePositionBase
 
-PassString = "PASS"
+pass_string = "PASS"
 _pass = None
 
 
@@ -24,7 +23,7 @@ class Move(PiecePositionBase):
         elif move_string is not None:
             if move_string.isspace():
                 raise ValueError("Invalid move_string.")
-            if not move_string.upper() == PassString:
+            if not move_string.upper() == pass_string:
                 self.parse(move_string)
                 self.init(self.piece_name, self.position)
         else:
@@ -41,7 +40,7 @@ class Move(PiecePositionBase):
 
     def __repr__(self):
         if self.is_pass:
-            return PassString
+            return pass_string
 
         pos = self.position if self.position else ""
         return "%s[%s]" % (EnumUtils.get_short_name(self.piece_name), str(pos))

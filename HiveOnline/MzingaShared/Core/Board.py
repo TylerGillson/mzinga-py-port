@@ -1,4 +1,5 @@
 import queue
+from typing import Union
 
 from MzingaShared.Core import Move as MoveCls, EnumUtils
 from MzingaShared.Core.BoardMetrics import BoardMetrics
@@ -247,22 +248,25 @@ class Board:
             self._pieces.append(Piece(EnumUtils.piece_names_by_int[i]))
 
     def has_piece_at(self, position):
-        return self.get_piece(position) is not None
+        return self.get_piece_internal(position) is not None
 
     def get_piece_position(self, piece_name):
         if piece_name == "INVALID":
             raise ValueError("Invalid piece_name.")
         return self.get_piece(piece_name).position
 
-    def get_piece(self, value) -> Piece:
+    def get_piece(self, value) -> Union[Piece, None]:
         if isinstance(value, Position):
-            try:
-                return self._pieces_by_position[value]
-            except KeyError:
-                # noinspection PyTypeChecker
-                return None
+            piece = self.get_piece_internal(value)
+            return piece if piece is None else piece.piece_name
         else:
             return self._pieces[piece_names[value]]
+
+    def get_piece_internal(self, position):
+        try:
+            return self._pieces_by_position[position]
+        except KeyError:
+            return None
 
     def get_piece_on_top(self, value):
         if isinstance(value, Piece):
@@ -278,7 +282,7 @@ class Board:
     def get_piece_on_top_internal(self, position):
         while position.stack > 0:
             position = position.get_below()
-        top_piece = self.get_piece(position)
+        top_piece = self.get_piece_internal(position)
         if top_piece:
             top_piece = self.get_piece_on_top(top_piece)
         return top_piece
@@ -310,7 +314,7 @@ class Board:
 
                 if new_position.stack > 0:
                     pos_below = new_position.get_below()
-                    piece_below = self.get_piece(pos_below)
+                    piece_below = self.get_piece_internal(pos_below)
                     piece_below.piece_above = piece
                     piece.piece_below = piece_below
 
@@ -357,7 +361,7 @@ class Board:
                 # Check all pieces at this stack level
                 for i in range(num_directions):
                     neighbor = neighbour_at(i)
-                    neighbor_piece = self.get_piece(neighbor)
+                    neighbor_piece = self.get_piece_internal(neighbor)
                     if neighbor_piece is not None and not part_of_hive[piece_names[neighbor_piece.piece_name]]:
                         pieces_to_look_at.put(neighbor_piece)
                         part_of_hive[piece_names[neighbor_piece.piece_name]] = True
@@ -538,13 +542,13 @@ class Board:
     def makes_noisy_ring(self, move):
         # Verify move position has at least two neighbours before checking for rings:
         move_occupied_neighbours = [move.position.neighbour_at(i) for i in EnumUtils.directions.values()
-                                    if self.get_piece(move.position.neighbour_at(i)) is not None]
+                                    if self.get_piece_internal(move.position.neighbour_at(i)) is not None]
         if len(move_occupied_neighbours) < 2:
             return False
 
         origin = move.position
         piece_colour = move.piece_name[0:5]
-        get_piece = self.get_piece
+        get_piece_internal = self.get_piece_internal
 
         def analyze_ring():
             ring_pieces = []
@@ -552,7 +556,7 @@ class Board:
 
             for angle in ring:
                 referent = referent.neighbour_at(directions[angle])
-                n = get_piece(referent)
+                n = get_piece_internal(referent)
                 if n is None:
                     break
                 if n.piece_name != move.piece_name:
@@ -606,7 +610,7 @@ class Board:
 
         # Determine current number of non_sliding_neighbour_positions:
         tight_positions_1 = [p for p in queen_neighbour_set
-                             if self.get_piece(p) is None and self.get_valid_slides_from_pos(p).count == 0]
+                             if self.get_piece_internal(p) is None and self.get_valid_slides_from_pos(p).count == 0]
 
         # Mock move, check again, then undo:
         piece = self.get_piece(piece_name)
@@ -617,7 +621,7 @@ class Board:
             queen_neighbour_set = [move.position.neighbour_at(i) for i in EnumUtils.directions.values()]
 
         tight_positions_2 = [p for p in queen_neighbour_set
-                             if self.get_piece(p) is None and self.get_valid_slides_from_pos(p).count == 0]
+                             if self.get_piece_internal(p) is None and self.get_valid_slides_from_pos(p).count == 0]
         self.move_piece(piece, original_pos, update_zobrist=False)
 
         # If a non-sliding-neighbour position was added to the friendly queen's neighbours, a defense ring was formed:
@@ -634,7 +638,7 @@ class Board:
 
             if piece.in_play:
                 for i in range(EnumUtils.num_directions):
-                    neighbor = self.get_piece(piece.position.neighbour_at(i))
+                    neighbor = self.get_piece_internal(piece.position.neighbour_at(i))
                     if neighbor is not None:
                         if neighbor.colour == piece.colour:
                             friendly_count += 1
@@ -677,7 +681,7 @@ class Board:
                     fqn_add(pos)
 
                 # Count occupied neighbouring spaces and check empty neighbours for tightness:
-                if self.get_piece(pos) is not None:
+                if self.get_piece_internal(pos) is not None:
                     neighbour_count += 1
                 else:
                     valid_moves = self.get_valid_slides_from_pos(pos)
@@ -693,7 +697,7 @@ class Board:
         # Check for neighbours in each direction:
         for d in range(EnumUtils.num_directions):
             neighbour_i_pos = pos.neighbour_at(d)
-            piece_at_dir_i = self.get_piece(neighbour_i_pos)
+            piece_at_dir_i = self.get_piece_internal(neighbour_i_pos)
 
             if piece_at_dir_i is not None:
                 if piece_at_dir_i.colour == "White":
@@ -727,7 +731,7 @@ class Board:
 
             for i in range(EnumUtils.num_directions):
                 pos = neighbour_at(i)
-                if self.get_piece(pos) is None:
+                if self.get_piece_internal(pos) is None:
                     empty_positions.add(pos)
 
         # Filter candidates to find ring centres:
@@ -774,7 +778,7 @@ class Board:
     def get_trapped_neighbours(self, position, enemies_only=False):
         trapped_neighbours = []
         for i in range(EnumUtils.num_directions):
-            n = self.get_piece(position.neighbour_at(i))
+            n = self.get_piece_internal(position.neighbour_at(i))
             if n is None:
                 continue
             if not self.can_move_without_breaking_hive(n):

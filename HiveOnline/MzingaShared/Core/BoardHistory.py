@@ -35,8 +35,8 @@ class BoardHistory(object):
             return "".join(["".join([str(i), ';']) for i in self._items])[:-1]
         return "No History"
 
-    def add(self, move, original_position):
-        item = BoardHistoryItem(move, original_position)
+    def add(self, move, original_position, move_string):
+        item = BoardHistoryItem(move, original_position, move_string=move_string)
         self._items.append(item)
 
     def undo_last_move(self):
@@ -51,14 +51,14 @@ class BoardHistory(object):
 
 
 class BoardHistoryItem(object):
-    __slots__ = "move", "original_position"
+    __slots__ = "move", "original_position", "move_string"
 
-    def __init__(self, move=None, original_position=None, board_history_item_string=None):
+    def __init__(self, move=None, original_position=None, board_history_item_string=None, move_string=None):
         if board_history_item_string:
             if board_history_item_string.isspace():
                 raise ValueError("Invalid board_history_item_string")
 
-            if board_history_item_string.upper().equals(Move.PassString):
+            if board_history_item_string.upper() == Move.pass_string:
                 self.move = Move.pass_turn()
                 self.original_position = None
             else:
@@ -73,6 +73,8 @@ class BoardHistoryItem(object):
 
             self.move = move
             self.original_position = original_position
+
+        self.move_string = move_string
 
     def __repr__(self):
         if self.move.is_pass:

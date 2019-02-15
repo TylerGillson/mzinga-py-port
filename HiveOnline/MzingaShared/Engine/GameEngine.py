@@ -2,9 +2,10 @@ import datetime
 # import asyncio
 
 from MzingaShared.Core.Board import InvalidMoveException
-from MzingaShared.Core.BoardHistory import BoardHistory
-from MzingaShared.Core.GameBoard import GameBoard
+from MzingaShared.Core import GameBoard
+from MzingaShared.Core.GameBoard import GameBoard as GameBoardCls
 from MzingaShared.Core.Move import Move
+from MzingaShared.Core import NotationUtils
 from Utils.Events import Broadcaster
 from Utils.TaskQueue import TaskQueue
 
@@ -29,12 +30,9 @@ class GameEngine:
     cmd_dict = {
         "info": "self.info()",
         "help": "self.help()",
-        "board": "self.board() if param_count == 0 else self.board(split[1])",
-        "play": "self.raise_command_exception() if param_count < 1 else self.play(split[1])",
         "pass": "self.pass_turn()",
         "validmoves": "self.valid_moves()",
         "undo": "self.undo() if param_count == 0 else self.undo(split[1])",
-        "history": "self.history()",
         "exit": "self.exit()"
     }
     
@@ -48,7 +46,6 @@ class GameEngine:
         self.config = config
         self.init_ai()
         self.exit_requested = False
-
         self.StartAsyncCommand.on_change += self.on_start_async_command
 
     def init_ai(self):
@@ -89,6 +86,11 @@ class GameEngine:
                     return self.best_move(max_time=split[2])
                 else:
                     self.raise_command_exception()
+            elif cmd == "board":
+                if param_count == 0:
+                    return self.board()
+                else:
+                    return self.board("".join([s + " " for s in split[1:]]))
             elif cmd == "options":
                 if param_count == 0:
                     return self.options_list()
@@ -103,6 +105,8 @@ class GameEngine:
                     return self.new_game()
                 else:
                     return self.new_game(board_string=split[1])
+            elif cmd == "play":
+                self.raise_command_exception() if param_count < 1 else self.play("".join([s + " " for s in split[1:]]))
             else:
                 return eval(self.cmd_dict[cmd])
 
@@ -115,8 +119,10 @@ class GameEngine:
             err_msg = ex.message
             err = True
         except Exception as ex:
-            print("err %s" % ex)
-            err_msg = ex
+            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            message = template.format(type(ex).__name__, ex.args)
+            print(message)
+            err_msg = message
             err = True
 
         if not err:
@@ -143,27 +149,35 @@ class GameEngine:
         print("validmoves")
         print("bestmove")
         print("undo")
-        print("history")
         print("options")
         print("exit")
 
     def board(self, board_string=None):
         if debug:
             if not (board_string is None or board_string.isspace()):
-                self._game_board = GameBoard(board_string=board_string, game_type=self.config.game_type)
+                self._game_board = GameBoardCls(board_string=board_string, game_type=self.config.game_type)
                 self._game_ai.reset_caches()
         if self._game_board is None:
             raise NoBoardException
-        print(self._game_board)
+        print(self._game_board.to_game_string())
 
     def new_game(self, **kwargs):
         if kwargs:
-            self._game_board = GameBoard(board_string=kwargs.pop("board_string"), game_type=kwargs.pop("game_type"))
+            # First, try parsing the board string as boardspace notation:
+            parsed, board = GameBoard.try_parse_game_string(kwargs.pop("board_string"), kwargs.pop("game_type"))
+
+            # Otherwise, default to axial notation:
+            if not parsed:
+                board = GameBoardCls(board_string=kwargs.pop("board_string"), game_type=kwargs.pop("game_type"))
         else:
-            self._game_board = GameBoard(board_string="START", game_type=self.config.game_type)
+            board = GameBoardCls(board_string="START", game_type=self.config.game_type)
+
+        self._game_board = board
         self._game_ai.reset_caches()
-        print(self._game_board)
-        return str(self._game_board)
+
+        game_str = self._game_board.to_game_string()
+        print(game_str)
+        return game_str
 
     def check_board(self, check_game_over=True):
         if self._game_board is None:
@@ -174,20 +188,29 @@ class GameEngine:
 
     def play(self, move_string):
         self.check_board()
-        self._game_board.play(Move(move_string=move_string))
-        print(self._game_board)
-        return str(self._game_board)
+
+        try:
+            move = NotationUtils.parse_move_string(self._game_board, move_string)
+        except ValueError or Exception:
+            raise ValueError("Unable to parse '%s'." % move_string)
+
+        _, move_string = NotationUtils.try_normalize_boardspace_move_string(move_string)
+        self._game_board.play(move, move_string)
+
+        game_str = self._game_board.to_game_string()
+        print(game_str)
+        return game_str
 
     def pass_turn(self):
         self.check_board()
         self._game_board.pass_turn()
-        print(self._game_board)
+        print(self._game_board.to_game_string())
 
     def valid_moves(self):
         self.check_board()
         valid_moves = self._game_board.get_valid_moves()
-        print(valid_moves)
-        return str(self._game_board)
+        print(NotationUtils.to_boardspace_move_string_list(self._game_board, valid_moves))
+        return self._game_board.to_game_string()
 
     def best_move(self, **kwargs):
         self.check_board()
@@ -211,7 +234,7 @@ class GameEngine:
         elif not isinstance(best_move, Move):
             raise ValueError(best_move)
 
-        print(best_move)
+        print(NotationUtils.to_boardspace_move_string(self._game_board, best_move))
         return best_move
 
     def undo(self, moves=1):
@@ -222,12 +245,8 @@ class GameEngine:
 
         for i in range(moves):
             self._game_board.undo_last_move()
-        print(self._game_board)
 
-    def history(self):
-        self.check_board(check_game_over=False)
-        history = BoardHistory(board_history=self._game_board.board_history)
-        print(history)
+        print(self._game_board.to_game_string())
 
     def options_list(self):
         self.options_get("max_branching_factor")

@@ -1,4 +1,4 @@
-from MzingaShared.Core import Move, EnumUtils
+from MzingaShared.Core import Move, EnumUtils, NotationUtils
 from MzingaShared.Core.Board import Board, InvalidMoveException
 from MzingaShared.Core.BoardHistory import BoardHistory
 from Utils.Events import Broadcaster
@@ -34,6 +34,10 @@ class GameBoard(Board):
     def board_history(self, value):
         self._board_history = value
 
+    @property
+    def last_move(self):
+        return self._board_history.last_move
+
     def __init__(self, board_string=None, game_type=None, **kwargs):
         self.board_history = BoardHistory()
         self.last_piece_moved = None
@@ -44,7 +48,13 @@ class GameBoard(Board):
     def __repr__(self):
         return super().__repr__()
 
-    def play(self, move):
+    def clone(self):
+        clone = GameBoard(board_string="START", game_type=self.game_type)
+        for item in self.board_history:
+            clone.trusted_play(item.move, item.move_string)
+        return clone
+
+    def play(self, move, move_string=None):
         if move is None:
             raise ValueError("Invalid move.")
         if move.is_pass:
@@ -89,7 +99,12 @@ class GameBoard(Board):
 
             raise InvalidMoveException(move)
 
-        self.trusted_play(move)
+        if move_string is not None:
+            play_str = NotationUtils.normalize_boardspace_move_string(move_string)
+        else:
+            play_str = NotationUtils.to_boardspace_move_string(self, move)
+
+        self.trusted_play(move, play_str)
 
     def pass_turn(self):
         pass_turn = Move.pass_turn()
@@ -100,9 +115,9 @@ class GameBoard(Board):
         if pass_turn not in self.get_valid_moves():
             raise InvalidMoveException(pass_turn, "You can't pass when you have valid moves.")
 
-        self.trusted_play(pass_turn)
+        self.trusted_play(pass_turn, NotationUtils.boardspace_pass)
 
-    def trusted_play(self, move):
+    def trusted_play(self, move, move_string=None):
         original_position = None
 
         if not move.is_pass:
@@ -110,7 +125,7 @@ class GameBoard(Board):
             original_position = target_piece.position
             self.move_piece(target_piece, move.position)
 
-        self._board_history.add(move, original_position)
+        self._board_history.add(move, original_position, move_string)
         self.current_turn += 1
         self.last_piece_moved = move.piece_name
         self.board_changed.on_change.fire(self)  # fire event
@@ -133,3 +148,41 @@ class GameBoard(Board):
 
         self.current_turn -= 1
         self.board_changed.on_change.fire(self)
+
+    def to_game_string(self):
+        game_strs = []
+        game_strs.extend([self.board_state, ';'])  # board state
+        game_strs.append("".join([self.current_turn_colour, str(self.current_player_turn), ';']))  # turn state
+
+        # moves:
+        for item in self.board_history.get_enumerator:
+            if item.move_string:
+                move_str = item.move_string
+            else:
+                move_str = NotationUtils.to_boardspace_move_string(self, item.move)
+            game_strs.append("%s%c" % (move_str, ';'))
+
+        return "".join(game_strs)[0:-1]
+
+
+def try_parse_game_string(game_string, game_type):
+    try:
+        board = parse_game_string(game_string, game_type)
+        return True, board
+    except ValueError or Exception:
+        return False, None
+
+
+def parse_game_string(game_string, game_type):
+    if game_string is None or game_string.isspace():
+        raise ValueError("Invalid game_string.")
+
+    split = game_string.split(';')
+    gb = GameBoard("START", game_type)
+    normalized_move_strs = list(map(NotationUtils.normalize_boardspace_move_string, split[3:]))
+
+    for nms in normalized_move_strs:
+        move = NotationUtils.parse_move_string(gb, nms)
+        gb.play(move, nms)
+
+    return gb
