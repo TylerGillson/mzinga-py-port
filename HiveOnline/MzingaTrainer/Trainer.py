@@ -45,6 +45,9 @@ class Trainer(TrainerBase):
                     return "".join([",Start%s.%s" % (bug_type, bug_type_weight),
                                     ",End%s.%s" % (bug_type, bug_type_weight)])
 
+                if profile_list[0].game_type == "Extended":
+                    header += ",queen_bee_life_weight,queen_bee_tight_spaces_weight,noisy_ring_weight"
+
                 data_strs = self.metric_weights_cls.iterate_over_weights_result(add_csv_weights, [])
                 header += reduce((lambda a, b: a + b), data_strs)
                 f.write(header)
@@ -56,19 +59,27 @@ class Trainer(TrainerBase):
                     return "".join([",%6.2f" % float(start_normalized.get(bug_type, bug_type_weight)),
                                     ",%6.2f" % float(end_normalized.get(bug_type, bug_type_weight))])
 
+                def add_csv_board_weights(key, **kwargs):
+                    board_metric_weights = kwargs.pop('board_metric_weights')
+                    return "".join([",%6.2f" % float(board_metric_weights.get(key))])
+
                 for p in profile_list:
-                    profile_str = "%s,%s,%s,%d,%d,%s,%s,%d,%d,%d" % (p.id, p.name, p.game_type,
-                                                                     p.elo_rating, p.generation,
-                                                                     p.parent_a if p.parent_a is not None else "",
-                                                                     p.parent_b if p.parent_b is not None else "",
-                                                                     p.wins, p.losses, p.draws)
+                    profile_str = "%s,%s,%s,%d,%d,%s,%s,%d,%d,%d" % \
+                                  (p.id, p.name, p.game_type, p.elo_rating, p.generation,
+                                   p.parent_a if p.parent_a is not None else "",
+                                   p.parent_b if p.parent_b is not None else "", p.wins, p.losses, p.draws)
+
+                    if p.game_type == "Extended":
+                        board_metric_strs = p.board_metric_weights.iterate_over_weights_result(
+                            add_csv_board_weights, [], board_metric_weights=p.board_metric_weights)
+                        profile_str += reduce((lambda a, b: a + b), board_metric_strs).replace(" ", "")
 
                     sn = p.start_metric_weights.get_normalized()
                     en = p.end_metric_weights.get_normalized()
                     data_strs = self.metric_weights_cls.iterate_over_weights_result(
                         add_csv_norm_weights, [], start_normalized=sn, end_normalized=en)
 
-                    profile_str += reduce((lambda a, b: a + b), data_strs)
+                    profile_str += reduce((lambda a, b: a + b), data_strs).replace(" ", "")
                     f.write(profile_str)
                     f.write("\n")
 
