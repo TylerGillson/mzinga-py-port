@@ -79,7 +79,7 @@ class TrainerBase(object):
             rounds = 0
             while round_result == "Draw":
                 self.log("Battle Royale round %d start." % rounds + 1)
-                round_result = self.battle_profiles(w_profile, b_profile)
+                round_result = self.battle_profiles(w_profile, b_profile, report_moves=True)
 
                 self.log("Battle Royale round %d end." % rounds + 1)
                 rounds += 1
@@ -110,7 +110,7 @@ class TrainerBase(object):
             return -1
         return 1
 
-    def battle_profiles(self, white_profile, black_profile):
+    def battle_profiles(self, white_profile, black_profile, report_moves=False):
         # Conditionally profile the battle:
         pr = None
         if run_profile:
@@ -211,7 +211,10 @@ class TrainerBase(object):
 
         # Output battle result:
         w_s, b_s = self.to_string(white_profile), self.to_string(black_profile)
-        self.log("Battle end %s %s vs. %s" % (board_state, w_s, b_s))
+        if report_moves:
+            self.log("Battle end %s %s vs. %s. Turns: %d" % (board_state, w_s, b_s, game_board.current_turn))
+        else:
+            self.log("Battle end %s %s vs. %s" % (board_state, w_s, b_s))
 
         # Output profile results:
         if run_profile:
@@ -285,7 +288,6 @@ class TrainerBase(object):
             white_index = self.random.randrange(0, 2)  # Help mitigate top players always playing white
             white_profile = current_tier[profile_index + white_index]
             black_profile = current_tier[profile_index + 1 - white_index]
-
             round_result = "Draw"
 
             white_higher_rank = white_profile.elo_rating < black_profile.elo_rating
@@ -295,12 +297,12 @@ class TrainerBase(object):
             self.log("Tournament match start %s vs. %s." % (w_s, b_s))
 
             if max_draws == 1:
-                round_result = self.battle_profiles(white_profile, black_profile)
+                round_result = self.battle_profiles(white_profile, black_profile, report_moves=True)
             else:
                 rounds = 0
                 while round_result == "Draw":
                     self.log("Tournament round %d start." % (rounds + 1))
-                    round_result = self.battle_profiles(white_profile, black_profile)
+                    round_result = self.battle_profiles(white_profile, black_profile, report_moves=True)
 
                     self.log("Tournament round %d end." % (rounds + 1))
                     rounds += 1
