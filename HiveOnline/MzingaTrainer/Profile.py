@@ -307,7 +307,7 @@ class Profile:
         return Profile(g_id, g_name, game_type, **kwargs)
 
     @staticmethod
-    def mate(parent_a, parent_b, min_mix, max_mix):
+    def mate(parent_a, parent_b, min_mix, max_mix, use_original_ga=False):
         if parent_a is None:
             raise ValueError("Invalid parent_a.")
         if parent_b is None:
@@ -321,23 +321,30 @@ class Profile:
         name = generate_name(m_id)
         elo_rating = EloUtils.default_rating
         generation = max(parent_a.generation, parent_b.generation) + 1
+        original_rules = parent_a.game_type == "Original"
 
         # Normalize metric weights:
         pa_start_norm = parent_a.start_metric_weights.get_normalized()
         pa_end_norm = parent_a.end_metric_weights.get_normalized()
         pb_start_norm = parent_b.start_metric_weights.get_normalized()
         pb_end_norm = parent_b.end_metric_weights.get_normalized()
-        board_metric_weights = None
 
-        if parent_a.game_type == "Original":
+        board_metric_weights = None
+        pa_board_norm = None
+        pb_board_norm = None
+
+        if not original_rules:
+            pa_board_norm = parent_a.board_metric_weights.get_normalized()
+            pb_board_norm = parent_b.board_metric_weights.get_normalized()
+
+        if original_rules or use_original_ga:
             start_metric_weights = Ga.mix_metric_weights(pa_start_norm, pb_start_norm,
                                                          min_mix, max_mix, parent_a.game_type)
             end_metric_weights = Ga.mix_metric_weights(pa_end_norm, pb_end_norm,
                                                        min_mix, max_mix, parent_a.game_type)
+            if use_original_ga:
+                board_metric_weights = Ga.mix_board_metric_weights(pa_board_norm, pb_board_norm, min_mix, max_mix)
         else:
-            pa_board_norm = parent_a.board_metric_weights.get_normalized()
-            pb_board_norm = parent_b.board_metric_weights.get_normalized()
-
             start_metric_weights = Ga.cross_over(pa_start_norm, pb_start_norm)
             end_metric_weights = Ga.cross_over(pa_end_norm, pb_end_norm)
             board_metric_weights = Ga.cross_over(pa_board_norm, pb_board_norm)

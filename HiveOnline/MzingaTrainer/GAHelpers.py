@@ -60,3 +60,17 @@ def mix_metric_weights(mw_a, mw_b, min_mix, max_mix, game_type):
 
     mw.iterate_over_weights(mix_weights)
     return mw
+
+
+def mix_board_metric_weights(bmw_a, bmw_b, min_mix, max_mix):
+    bmw = BoardMetricWeightsCls()
+
+    def mix_weights(key):
+        value = 0.5 * (bmw_a.get(key) + bmw_b.get(key))
+        if value == 0.0:
+            value = -0.01 + (rand.random() * 0.02)
+        value = value * (min_mix + (rand.random() * abs(max_mix - min_mix)))
+        bmw.set(key, value)
+
+    bmw.iterate_over_weights(mix_weights)
+    return bmw

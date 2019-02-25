@@ -363,7 +363,7 @@ class Trainer(TrainerBase):
                 while parents.qsize() >= 2:
                     parent_a = parents.get()
                     parent_b = parents.get()
-                    child = Profile.mate(parent_a, parent_b, min_mix, max_mix)
+                    child = Profile.mate(parent_a, parent_b, min_mix, max_mix, self.trainer_settings.use_original_ga)
 
                     pa, pb, ch = self.to_string(parent_a), self.to_string(parent_b), self.to_string(child)
                     self.log("Mated %s and %s to sire %s." % (pa, pb, ch))

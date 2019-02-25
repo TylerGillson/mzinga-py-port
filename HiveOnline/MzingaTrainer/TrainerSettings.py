@@ -15,6 +15,7 @@ class TrainerSettings:
     mixed_game_time_handicap = 1
     extended_colour = None
     battle_repeat = 1
+    use_original_ga = False
 
     _battle_time_limit = datetime.timedelta(minutes=10)
     _bulk_battle_time_limit = datetime.timedelta(minutes=300)
