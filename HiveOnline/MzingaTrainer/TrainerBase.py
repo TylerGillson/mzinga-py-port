@@ -346,7 +346,9 @@ class TrainerBase(object):
 
     def to_string(self, val):
         if isinstance(val, datetime.timedelta):
-            return "%d.%d:%d:%d" % (val.days, val.seconds // 3600, val.seconds // 60, val.seconds)
+            hours, remainder = divmod(val.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            return "%d-%d:%d:%d" % (val.days, hours, minutes, seconds)
         elif isinstance(val, Profile):
             if val is None:
                 raise ValueError("Invalid profile.")

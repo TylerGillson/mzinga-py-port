@@ -100,7 +100,7 @@ class Trainer(TrainerBase):
             white_profile = self.read_profile(white_profile_path)
             black_profile = self.read_profile(black_profile_path)
 
-            self.battle_profiles(white_profile, black_profile)
+            self.battle_profiles(white_profile, black_profile, report_moves=True)
 
             # Save Profiles
             self.write_profile(white_profile_path, white_profile)
