@@ -869,6 +869,11 @@ class Board:
                 elif self.current_turn == 1 and colour == "Black" and not_black_queen:
 
                     for i in range(EnumUtils.num_directions):
+
+                        # Prevent Extended AI from opening with a SoldierAnt:
+                        if self.game_type == "Extended" and "SoldierAnt" in piece_name:
+                            continue
+
                         neighbor = neighbour_at(i)
                         add(Move(piece_name=piece_name, position=neighbor))
                     return valid_moves
