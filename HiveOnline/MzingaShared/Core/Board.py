@@ -857,6 +857,11 @@ class Board:
 
                 # First move must be at the origin and not the White Queen Bee
                 if self.current_turn == 0 and colour == "White" and not_white_queen:
+
+                    # Prevent Extended AI from opening with a SoldierAnt:
+                    if self.game_type == "Extended" and "SoldierAnt" in piece_name:
+                        return valid_moves
+
                     add(Move(piece_name=piece_name, position=origin))
                     return valid_moves
 
