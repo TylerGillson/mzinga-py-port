@@ -135,6 +135,16 @@ class Board:
     def black_hand(self):
         return [piece_names_by_int.get(i) for i in range(EnumUtils.num_piece_names // 2, EnumUtils.num_piece_names)
                 if self._pieces[i] is not None and self._pieces[i].in_play]
+
+    @property
+    def white_bench(self):
+        return [piece_names_by_int.get(i) for i in range(EnumUtils.num_piece_names // 2)
+                if not self._pieces[i].in_play]
+
+    @property
+    def black_bench(self):
+        return [piece_names_by_int.get(i) for i in range(EnumUtils.num_piece_names // 2, EnumUtils.num_piece_names)
+                if not self._pieces[i].in_play]
     # END PIECE ENUMERATION PROPERTIES
 
     # PIECE STATE PROPERTIES

@@ -82,6 +82,10 @@ class GameAI:
     def cached_board_score_hits(self):
         return self._cached_board_scores.metrics.hits
 
+    def set_use_extended(self, game_board):
+        if game_board.mixed_battle:
+            self.use_extended = game_board.current_turn_colour == game_board.extended_colour
+
     def __init__(self, battle_key, config=None):
         self.battle_key = battle_key
         self.use_extended = True
@@ -173,6 +177,7 @@ class GameAI:
             moves_to_evaluate.add(evaluated_move=best_move)
             return moves_to_evaluate
 
+        # Otherwise, begin working towards mini-max search
         valid_moves = self.get_presorted_valid_moves(game_board, best_move)
 
         ####################
@@ -199,7 +204,7 @@ class GameAI:
                         valid_moves = [m for m in valid_moves if "SoldierAnt2" in m.piece_name]
         #####################
 
-        # If necessary, convert each entry to an EvaluatedMove:
+        # If necessary, convert each entry of valid_moves to an EvaluatedMove:
         if isinstance(valid_moves[0], Move):
             valid_moves = list(map(lambda x: EvaluatedMove(x), valid_moves))
 
@@ -213,6 +218,19 @@ class GameAI:
         # No need to search
         if moves_to_evaluate.count <= 1 or best_move_params.max_search_depth == 0:
             return moves_to_evaluate
+
+        # Extended AI modulates in_play weights based on deployed piece ratio:
+        self.set_use_extended(game_board)
+        if self.game_type == "Extended" and self.use_extended:
+            num_white_pieces = len(list(filter(lambda x: "White" in x, game_board.pieces_in_play)))
+            num_black_pieces = len(game_board.pieces_in_play) - num_white_pieces
+            bench_pieces = game_board.white_bench \
+                if game_board.current_turn_colour == "White" \
+                else game_board.black_bench
+
+            args = [game_board.current_turn_colour, bench_pieces,
+                    num_white_pieces, num_black_pieces, self.start_metric_weights]
+            modulate_in_play_weights(*args)
 
         # Iterative search
         depth = 1 + max(0, moves_to_evaluate.best_move.depth)
@@ -532,9 +550,9 @@ class GameAI:
                 return score
 
             # Ignore extended metrics for the Original profile in a mixed battle:
-            if game_board.mixed_battle:
-                self.use_extended = game_board.current_turn_colour == game_board.extended_colour
+            self.set_use_extended(game_board)
 
+            # Calculate metrics, then score:
             board_metrics = game_board.get_board_metrics()
             score = self.calculate_board_score(None, board_metrics, self.start_metric_weights, self.end_metric_weights)
             self._cached_board_scores.store(key, score)
@@ -602,3 +620,22 @@ class GameAI:
                         * board_metrics[piece_name].can_make_defense_ring
 
             return score
+
+
+def modulate_in_play_weights(current_turn, bench_pieces, num_white_pieces, num_black_pieces, metric_weights):
+    diff = abs(num_white_pieces - num_black_pieces) * 10
+
+    increase = \
+        current_turn == "White" and num_black_pieces >= num_white_pieces + 2 or \
+        current_turn == "Black" and num_black_pieces + 2 <= num_white_pieces
+    decrease = \
+        current_turn == "White" and num_black_pieces <= num_white_pieces - 2 or \
+        current_turn == "Black" and num_black_pieces >= num_white_pieces + 2
+
+    mod_val = diff if increase else -diff
+
+    if increase or decrease:
+        for piece_name in bench_pieces:
+            bug_type = EnumUtilsCls.get_bug_type(piece_name)
+            current_weight = metric_weights.get(bug_type, "in_play_weight")
+            metric_weights.set(bug_type, "in_play_weight", current_weight + mod_val)

@@ -127,20 +127,22 @@ class TrainerBase(object):
         battle_key = "".join([white_profile.name, "_", black_profile.name])
 
         # Create AIs
+        wp_st, wp_end = white_profile.start_metric_weights, white_profile.end_metric_weights
+        bp_st, bp_end = black_profile.start_metric_weights, black_profile.end_metric_weights
+
         white_ai = GameAI(battle_key, GameAIConfig(
-            white_profile.start_metric_weights,
-            white_profile.end_metric_weights,
+            wp_st,
+            wp_end,
             self.trainer_settings.trans_table_size,
             white_profile.game_type,
-            board_weights=white_profile.board_metric_weights)
-                          )
+            board_weights=white_profile.board_metric_weights))
+
         black_ai = GameAI(battle_key, GameAIConfig(
-            black_profile.start_metric_weights,
-            black_profile.end_metric_weights,
+            bp_st,
+            bp_end,
             self.trainer_settings.trans_table_size,
             black_profile.game_type,
-            board_weights=black_profile.board_metric_weights)
-                          )
+            board_weights=black_profile.board_metric_weights))
 
         # Create Game
         kwargs = {
@@ -197,6 +199,10 @@ class TrainerBase(object):
         if board_state == "Draw":
             white_score, black_score, white_result, black_result = (0.5, 0.5, "Draw", "Draw")
 
+        # Reset modulated metric weights:
+        white_profile.start_metric_weights, white_profile.end_metric_weights = wp_st, wp_end
+        black_profile.start_metric_weights, black_profile.end_metric_weights = bp_st, bp_end
+
         # Prepare for ELO update:
         white_rating = white_profile.elo_rating
         white_k = EloUtils.provisional_k if self.is_provisional(white_profile) else EloUtils.default_k
@@ -220,6 +226,10 @@ class TrainerBase(object):
         if run_profile:
             pr.disable()
             pr.dump_stats('/Users/tylergillson/Desktop/output.prof')
+
+        # Clean up:
+        del white_ai, black_ai, game_board
+        gc.collect()
 
         return board_state
 
