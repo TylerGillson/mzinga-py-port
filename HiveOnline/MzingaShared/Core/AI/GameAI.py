@@ -175,6 +175,30 @@ class GameAI:
 
         valid_moves = self.get_presorted_valid_moves(game_board, best_move)
 
+        ####################
+        # Opening Heuristics
+        ####################
+        if self.game_type == "Extended":
+            board_turn = game_board.current_turn
+
+            # Prevent Extended AI from opening with a SoldierAnt:
+            if board_turn <= 2:
+                valid_moves = [m for m in valid_moves if "SoldierAnt" not in m.piece_name]
+
+            # Opening move heuristics for turns 2-5:
+            if 2 <= board_turn <= 9:
+                turn_colour = game_board.current_turn_colour
+                turn_pieces = [p for p in game_board.pieces_in_play if turn_colour in p]
+                num_soldier_ants = len([p for p in turn_pieces if "SoldierAnt" in p])
+
+                # Ensure two SoldierAnts deployed by player's 5th turn (board_turn 8 for White, 9 for Black):
+                if board_turn >= 6 and num_soldier_ants < 2:
+                    valid_moves = [m for m in valid_moves if "SoldierAnt" in m.piece_name]
+
+                    if num_soldier_ants == 1:
+                        valid_moves = [m for m in valid_moves if "SoldierAnt2" in m.piece_name]
+        #####################
+
         # If necessary, convert each entry to an EvaluatedMove:
         if isinstance(valid_moves[0], Move):
             valid_moves = list(map(lambda x: EvaluatedMove(x), valid_moves))

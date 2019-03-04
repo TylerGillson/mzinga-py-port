@@ -12,7 +12,7 @@ class Program:
 
     def main(self, args):
         valid_args = args is not None and len(args) > 0
-        config = self.load_config(args[0]) if valid_args else GameEngineConfig.get_default_config()
+        config = self.load_config(args[0]) if valid_args else GameEngineConfig.get_default_config(None)
         self.engine = GameEngine(self.ID, config)
         self.engine.parse_command("info")
 

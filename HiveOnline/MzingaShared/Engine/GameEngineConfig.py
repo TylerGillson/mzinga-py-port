@@ -175,7 +175,7 @@ class GameEngineConfig:
         return r_type, value, values
 
     def get_game_ai(self):
-        return GameAI(GameAIConfig(
+        return GameAI("engine", config=GameAIConfig(
             self.start_metric_weights,
             self.end_metric_weights if self.end_metric_weights else self.start_metric_weights,
             self.transposition_table_size_mb,
@@ -185,10 +185,10 @@ class GameEngineConfig:
         ))
 
 
-def get_default_config():
-    if GameEngineConfig.game_type == "Original":
+def get_default_config(game_type):
+    if game_type is None or game_type == "Original":
         return GameEngineConfig(DefaultConfig)
-    elif GameEngineConfig.game_type == "Extended":
+    elif game_type == "Extended":
         return GameEngineConfig(ExtendedConfig)
 
 

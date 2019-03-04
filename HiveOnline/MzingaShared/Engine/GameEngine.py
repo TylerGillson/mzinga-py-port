@@ -6,6 +6,7 @@ from MzingaShared.Core import GameBoard
 from MzingaShared.Core.GameBoard import GameBoard as GameBoardCls
 from MzingaShared.Core.Move import Move
 from MzingaShared.Core import NotationUtils
+from MzingaShared.Engine import GameEngineConfig
 from Utils.Events import Broadcaster
 from Utils.TaskQueue import TaskQueue
 
@@ -294,6 +295,7 @@ class GameEngine:
             self.config.parse_report_intermediate_best_moves_value(value)
             refresh_ai = True
         elif opt_key == "game_type":
+            self.config = GameEngineConfig.get_default_config("Extended")
             self.config.parse_game_type_value(value)
             refresh_ai = True
         else:
