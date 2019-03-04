@@ -536,8 +536,8 @@ class Board:
 
             newly_trapped = list(post_move_trapped_neighbours - pre_move_trapped_neighbours)
             newly_trapped_against_queen = \
-                [p for p in newly_trapped if p.position in self._cached_enemy_queen_neighbours]
-            return len(newly_trapped_against_queen) > 0
+                len([p for p in newly_trapped if p.position in self._cached_enemy_queen_neighbours]) > 0
+            return newly_trapped_against_queen and not piece_already_adjacent
 
     def makes_noisy_ring(self, move):
         # Verify move position has at least two neighbours before checking for rings:
@@ -857,11 +857,6 @@ class Board:
 
                 # First move must be at the origin and not the White Queen Bee
                 if self.current_turn == 0 and colour == "White" and not_white_queen:
-
-                    # Prevent Extended AI from opening with a SoldierAnt:
-                    if self.game_type == "Extended" and "SoldierAnt" in piece_name:
-                        return valid_moves
-
                     add(Move(piece_name=piece_name, position=origin))
                     return valid_moves
 
@@ -869,11 +864,6 @@ class Board:
                 elif self.current_turn == 1 and colour == "Black" and not_black_queen:
 
                     for i in range(EnumUtils.num_directions):
-
-                        # Prevent Extended AI from opening with a SoldierAnt:
-                        if self.game_type == "Extended" and "SoldierAnt" in piece_name:
-                            continue
-
                         neighbor = neighbour_at(i)
                         add(Move(piece_name=piece_name, position=neighbor))
                     return valid_moves
