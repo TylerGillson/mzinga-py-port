@@ -90,6 +90,10 @@ class GameAI:
         self.battle_key = battle_key
         self.use_extended = True
 
+        # Opening move heuristic constants:
+        self.board_turn_cap = 9
+        self.deploy_soldier_ants_turn = 6
+
         if config:
             self.game_type = config.game_type
 
@@ -186,26 +190,35 @@ class GameAI:
         if self.game_type == "Extended":
             board_turn = game_board.current_turn
 
+            def get_piece_name(move):
+                return move.piece_name if isinstance(move, Move) else move.move.piece_name
+
             # Prevent Extended AI from opening with a SoldierAnt:
             if board_turn <= 2:
-                valid_moves = [m for m in valid_moves if "SoldierAnt" not in m.piece_name]
+                valid_moves = [m for m in valid_moves if "SoldierAnt" not in get_piece_name(m)]
 
             # Opening move heuristics for turns 2-5:
-            if 2 <= board_turn <= 9:
+            if 2 < board_turn <= self.board_turn_cap:
                 turn_colour = game_board.current_turn_colour
                 turn_pieces = [p for p in game_board.pieces_in_play if turn_colour in p]
                 num_soldier_ants = len([p for p in turn_pieces if "SoldierAnt" in p])
 
                 # Ensure two SoldierAnts deployed by player's 5th turn (board_turn 8 for White, 9 for Black):
-                if board_turn >= 6 and num_soldier_ants < 2:
-                    valid_moves = [m for m in valid_moves if "SoldierAnt" in m.piece_name]
+                if board_turn > self.deploy_soldier_ants_turn and num_soldier_ants < 2:
+                    qip = game_board.white_queen_in_play if turn_colour == "White" else game_board.black_queen_in_play
 
-                    if num_soldier_ants == 1:
-                        valid_moves = [m for m in valid_moves if "SoldierAnt2" in m.piece_name]
+                    if not qip:  # If Queen Bee not played by turn 4, extend heuristic bounds to sixth turn:
+                        self.board_turn_cap += 2
+                        self.deploy_soldier_ants_turn += 2
+                    else:
+                        valid_moves = [m for m in valid_moves if "SoldierAnt" in get_piece_name(m)]
+
+                        if num_soldier_ants == 1:
+                            valid_moves = [m for m in valid_moves if "SoldierAnt2" in get_piece_name(m)]
         #####################
 
         # If necessary, convert each entry of valid_moves to an EvaluatedMove:
-        if isinstance(valid_moves[0], Move):
+        if valid_moves and isinstance(valid_moves[0], Move):
             valid_moves = list(map(lambda x: EvaluatedMove(x), valid_moves))
 
         moves_to_evaluate.add(evaluated_moves=valid_moves, re_sort=False)
