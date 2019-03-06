@@ -412,6 +412,7 @@ class Trainer(TrainerBase):
             while len(current_tier) > 1:
                 self.log("Tournament tier %d start, %d participants." % (tier, len(current_tier)))
                 winners = []
+                gimme_profile = current_tier[-1] if len(current_tier) % 2 != 0 else None
 
                 # Generate list of lists of parameters for calls to simulate_tier_battle:
                 args = (current_tier, max_draws, path, time_limit, tournament_start)
@@ -435,6 +436,8 @@ class Trainer(TrainerBase):
                 tier += 1
 
                 current_tier = winners
+                if gimme_profile:
+                    current_tier.append(gimme_profile)
 
                 if time_limit - (datetime.datetime.now() - tournament_start) <= datetime.timedelta.min:
                     self.log("Tournament time-out.")
