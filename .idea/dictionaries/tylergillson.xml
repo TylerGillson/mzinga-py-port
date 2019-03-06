@@ -8,6 +8,7 @@
       <w>battletimelimit</w>
       <w>bbtl</w>
       <w>blackprofilepath</w>
+      <w>blackuseheuristics</w>
       <w>boardspace</w>
       <w>bulkbattletimelimit</w>
       <w>cpsc</w>
@@ -61,8 +62,10 @@
       <w>tylergillson</w>
       <w>unshuffled</w>
       <w>uoga</w>
+      <w>useheuristics</w>
       <w>useoriginalga</w>
       <w>whiteprofilepath</w>
+      <w>whiteuseheuristics</w>
       <w>zobrist</w>
     </words>
   </dictionary>

@@ -8,6 +8,9 @@ from functools import reduce
 
 from MzingaTrainer.Profile import Profile
 from MzingaTrainer.TrainerBase import TrainerBase
+from MzingaTrainer.TrainerCounter import TrainerCounter
+
+trainer_counter = None
 
 
 def work_tournament(*args):
@@ -135,8 +138,8 @@ class Trainer(TrainerBase):
         max_battles = min(max_battles, combinations)
         total = max_battles
 
-        completed = 0
-        remaining = total
+        global trainer_counter
+        trainer_counter = TrainerCounter(init_completed=0, init_remaining=total)
 
         time_remaining = datetime.timedelta(seconds=self.trainer_settings.battle_time_limit.seconds * total)
         timeout_remaining = time_limit - (datetime.datetime.now() - br_start)
@@ -152,7 +155,7 @@ class Trainer(TrainerBase):
             matches = self.shuffle(matches)
 
         # Generate list of lists of parameters for calls to simulate_match:
-        args = (completed, remaining, max_draws, path, time_limit, br_start)
+        args = (max_draws, path, time_limit, br_start)
         # noinspection PyTypeChecker
         inputs = [(self, match) + args for match in matches]
 
@@ -160,15 +163,12 @@ class Trainer(TrainerBase):
         max_parallelism = self.get_max_parallelism(max_concurrent_battles)
         chunk_size = len(inputs) // max_parallelism
 
-        with mp.Pool(max_parallelism) as pool:
+        with mp.Pool(max_parallelism, initargs=(trainer_counter,)) as pool:
             for battle_result in pool.imap_unordered(work_battle_royale, inputs, chunksize=chunk_size):
                 # Terminate the entire pool if a timeout occurs:
                 if battle_result == -1:
                     pool.terminate()
                     break
-                else:
-                    completed += 1
-                    remaining -= 1
 
         if time_limit - (datetime.datetime.now() - br_start) <= datetime.timedelta.min:
             self.log("Battle Royale time-out.")
@@ -396,8 +396,8 @@ class Trainer(TrainerBase):
             profiles = self.load_profiles(path)
             total = len(profiles) - 1
 
-            completed = 0
-            remaining = total
+            global trainer_counter
+            trainer_counter = TrainerCounter(init_completed=0, init_remaining=total)
 
             time_remaining = datetime.timedelta(seconds=self.trainer_settings.battle_time_limit.seconds * total)
             timeout_remaining = time_limit - (datetime.datetime.now() - tournament_start)
@@ -414,7 +414,7 @@ class Trainer(TrainerBase):
                 winners = []
 
                 # Generate list of lists of parameters for calls to simulate_tier_battle:
-                args = (completed, remaining, current_tier, max_draws, path, time_limit, tournament_start)
+                args = (current_tier, max_draws, path, time_limit, tournament_start)
                 # noinspection PyTypeChecker
                 inputs = [(self, i) + args for i in range(len(current_tier) // 2)]
 
@@ -422,7 +422,7 @@ class Trainer(TrainerBase):
                 max_parallelism = self.get_max_parallelism(max_concurrent_battles)
                 chunk_size = len(inputs) // max_parallelism
 
-                with mp.Pool(max_parallelism) as pool:
+                with mp.Pool(max_parallelism, initargs=(trainer_counter,)) as pool:
                     for battle_result in pool.imap_unordered(work_tournament, inputs, chunksize=chunk_size):
                         # Terminate the entire pool if a timeout occurs:
                         if battle_result == -1:
@@ -430,8 +430,6 @@ class Trainer(TrainerBase):
                             break
                         else:
                             winners.extend(battle_result)
-                            completed += 1
-                            remaining -= 1
 
                 self.log("Tournament tier %d end." % tier)
                 tier += 1

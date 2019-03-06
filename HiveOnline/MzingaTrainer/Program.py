@@ -76,6 +76,8 @@ class Program:
         print("-MixedGameTypes          Whether original & extended AIs will be competing")
         print("-MixedGameTimeHandicap   A multiplier for the base turn time applied to the Original profile's turns")
         print("-ExtendedColour          Which colour is Extended in a mixed battle")
+        print("-WhiteUseHeuristics      Whether White uses opening-play & piece-ratio heuristics in Original mode")
+        print("-BlackUseHeuristics      Whether Black uses opening-play & piece-ratio heuristics in Original mode")
         print("-UseOriginalGA           Whether or not to use Mzinga's original genetic operators in Extended mode")
         print("-BattleRepeat            How many head-to-head battles to simulate in battle mode")
         print("-LogToFile               Whether output is piped to a file or the console")
@@ -119,6 +121,10 @@ class Program:
             trainer_settings.battle_repeat = int(args[i + 1])
         elif arg in ['ec', 'extendedcolour']:
             trainer_settings.extended_colour = args[i + 1]
+        elif arg in ['wuh', 'whiteuseheuristics']:
+            trainer_settings.white_use_heuristics = args[i + 1] == "True"
+        elif arg in ['buh', 'blackuseheuristics']:
+            trainer_settings.black_use_heuristics = args[i + 1] == "True"
         elif arg in ['uoga', 'useoriginalga']:
             trainer_settings.use_original_ga = args[i + 1] == "True"
         elif arg in ["ltf", "logtofile"]:

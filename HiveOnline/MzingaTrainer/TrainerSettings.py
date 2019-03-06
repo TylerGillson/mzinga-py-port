@@ -17,6 +17,9 @@ class TrainerSettings:
     battle_repeat = 1
     use_original_ga = False
 
+    white_use_heuristics = False
+    black_use_heuristics = False
+
     _battle_time_limit = datetime.timedelta(minutes=10)
     _bulk_battle_time_limit = datetime.timedelta(minutes=300)
     _max_draws = 1

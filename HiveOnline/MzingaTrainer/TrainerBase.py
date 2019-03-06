@@ -16,6 +16,7 @@ from MzingaTrainer.Profile import Profile
 from MzingaTrainer import EloUtils
 from MzingaTrainer.EloUtils import EloUtils as EloUtilsCls
 from MzingaTrainer.TrainerSettings import TrainerSettings
+from MzingaTrainer import Trainer
 
 GameResults = ["Loss", "Draw", "Win"]
 
@@ -64,7 +65,7 @@ class TrainerBase(object):
             else max_concurrent_battles
         return max_parallelism
 
-    def simulate_match(self, match, completed, remaining, max_draws, path, time_limit, br_start):
+    def simulate_match(self, match, max_draws, path, time_limit, br_start):
         ts = self.to_string
         w_profile = match[0]
         b_profile = match[1]
@@ -99,8 +100,11 @@ class TrainerBase(object):
         self.write_profile(b_profile_path, b_profile)
 
         # Display progress:
+        Trainer.trainer_counter.update()
+        completed, remaining = Trainer.trainer_counter.values
+
         timeout_remaining = time_limit - (datetime.datetime.now() - br_start)
-        progress, time_remaining = self.get_progress(br_start, completed + 1, remaining - 1)
+        progress, time_remaining = self.get_progress(br_start, completed, remaining)
         eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
         self.log("Battle Royale progress: %6.2f, ETA: %s." % (progress, eta))
 
@@ -135,14 +139,18 @@ class TrainerBase(object):
             wp_end,
             self.trainer_settings.trans_table_size,
             white_profile.game_type,
-            board_weights=white_profile.board_metric_weights))
+            board_weights=white_profile.board_metric_weights,
+            use_heuristics=self.trainer_settings.white_use_heuristics)
+        )
 
         black_ai = GameAI(battle_key, GameAIConfig(
             bp_st,
             bp_end,
             self.trainer_settings.trans_table_size,
             black_profile.game_type,
-            board_weights=black_profile.board_metric_weights))
+            board_weights=black_profile.board_metric_weights,
+            use_heuristics=self.trainer_settings.black_use_heuristics)
+        )
 
         # Create Game
         kwargs = {
@@ -284,8 +292,7 @@ class TrainerBase(object):
         else:
             print(log_str)
 
-    def simulate_tier_battle(self, i, completed, remaining, current_tier,
-                             max_draws, path, time_limit, tournament_start):
+    def simulate_tier_battle(self, i, current_tier, max_draws, path, time_limit, tournament_start):
         winners = []
         ts = self.to_string
         profile_index = i * 2
@@ -344,7 +351,9 @@ class TrainerBase(object):
 
             timeout_remaining = time_limit - (datetime.datetime.now() - tournament_start)
 
-            progress, time_remaining = self.get_progress(tournament_start, completed + 1, remaining - 1)
+            Trainer.trainer_counter.update()
+            completed, remaining = Trainer.trainer_counter.values
+            progress, time_remaining = self.get_progress(tournament_start, completed, remaining)
             eta = ts(timeout_remaining) if timeout_remaining < time_remaining else ts(time_remaining)
             self.log("Tournament progress: %6.2f, ETA: %s." % (progress, eta))
 

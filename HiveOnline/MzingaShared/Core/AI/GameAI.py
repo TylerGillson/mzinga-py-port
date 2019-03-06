@@ -67,7 +67,7 @@ class GameAI:
     max_max_branching_factor = 500
     default_board_scores_cache_size = 516240
     quiescent_search_max_depth = 3  # To prevent runaway stack overflows
-    max_depth = 3  # 10
+    max_depth = 10
     game_type = None
 
     _max_branching_factor = max_max_branching_factor  # To prevent search explosion
@@ -82,13 +82,13 @@ class GameAI:
     def cached_board_score_hits(self):
         return self._cached_board_scores.metrics.hits
 
-    def set_use_extended(self, game_board):
+    def set_mixed_battle_use_extended(self, game_board):
         if game_board.mixed_battle:
-            self.use_extended = game_board.current_turn_colour == game_board.extended_colour
+            self.mixed_battle_use_extended = game_board.current_turn_colour == game_board.extended_colour
 
     def __init__(self, battle_key, config=None):
         self.battle_key = battle_key
-        self.use_extended = True
+        self.mixed_battle_use_extended = True
 
         # Opening move heuristic constants:
         self.board_turn_cap = 9
@@ -96,6 +96,7 @@ class GameAI:
 
         if config:
             self.game_type = config.game_type
+            self.use_heuristics = config.use_heuristics
 
             self.board_metric_weights = config.board_metric_weights.clone() \
                 if config.board_metric_weights else BoardMetricWeights()
@@ -117,6 +118,7 @@ class GameAI:
                 self._max_branching_factor = config.max_branching_factor
         else:
             self.game_type = "Original"
+            self.use_heuristics = False
             self.board_metric_weights = BoardMetricWeights()
             self.start_metric_weights = MetricWeights(self.game_type)
             self.end_metric_weights = MetricWeights(self.game_type)
@@ -184,10 +186,10 @@ class GameAI:
         # Otherwise, begin working towards mini-max search
         valid_moves = self.get_presorted_valid_moves(game_board, best_move)
 
-        ####################
-        # Opening Heuristics
-        ####################
-        if self.game_type == "Extended":
+        ######################
+        # Opening Heuristics #
+        ######################
+        if self.game_type == "Extended" or self.use_heuristics:
             board_turn = game_board.current_turn
 
             def get_piece_name(move):
@@ -232,9 +234,11 @@ class GameAI:
         if moves_to_evaluate.count <= 1 or best_move_params.max_search_depth == 0:
             return moves_to_evaluate
 
-        # Extended AI modulates in_play weights based on deployed piece ratio:
-        self.set_use_extended(game_board)
-        if self.game_type == "Extended" and self.use_extended:
+        #########################
+        # Piece Ratio Heuristic #
+        #########################
+        if self.game_type == "Extended" or self.use_heuristics:
+            # Modulate in_play weights based on deployed piece ratio:
             num_white_pieces = len(list(filter(lambda x: "White" in x, game_board.pieces_in_play)))
             num_black_pieces = len(game_board.pieces_in_play) - num_white_pieces
             bench_pieces = game_board.white_bench \
@@ -244,6 +248,7 @@ class GameAI:
             args = [game_board.current_turn_colour, bench_pieces,
                     num_white_pieces, num_black_pieces, self.start_metric_weights]
             modulate_in_play_weights(*args)
+        #########################
 
         # Iterative search
         depth = 1 + max(0, moves_to_evaluate.best_move.depth)
@@ -563,7 +568,7 @@ class GameAI:
                 return score
 
             # Ignore extended metrics for the Original profile in a mixed battle:
-            self.set_use_extended(game_board)
+            self.set_mixed_battle_use_extended(game_board)
 
             # Calculate metrics, then score:
             board_metrics = game_board.get_board_metrics()
@@ -595,7 +600,7 @@ class GameAI:
             get = mw.get
 
             # Optionally compute extended board metrics:
-            if self.game_type == "Extended" and self.use_extended:
+            if self.game_type == "Extended" and self.mixed_battle_use_extended:
                 bmw_get = self.board_metric_weights.get
                 queen_bee_life_weight = bmw_get("queen_bee_life_weight")
                 queen_bee_tight_spaces_weight = bmw_get("queen_bee_tight_spaces_weight")
@@ -626,7 +631,7 @@ class GameAI:
                                       * board_metrics[piece_name].enemy_neighbour_count
 
                 # Optionally compute extended piece metrics:
-                if self.game_type == "Extended" and self.use_extended:
+                if self.game_type == "Extended" and self.mixed_battle_use_extended:
                     score += colour_value * get(bug_type, "can_make_noisy_ring_weight") \
                         * board_metrics[piece_name].can_make_noisy_ring
                     score += colour_value * get(bug_type, "can_make_defense_ring_weight") \
