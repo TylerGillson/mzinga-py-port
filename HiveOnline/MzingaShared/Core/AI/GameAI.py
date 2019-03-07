@@ -189,7 +189,7 @@ class GameAI:
         ######################
         # Opening Heuristics #
         ######################
-        if self.game_type == "Extended" or self.use_heuristics:
+        if self.use_heuristics:
             board_turn = game_board.current_turn
 
             def get_piece_name(move):
@@ -237,7 +237,7 @@ class GameAI:
         #########################
         # Piece Ratio Heuristic #
         #########################
-        if self.game_type == "Extended" or self.use_heuristics:
+        if self.use_heuristics:
             # Modulate in_play weights based on deployed piece ratio:
             num_white_pieces = len(list(filter(lambda x: "White" in x, game_board.pieces_in_play)))
             num_black_pieces = len(game_board.pieces_in_play) - num_white_pieces
