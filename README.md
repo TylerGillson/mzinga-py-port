@@ -42,7 +42,7 @@ There are two primary executables: MzingaEngine/Program.py and MzingaTrainer/Pro
 The game engine is used to play against the default AI, whose configuration file is: MzingaShared/Engine/GameEngineConfig.py. To play, ensure that your PYTHONPATH is configured correctly, then execute: ```python3 Program.py```. Once the game engine has loaded, type ```help``` to see a summary of all the game engine commands. See also: [Jon Thysell's Game Engine Documentation](https://github.com/jonthysell/Mzinga/wiki/UniversalHiveProtocol#engine-commands).
 
 ### Trainer
-The trainer executes an evolutionary algorithm to obtain optimized metric weights for the default game engine's AI. It has many configuration options, which can be reviewed in: MzingaTrainer/Program.py. The RunConfigurations folder contains a directory of PyCharm run configurations which are a good place to start. 
+The trainer executes an evolutionary algorithm to obtain optimized metric weights for the default game engine's AI. It has many configuration options, which can be reviewed in MzingaTrainer/Program.py. The RunConfigurations folder contains a directory of PyCharm run configurations which are a good place to start. 
 
 Primary Functionalities:
 1. Battle - compete two AI profiles against each other 1 or more times consecutively.
