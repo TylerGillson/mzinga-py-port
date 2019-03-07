@@ -2,6 +2,8 @@
 HiveOnline/HiveOnline/settings.py
 
 *.xml
+!HiveOnline/RunConfigurations/*.xml
+
 *.pyc
 *log.txt
 *.csv
