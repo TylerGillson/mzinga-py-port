@@ -39,6 +39,8 @@ class GameEngineConfig:
     report_intermediate_best_moves = False
     game_type = "Original"  # "Original"
 
+    use_heuristics = True
+
     def __init__(self, input_stream):
         self.load_config(input_stream)
 
@@ -175,13 +177,18 @@ class GameEngineConfig:
         return r_type, value, values
 
     def get_game_ai(self):
+        kwargs = {
+            "b_factor": self.max_branching_factor,
+            "board_weights": self.board_metric_weights,
+            "use_heuristics": self.use_heuristics
+        }
+
         return GameAI("engine", config=GameAIConfig(
             self.start_metric_weights,
             self.end_metric_weights if self.end_metric_weights else self.start_metric_weights,
             self.transposition_table_size_mb,
             self.game_type,
-            self.max_branching_factor,
-            self.board_metric_weights,
+            **kwargs
         ))
 
 
@@ -256,103 +263,103 @@ ExtendedConfig = """
 <report_intermediate_best_moves>False</report_intermediate_best_moves>
 <game_type>Extended</game_type>
 <start_metric_weights>
-<QueenBee.in_play_weight>-13.575948</QueenBee.in_play_weight>
-<QueenBee.is_pinned_weight>-11.390854</QueenBee.is_pinned_weight>
-<QueenBee.is_covered_weight>65.871924</QueenBee.is_covered_weight>
-<QueenBee.noisy_move_weight>8.069638</QueenBee.noisy_move_weight>
-<QueenBee.quiet_move_weight>84.280936</QueenBee.quiet_move_weight>
-<QueenBee.friendly_neighbour_weight>-29.429172</QueenBee.friendly_neighbour_weight>
-<QueenBee.enemy_neighbour_weight>98.584215</QueenBee.enemy_neighbour_weight>
-<QueenBee.can_make_noisy_ring_weight>68.978802</QueenBee.can_make_noisy_ring_weight>
-<QueenBee.can_make_defense_ring_weight>86.83239</QueenBee.can_make_defense_ring_weight>
-<Spider.in_play_weight>34.591204</Spider.in_play_weight>
-<Spider.is_pinned_weight>-86.090283</Spider.is_pinned_weight>
-<Spider.is_covered_weight>39.236924</Spider.is_covered_weight>
-<Spider.noisy_move_weight>48.535448</Spider.noisy_move_weight>
-<Spider.quiet_move_weight>-23.165922</Spider.quiet_move_weight>
-<Spider.friendly_neighbour_weight>81.861833</Spider.friendly_neighbour_weight>
-<Spider.enemy_neighbour_weight>-86.82599</Spider.enemy_neighbour_weight>
-<Spider.can_make_noisy_ring_weight>62.860191</Spider.can_make_noisy_ring_weight>
-<Spider.can_make_defense_ring_weight>49.088142</Spider.can_make_defense_ring_weight>
-<Beetle.in_play_weight>91.830788</Beetle.in_play_weight>
-<Beetle.is_pinned_weight>-29.980104</Beetle.is_pinned_weight>
-<Beetle.is_covered_weight>-33.974149</Beetle.is_covered_weight>
-<Beetle.noisy_move_weight>45.268098</Beetle.noisy_move_weight>
-<Beetle.quiet_move_weight>3.037637</Beetle.quiet_move_weight>
-<Beetle.friendly_neighbour_weight>56.283969</Beetle.friendly_neighbour_weight>
-<Beetle.enemy_neighbour_weight>-39.481233</Beetle.enemy_neighbour_weight>
-<Beetle.can_make_noisy_ring_weight>-5.302477</Beetle.can_make_noisy_ring_weight>
-<Beetle.can_make_defense_ring_weight>-34.094779</Beetle.can_make_defense_ring_weight>
-<Grasshopper.in_play_weight>73.91689</Grasshopper.in_play_weight>
-<Grasshopper.is_pinned_weight>34.643755</Grasshopper.is_pinned_weight>
-<Grasshopper.is_covered_weight>-25.890344</Grasshopper.is_covered_weight>
-<Grasshopper.noisy_move_weight>-100.0</Grasshopper.noisy_move_weight>
-<Grasshopper.quiet_move_weight>44.152274</Grasshopper.quiet_move_weight>
-<Grasshopper.friendly_neighbour_weight>-4.827278</Grasshopper.friendly_neighbour_weight>
-<Grasshopper.enemy_neighbour_weight>-6.603112</Grasshopper.enemy_neighbour_weight>
-<Grasshopper.can_make_noisy_ring_weight>53.988895</Grasshopper.can_make_noisy_ring_weight>
-<Grasshopper.can_make_defense_ring_weight>-83.655425</Grasshopper.can_make_defense_ring_weight>
-<SoldierAnt.in_play_weight>-88.959255</SoldierAnt.in_play_weight>
-<SoldierAnt.is_pinned_weight>-78.526155</SoldierAnt.is_pinned_weight>
-<SoldierAnt.is_covered_weight>36.125556</SoldierAnt.is_covered_weight>
-<SoldierAnt.noisy_move_weight>32.181814</SoldierAnt.noisy_move_weight>
-<SoldierAnt.quiet_move_weight>-22.149079</SoldierAnt.quiet_move_weight>
-<SoldierAnt.friendly_neighbour_weight>82.587752</SoldierAnt.friendly_neighbour_weight>
-<SoldierAnt.enemy_neighbour_weight>76.401599</SoldierAnt.enemy_neighbour_weight>
-<SoldierAnt.can_make_noisy_ring_weight>62.448668</SoldierAnt.can_make_noisy_ring_weight>
-<SoldierAnt.can_make_defense_ring_weight>-61.770531</SoldierAnt.can_make_defense_ring_weight>
+<QueenBee.in_play_weight>0.337678</QueenBee.in_play_weight>
+<QueenBee.is_pinned_weight>-20.117377</QueenBee.is_pinned_weight>
+<QueenBee.is_covered_weight>-11.622435</QueenBee.is_covered_weight>
+<QueenBee.noisy_move_weight>73.753983</QueenBee.noisy_move_weight>
+<QueenBee.quiet_move_weight>38.349441</QueenBee.quiet_move_weight>
+<QueenBee.friendly_neighbour_weight>94.33672</QueenBee.friendly_neighbour_weight>
+<QueenBee.enemy_neighbour_weight>94.971069</QueenBee.enemy_neighbour_weight>
+<QueenBee.can_make_noisy_ring_weight>-100.0</QueenBee.can_make_noisy_ring_weight>
+<QueenBee.can_make_defense_ring_weight>-34.992948</QueenBee.can_make_defense_ring_weight>
+<Spider.in_play_weight>57.057663</Spider.in_play_weight>
+<Spider.is_pinned_weight>38.550403</Spider.is_pinned_weight>
+<Spider.is_covered_weight>-44.674675</Spider.is_covered_weight>
+<Spider.noisy_move_weight>-80.667972</Spider.noisy_move_weight>
+<Spider.quiet_move_weight>50.208043</Spider.quiet_move_weight>
+<Spider.friendly_neighbour_weight>97.846987</Spider.friendly_neighbour_weight>
+<Spider.enemy_neighbour_weight>50.571866</Spider.enemy_neighbour_weight>
+<Spider.can_make_noisy_ring_weight>-35.994451</Spider.can_make_noisy_ring_weight>
+<Spider.can_make_defense_ring_weight>-45.217409</Spider.can_make_defense_ring_weight>
+<Beetle.in_play_weight>80.888364</Beetle.in_play_weight>
+<Beetle.is_pinned_weight>86.044251</Beetle.is_pinned_weight>
+<Beetle.is_covered_weight>-79.955813</Beetle.is_covered_weight>
+<Beetle.noisy_move_weight>3.579708</Beetle.noisy_move_weight>
+<Beetle.quiet_move_weight>40.43433</Beetle.quiet_move_weight>
+<Beetle.friendly_neighbour_weight>59.994454</Beetle.friendly_neighbour_weight>
+<Beetle.enemy_neighbour_weight>39.691217</Beetle.enemy_neighbour_weight>
+<Beetle.can_make_noisy_ring_weight>62.846268</Beetle.can_make_noisy_ring_weight>
+<Beetle.can_make_defense_ring_weight>0.989904</Beetle.can_make_defense_ring_weight>
+<Grasshopper.in_play_weight>21.491468</Grasshopper.in_play_weight>
+<Grasshopper.is_pinned_weight>-57.870662</Grasshopper.is_pinned_weight>
+<Grasshopper.is_covered_weight>-66.872461</Grasshopper.is_covered_weight>
+<Grasshopper.noisy_move_weight>-67.479911</Grasshopper.noisy_move_weight>
+<Grasshopper.quiet_move_weight>-2.516557</Grasshopper.quiet_move_weight>
+<Grasshopper.friendly_neighbour_weight>26.946375</Grasshopper.friendly_neighbour_weight>
+<Grasshopper.enemy_neighbour_weight>23.738153</Grasshopper.enemy_neighbour_weight>
+<Grasshopper.can_make_noisy_ring_weight>-12.479761</Grasshopper.can_make_noisy_ring_weight>
+<Grasshopper.can_make_defense_ring_weight>88.430081</Grasshopper.can_make_defense_ring_weight>
+<SoldierAnt.in_play_weight>-42.738638</SoldierAnt.in_play_weight>
+<SoldierAnt.is_pinned_weight>93.138295</SoldierAnt.is_pinned_weight>
+<SoldierAnt.is_covered_weight>62.036824</SoldierAnt.is_covered_weight>
+<SoldierAnt.noisy_move_weight>51.547413</SoldierAnt.noisy_move_weight>
+<SoldierAnt.quiet_move_weight>87.853287</SoldierAnt.quiet_move_weight>
+<SoldierAnt.friendly_neighbour_weight>-58.931359</SoldierAnt.friendly_neighbour_weight>
+<SoldierAnt.enemy_neighbour_weight>-98.76746</SoldierAnt.enemy_neighbour_weight>
+<SoldierAnt.can_make_noisy_ring_weight>29.365377</SoldierAnt.can_make_noisy_ring_weight>
+<SoldierAnt.can_make_defense_ring_weight>-45.578182</SoldierAnt.can_make_defense_ring_weight>
 </start_metric_weights>
 <end_metric_weights>
-<QueenBee.in_play_weight>35.977407</QueenBee.in_play_weight>
-<QueenBee.is_pinned_weight>16.526246</QueenBee.is_pinned_weight>
-<QueenBee.is_covered_weight>-25.635449</QueenBee.is_covered_weight>
-<QueenBee.noisy_move_weight>67.72225</QueenBee.noisy_move_weight>
-<QueenBee.quiet_move_weight>-92.177098</QueenBee.quiet_move_weight>
-<QueenBee.friendly_neighbour_weight>94.246805</QueenBee.friendly_neighbour_weight>
-<QueenBee.enemy_neighbour_weight>78.519884</QueenBee.enemy_neighbour_weight>
-<QueenBee.can_make_noisy_ring_weight>46.350363</QueenBee.can_make_noisy_ring_weight>
-<QueenBee.can_make_defense_ring_weight>49.049371</QueenBee.can_make_defense_ring_weight>
-<Spider.in_play_weight>73.087661</Spider.in_play_weight>
-<Spider.is_pinned_weight>-95.344391</Spider.is_pinned_weight>
-<Spider.is_covered_weight>-78.142462</Spider.is_covered_weight>
-<Spider.noisy_move_weight>77.606477</Spider.noisy_move_weight>
-<Spider.quiet_move_weight>-86.043358</Spider.quiet_move_weight>
-<Spider.friendly_neighbour_weight>67.159172</Spider.friendly_neighbour_weight>
-<Spider.enemy_neighbour_weight>76.46847</Spider.enemy_neighbour_weight>
-<Spider.can_make_noisy_ring_weight>52.907164</Spider.can_make_noisy_ring_weight>
-<Spider.can_make_defense_ring_weight>-43.476861</Spider.can_make_defense_ring_weight>
-<Beetle.in_play_weight>-65.946415</Beetle.in_play_weight>
-<Beetle.is_pinned_weight>-15.997796</Beetle.is_pinned_weight>
-<Beetle.is_covered_weight>-42.647107</Beetle.is_covered_weight>
-<Beetle.noisy_move_weight>35.069179</Beetle.noisy_move_weight>
-<Beetle.quiet_move_weight>64.975771</Beetle.quiet_move_weight>
-<Beetle.friendly_neighbour_weight>-24.944331</Beetle.friendly_neighbour_weight>
-<Beetle.enemy_neighbour_weight>-95.038815</Beetle.enemy_neighbour_weight>
-<Beetle.can_make_noisy_ring_weight>5.986062</Beetle.can_make_noisy_ring_weight>
-<Beetle.can_make_defense_ring_weight>-2.666235</Beetle.can_make_defense_ring_weight>
-<Grasshopper.in_play_weight>-47.801049</Grasshopper.in_play_weight>
-<Grasshopper.is_pinned_weight>-95.793614</Grasshopper.is_pinned_weight>
-<Grasshopper.is_covered_weight>100.0</Grasshopper.is_covered_weight>
-<Grasshopper.noisy_move_weight>-84.792599</Grasshopper.noisy_move_weight>
-<Grasshopper.quiet_move_weight>-24.045674</Grasshopper.quiet_move_weight>
-<Grasshopper.friendly_neighbour_weight>0.361557</Grasshopper.friendly_neighbour_weight>
-<Grasshopper.enemy_neighbour_weight>3.507716</Grasshopper.enemy_neighbour_weight>
-<Grasshopper.can_make_noisy_ring_weight>-62.631449</Grasshopper.can_make_noisy_ring_weight>
-<Grasshopper.can_make_defense_ring_weight>94.998452</Grasshopper.can_make_defense_ring_weight>
-<SoldierAnt.in_play_weight>53.042894</SoldierAnt.in_play_weight>
-<SoldierAnt.is_pinned_weight>-90.892167</SoldierAnt.is_pinned_weight>
-<SoldierAnt.is_covered_weight>89.260138</SoldierAnt.is_covered_weight>
-<SoldierAnt.noisy_move_weight>40.773407</SoldierAnt.noisy_move_weight>
-<SoldierAnt.quiet_move_weight>30.516268</SoldierAnt.quiet_move_weight>
-<SoldierAnt.friendly_neighbour_weight>60.189976</SoldierAnt.friendly_neighbour_weight>
-<SoldierAnt.enemy_neighbour_weight>-53.657924</SoldierAnt.enemy_neighbour_weight>
-<SoldierAnt.can_make_noisy_ring_weight>-0.428643</SoldierAnt.can_make_noisy_ring_weight>
-<SoldierAnt.can_make_defense_ring_weight>92.386741</SoldierAnt.can_make_defense_ring_weight>
+<QueenBee.in_play_weight>53.307911</QueenBee.in_play_weight>
+<QueenBee.is_pinned_weight>-90.469432</QueenBee.is_pinned_weight>
+<QueenBee.is_covered_weight>-95.888999</QueenBee.is_covered_weight>
+<QueenBee.noisy_move_weight>45.214713</QueenBee.noisy_move_weight>
+<QueenBee.quiet_move_weight>53.191015</QueenBee.quiet_move_weight>
+<QueenBee.friendly_neighbour_weight>44.728238</QueenBee.friendly_neighbour_weight>
+<QueenBee.enemy_neighbour_weight>-87.366291</QueenBee.enemy_neighbour_weight>
+<QueenBee.can_make_noisy_ring_weight>-14.953019</QueenBee.can_make_noisy_ring_weight>
+<QueenBee.can_make_defense_ring_weight>-56.154512</QueenBee.can_make_defense_ring_weight>
+<Spider.in_play_weight>34.486362</Spider.in_play_weight>
+<Spider.is_pinned_weight>5.895434</Spider.is_pinned_weight>
+<Spider.is_covered_weight>92.081143</Spider.is_covered_weight>
+<Spider.noisy_move_weight>3.883118</Spider.noisy_move_weight>
+<Spider.quiet_move_weight>-89.658382</Spider.quiet_move_weight>
+<Spider.friendly_neighbour_weight>-87.357235</Spider.friendly_neighbour_weight>
+<Spider.enemy_neighbour_weight>-26.030357</Spider.enemy_neighbour_weight>
+<Spider.can_make_noisy_ring_weight>53.595554</Spider.can_make_noisy_ring_weight>
+<Spider.can_make_defense_ring_weight>27.664813</Spider.can_make_defense_ring_weight>
+<Beetle.in_play_weight>69.19703</Beetle.in_play_weight>
+<Beetle.is_pinned_weight>-49.286065</Beetle.is_pinned_weight>
+<Beetle.is_covered_weight>-100.0</Beetle.is_covered_weight>
+<Beetle.noisy_move_weight>75.881638</Beetle.noisy_move_weight>
+<Beetle.quiet_move_weight>43.939257</Beetle.quiet_move_weight>
+<Beetle.friendly_neighbour_weight>19.17773</Beetle.friendly_neighbour_weight>
+<Beetle.enemy_neighbour_weight>-33.051469</Beetle.enemy_neighbour_weight>
+<Beetle.can_make_noisy_ring_weight>-99.489042</Beetle.can_make_noisy_ring_weight>
+<Beetle.can_make_defense_ring_weight>95.045705</Beetle.can_make_defense_ring_weight>
+<Grasshopper.in_play_weight>74.447033</Grasshopper.in_play_weight>
+<Grasshopper.is_pinned_weight>-48.996601</Grasshopper.is_pinned_weight>
+<Grasshopper.is_covered_weight>61.758867</Grasshopper.is_covered_weight>
+<Grasshopper.noisy_move_weight>89.606318</Grasshopper.noisy_move_weight>
+<Grasshopper.quiet_move_weight>25.218721</Grasshopper.quiet_move_weight>
+<Grasshopper.friendly_neighbour_weight>35.98893</Grasshopper.friendly_neighbour_weight>
+<Grasshopper.enemy_neighbour_weight>-97.839518</Grasshopper.enemy_neighbour_weight>
+<Grasshopper.can_make_noisy_ring_weight>-8.4312</Grasshopper.can_make_noisy_ring_weight>
+<Grasshopper.can_make_defense_ring_weight>18.925275</Grasshopper.can_make_defense_ring_weight>
+<SoldierAnt.in_play_weight>1.999557</SoldierAnt.in_play_weight>
+<SoldierAnt.is_pinned_weight>65.359801</SoldierAnt.is_pinned_weight>
+<SoldierAnt.is_covered_weight>-84.720651</SoldierAnt.is_covered_weight>
+<SoldierAnt.noisy_move_weight>49.119627</SoldierAnt.noisy_move_weight>
+<SoldierAnt.quiet_move_weight>-5.496779</SoldierAnt.quiet_move_weight>
+<SoldierAnt.friendly_neighbour_weight>-84.7513</SoldierAnt.friendly_neighbour_weight>
+<SoldierAnt.enemy_neighbour_weight>-49.512598</SoldierAnt.enemy_neighbour_weight>
+<SoldierAnt.can_make_noisy_ring_weight>-6.344679</SoldierAnt.can_make_noisy_ring_weight>
+<SoldierAnt.can_make_defense_ring_weight>-65.468628</SoldierAnt.can_make_defense_ring_weight>
 </end_metric_weights>
 <board_metric_weights>
-<queen_bee_life_weight>81.590604</queen_bee_life_weight>
-<queen_bee_tight_spaces_weight>36.176612</queen_bee_tight_spaces_weight>
-<noisy_ring_weight>-98.0</noisy_ring_weight>
+<queen_bee_life_weight>-72.705098</queen_bee_life_weight>
+<queen_bee_tight_spaces_weight>93.088764</queen_bee_tight_spaces_weight>
+<noisy_ring_weight>100.0</noisy_ring_weight>
 </board_metric_weights>
 </GameAI>
 </Mzinga.Engine>

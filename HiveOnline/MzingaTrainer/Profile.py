@@ -30,6 +30,8 @@ class Profile:
     draws = 0
     elo_rating = EloUtils.default_rating
 
+    use_heuristics = False
+
     @property
     def name(self):
         return self._name if not (self._name is None or self._name.isspace()) else str(self.id)[0:8:]
@@ -107,6 +109,9 @@ class Profile:
         if "draws" in kwargs:
             self.draws = kwargs.pop("draws")
 
+        if "use_heuristics" in kwargs:
+            self.use_heuristics = kwargs.pop("use_heuristics")
+
         self.bug_metric_weights_cls = MetricWeightsCls(game_type)
 
     def __eq__(self, other):
@@ -171,6 +176,7 @@ class Profile:
         ElementTree.SubElement(root, "draws").text = str(self.draws)
         ElementTree.SubElement(root, "creation").text = str(self.creation_timestamp)
         ElementTree.SubElement(root, "last_updated").text = str(self.last_updated_timestamp)
+        ElementTree.SubElement(root, "use_heuristics").text = str(self.use_heuristics)
 
         start_metric_weights = ElementTree.SubElement(root, "start_metric_weights")
         end_metric_weights = ElementTree.SubElement(root, "end_metric_weights")
@@ -219,6 +225,8 @@ class Profile:
         wins = 0
         losses = 0
         draws = 0
+        use_heuristics = None
+
         board_metric_weights = None
         start_metric_weights = None
         end_metric_weights = None
@@ -250,6 +258,8 @@ class Profile:
                 losses = int(node.text)
             elif node.tag == "draws":
                 draws = int(node.text)
+            elif node.tag == "use_heuristics":
+                use_heuristics = node.text == "True"
             elif node.tag == "creation":
                 creation_timestamp = datetime.datetime.strptime(node.text, '%Y-%m-%d %H:%M:%S.%f')
             elif node.tag == "last_updated":
@@ -275,6 +285,7 @@ class Profile:
             "wins": wins,
             "losses": losses,
             "draws": draws,
+            "use_heuristics": use_heuristics,
             "start_metric_weights": start_metric_weights,
             "end_metric_weights": end_metric_weights,
             "creation_timestamp": creation_timestamp,

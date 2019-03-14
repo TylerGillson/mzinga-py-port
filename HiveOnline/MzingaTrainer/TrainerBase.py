@@ -134,13 +134,18 @@ class TrainerBase(object):
         wp_st, wp_end = white_profile.start_metric_weights, white_profile.end_metric_weights
         bp_st, bp_end = black_profile.start_metric_weights, black_profile.end_metric_weights
 
+        white_use_heuristics = self.trainer_settings.white_use_heuristics if white_profile.use_heuristics is None \
+            else white_profile.use_heuristics
+        black_use_heuristics = self.trainer_settings.black_use_heuristics if black_profile.use_heuristics is None \
+            else black_profile.use_heuristics
+
         white_ai = GameAI(battle_key, GameAIConfig(
             wp_st,
             wp_end,
             self.trainer_settings.trans_table_size,
             white_profile.game_type,
             board_weights=white_profile.board_metric_weights,
-            use_heuristics=self.trainer_settings.white_use_heuristics)
+            use_heuristics=white_use_heuristics)
         )
 
         black_ai = GameAI(battle_key, GameAIConfig(
@@ -149,7 +154,7 @@ class TrainerBase(object):
             self.trainer_settings.trans_table_size,
             black_profile.game_type,
             board_weights=black_profile.board_metric_weights,
-            use_heuristics=self.trainer_settings.black_use_heuristics)
+            use_heuristics=black_use_heuristics)
         )
 
         # Create Game
